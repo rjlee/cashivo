@@ -775,9 +775,9 @@ function renderYearHtml(summary, year, currencyRawParam) {
     html += `<p>No monthly data for year ${selYear}</p>`;
   }
 
-  // Spikes for this month
+  // Spikes for this year
   if (summary.anomalies && Array.isArray(summary.anomalies.spikes)) {
-    const spikes = summary.anomalies.spikes.filter(s => s.month === sel);
+    const spikes = summary.anomalies.spikes.filter(s => s.month.startsWith(selYear + '-'));
     html += `
   <h2>Spikes</h2>`;
     if (spikes.length) {
@@ -804,9 +804,9 @@ function renderYearHtml(summary, year, currencyRawParam) {
     }
   }
 
-  // Duplicate transactions for this month
+  // Duplicate transactions for this year
   if (summary.anomalies && Array.isArray(summary.anomalies.duplicates)) {
-    const dups = summary.anomalies.duplicates.filter(d => d.date.startsWith(sel));
+    const dups = summary.anomalies.duplicates.filter(d => d.date.startsWith(selYear + '-'));
     html += `
   <h2>Duplicate Transactions</h2>`;
     if (dups.length) {
