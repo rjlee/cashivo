@@ -480,12 +480,16 @@ function renderConsole(summary) {
 
   // 4. Lifestyle & Discretionary
   console.log('\n==== Lifestyle & Discretionary (most recent first) ====');
-  console.table(summary.lifestyle.slice().reverse().map(r => ({
-    Month: r.month,
-    Essentials: fmtAmount(r.essentials),
-    Lifestyle: fmtAmount(r.lifestyle),
-    'Discretionary %': r.discretionaryPct != null ? r.discretionaryPct.toFixed(2) : 'N/A'
-  })));
+  // Guard in case no lifestyle data is generated
+  const lifestyleData = Array.isArray(summary.lifestyle) ? summary.lifestyle : [];
+  console.table(
+    lifestyleData.slice().reverse().map(r => ({
+      Month: r.month,
+      Essentials: fmtAmount(r.essentials),
+      Lifestyle: fmtAmount(r.lifestyle),
+      'Discretionary %': r.discretionaryPct != null ? r.discretionaryPct.toFixed(2) : 'N/A'
+    }))
+  );
 
   // 5. Merchant Insights
   console.log('\n==== Merchant Insights ====');
