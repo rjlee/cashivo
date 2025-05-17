@@ -259,8 +259,29 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
 </head>
 <body>
   <h1>Insights for ${fmtMonth(sel)}</h1>
-  <p><a href="/years/${year}/${month}">← Back to Summary</a></p>
 `;
+
+  const allMonths = Array.isArray(summary.monthlySpending)
+    ? summary.monthlySpending.map(s => s.month).sort()
+    : [];
+  const idx = allMonths.indexOf(sel);
+  const prev = idx > 0 ? allMonths[idx - 1] : null;
+  const next = idx >= 0 && idx < allMonths.length - 1 ? allMonths[idx + 1] : null;
+  html += '<div class="month-nav">';
+  if (prev) {
+    const [pY, pM] = prev.split('-');
+    html += `<a class="prev-month" href="/years/${pY}/${pM}/insights">← ${fmtMonth(prev)}</a>`;
+  } else {
+    html += '<span></span>';
+  }
+  html += `<a class="year-link" href="/years/${year}/${month}">Summary</a>`;
+  if (next) {
+    const [nY, nM] = next.split('-');
+    html += `<a class="next-month" href="/years/${nY}/${nM}/insights">${fmtMonth(next)} →</a>`;
+  } else {
+    html += '<span></span>';
+  }
+  html += '</div>';
 
   
   if (Array.isArray(summary.dailySpending)) {
