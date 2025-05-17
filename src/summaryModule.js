@@ -180,9 +180,6 @@ function getSummary({ month } = {}) {
     if (Array.isArray(summary.monthlyOverview)) {
       summary.monthlyOverview = summary.monthlyOverview.filter(item => item.month === month);
     }
-    if (Array.isArray(summary.monthlySpending)) {
-      summary.monthlySpending = summary.monthlySpending.filter(item => item.month === month);
-    }
     if (Array.isArray(summary.dailySpending)) {
       summary.dailySpending = summary.dailySpending.filter(d => d.date.startsWith(month));
     }
@@ -190,8 +187,11 @@ function getSummary({ month } = {}) {
       summary.categoryBreakdown.perMonth = { [month]: summary.categoryBreakdown.perMonth[month] };
     }
     if (summary.trends && Array.isArray(summary.trends.monthlyTrends)) {
-      summary.trends.monthlyTrends = summary.trends.monthlyTrends.filter(t => t.month === month);
-    }
+    summary.trends.monthlyTrends = summary.trends.monthlyTrends.filter(t => t.month === month);
+  }
+  if (summary.trends && summary.trends.monthlyRecurringBills) {
+    summary.trends.recurringBills = summary.trends.monthlyRecurringBills[month] || [];
+  }
     if (Array.isArray(summary.lifestyle)) {
       summary.lifestyle = summary.lifestyle.filter(l => l.month === month);
     }
@@ -209,14 +209,11 @@ function getSummary({ month } = {}) {
     if (summary.merchantInsights) {
       const usage = summary.merchantInsights.usageOverTime || {};
       summary.merchantInsights.usageOverTime = Object.fromEntries(
-        Object.entries(usage)
-          .map(([m, data]) => [m, data[month] != null ? { [month]: data[month] } : {}])
+        Object.entries(usage).map(([m, data]) => [
+          m,
+          data[month] != null ? { [month]: data[month] } : {}
+        ])
       );
-      if (Array.isArray(summary.merchantInsights.topMerchants)) {
-        summary.merchantInsights.topMerchants = summary.merchantInsights.topMerchants.filter(
-          m => (summary.merchantInsights.usageOverTime[m.merchant] || {})[month] > 0
-        );
-      }
       summary.merchantInsights.transactionCounts = Object.fromEntries(
         Object.entries(summary.merchantInsights.transactionCounts || {}).filter(
           ([m]) => (summary.merchantInsights.usageOverTime[m] || {})[month] > 0
@@ -314,21 +311,27 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   }
 
   
-  if (summary.merchantInsights && Array.isArray(summary.merchantInsights.topMerchants)) {
+  if (summary.merchantInsights && summary.merchantInsights.usageOverTime) {
     html += `
   <h2>Top Merchants</h2>
   <canvas id="topMerchantsChart" width="600" height="300"></canvas>
   <script>
-    const topM = ${JSON.stringify(summary.merchantInsights.topMerchants)};
-    const usage = ${JSON.stringify(summary.merchantInsights.usageOverTime)};
-    const monthlyUsage = topM.map(m => ({ merchant: m.merchant, total: (usage[m.merchant] && usage[m.merchant]['${sel}']) || 0 }));
-    const filteredM = monthlyUsage.filter(x => x.total > 0).sort((a,b) => b.total - a.total);
-    const labelsM = filteredM.map(x => x.merchant);
-    const dataM = filteredM.map(x => x.total);
+    const usageMap = ${JSON.stringify(summary.merchantInsights.usageOverTime)};
+    const txCounts = ${JSON.stringify(summary.merchantInsights.transactionCounts)};
+    const monthlyArr = Object.entries(usageMap)
+      .map(([m, data]) => ({ merchant: m, total: data['${sel}'] || 0, count: txCounts[m] || 0 }))
+      .filter(x => x.total > 0)
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5);
+    const labelsM = monthlyArr.map(x => x.merchant);
+    const dataM = monthlyArr.map(x => x.total);
     const ctxM = document.getElementById('topMerchantsChart').getContext('2d');
     new Chart(ctxM, {
       type: 'bar',
-      data: { labels: labelsM, datasets: [{ label: 'Total Spend', data: dataM, backgroundColor: labelsM.map((_,i) => 'hsl(' + (i*360/labelsM.length) + ',70%,70%)') }] },
+      data: {
+        labels: labelsM,
+        datasets: [{ label: 'Total Spend', data: dataM, backgroundColor: labelsM.map((_, i) => 'hsl(' + (i * 360 / labelsM.length) + ',70%,70%)') }]
+      },
       options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
     });
   </script>`;
@@ -420,6 +423,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     }
   }
 
+  // Recurring bills & subscriptions for the selected month
   html += `
   <h2>Recurring Bills & Subscriptions</h2>
   <table>
@@ -432,7 +436,10 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
       </tr>
     </thead>
     <tbody>`;
-  (summary.trends.recurringBills || []).forEach(item => {
+  const recs = (summary.trends.recurringBills || []).filter(item =>
+    (summary.merchantInsights.usageOverTime[item.description] || {})[sel] > 0
+  );
+  recs.forEach(item => {
     html += `
       <tr>
         <td><a href="/years/${year}/${month}/category/${encodeURIComponent(item.description)}">${item.description}</a></td>
@@ -503,7 +510,6 @@ function renderHtml(summary, currencyRawParam) {
     }
     html += '</div>';
   }
-  // If this is a single-month view, render a 6-month spending bar chart
   if (Array.isArray(summary.monthlyOverview) && summary.monthlyOverview.length === 1) {
     const sel = summary.monthlyOverview[0].month;
     html += `
@@ -511,12 +517,7 @@ function renderHtml(summary, currencyRawParam) {
   <script>
     const spendData = ${JSON.stringify(summary.monthlySpending)};
     const selMonth = '${sel}';
-    const idx = spendData.findIndex(s => s.month === selMonth);
-    let slice = [];
-    if (idx >= 0) {
-      // Capture the current month and the previous 5 months
-      slice = spendData.slice(idx, idx + 6).reverse();
-    }
+    const slice = spendData.filter(s => s.month === selMonth);
     const labels = slice.map(e => e.month);
     const values = slice.map(e => e.spending);
     const ctx = document.getElementById('spendingChart').getContext('2d');
