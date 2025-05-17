@@ -165,9 +165,6 @@ async function ingest() {
   }
   const filteredTx = uniqueTx.filter(tx => completeMonths.includes(tx.date.slice(0, 7)));
   const finalCount = filteredTx.length;
-  if (incompleteMonths.length) {
-    console.log(`Excluding months with <${(coverageThreshold*100).toFixed(0)}% coverage:`, incompleteMonths.join(', '));
-  }
   console.log(`Transactions after filtering incomplete months: ${finalCount}`);
   // Write merged output
   fs.writeFileSync(outputFile, JSON.stringify(filteredTx, null, 2));
