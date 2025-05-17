@@ -28,6 +28,26 @@ const uploadDir = path.resolve(__dirname, '..', 'import');
 // Ensure import directory exists
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 const upload = multer({ dest: uploadDir });
+// Ensure data directory exists and default categories are seeded
+const dataDir = path.resolve(__dirname, '..', 'data');
+const categoriesDir = path.resolve(__dirname, '..', 'categories');
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+// Persist default categories.json if missing
+const dataCategoriesFile = path.join(dataDir, 'categories.json');
+if (!fs.existsSync(dataCategoriesFile)) {
+  fs.copyFileSync(
+    path.join(categoriesDir, 'default_categories.json'),
+    dataCategoriesFile
+  );
+}
+// Persist default category-groups.json if missing
+const dataCatGroupsFile = path.join(dataDir, 'category-groups.json');
+if (!fs.existsSync(dataCatGroupsFile)) {
+  fs.copyFileSync(
+    path.join(categoriesDir, 'default_category_groups.json'),
+    dataCatGroupsFile
+  );
+}
 const port = process.env.PORT || 3000;
 
 // (Static assets serving moved below to allow custom root and month routes)
@@ -35,6 +55,9 @@ const port = process.env.PORT || 3000;
 // Upload page (form to post CSV files)
 // Management page: upload new files and reset data
 app.get('/manage', (req, res) => {
+  // Display alert if defaults were loaded
+  const showMsg = req.query.msg === 'defaults_loaded';
+  const alertHtml = showMsg ? '<p style="color:green;">Default categories loaded successfully.</p>' : '';
   res.type('html').send(
     `<!doctype html>
 <html lang="en">
@@ -44,6 +67,7 @@ app.get('/manage', (req, res) => {
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+  ${alertHtml}
   <h1>Upload Transactions</h1>
   <p><a href="/years">← Back to Annual Summaries</a></p>
   <form method="POST" action="/manage" enctype="multipart/form-data">
@@ -53,6 +77,10 @@ app.get('/manage', (req, res) => {
     <div style="margin-top:1rem;">
       <button type="submit">Upload & Process</button>
     </div>
+  </form>
+  <!-- Button to reset categories to defaults -->
+  <form method="POST" action="/manage/load-default-categories" style="margin-top:1rem;">
+    <button type="submit">Load Default Categories</button>
   </form>
   <hr />
   <h2>Reset Data</h2>
@@ -148,6 +176,20 @@ app.post('/manage/reset', (req, res) => {
 </body>
 </html>`
   );
+});
+// Load default categories and groups from templates
+app.post('/manage/load-default-categories', (req, res) => {
+  try {
+    const srcCats = path.join(__dirname, '..', 'categories', 'default_categories.json');
+    const dstCats = path.join(__dirname, '..', 'data', 'categories.json');
+    fs.copyFileSync(srcCats, dstCats);
+    const srcGroups = path.join(__dirname, '..', 'categories', 'default_category_groups.json');
+    const dstGroups = path.join(__dirname, '..', 'data', 'category-groups.json');
+    fs.copyFileSync(srcGroups, dstGroups);
+    res.redirect('/manage?msg=defaults_loaded');
+  } catch (err) {
+    res.status(500).send(`Error loading default categories: ${err.message}`);
+  }
 });
 // Endpoint to serve summary JSON
 app.get('/api/summary', (req, res) => {

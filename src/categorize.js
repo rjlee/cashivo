@@ -12,7 +12,18 @@ process.env.TF_CPP_MIN_LOG_LEVEL = '3';
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const categories = require('./categories.json');
+// Load JSON helper: attempts to read file, returns null if missing or parse error
+function loadJSON(filePath) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+// Load category definitions: user-provided or default
+const userCategoriesPath = path.resolve(__dirname, '..', 'data', 'categories.json');
+const defaultCategories = require('../categories/default_categories.json');
+const categories = loadJSON(userCategoriesPath) || defaultCategories;
 // Concurrency limiter for AI requests
 const pLimit = require('p-limit');
 // Classification mode flags

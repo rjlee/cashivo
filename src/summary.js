@@ -40,7 +40,9 @@ if (startMonth || endMonth) {
 // Optional configs
 const budgets = loadJSON(path.resolve(__dirname, '..', 'budgets.json')) || {};
 const goalsConfig = loadJSON(path.resolve(__dirname, '..', 'goals.json')) || {};
-const categoryGroups = loadJSON(path.resolve(__dirname, '..', 'category-groups.json')) || {};
+// Load category groups: user-provided or default
+const defaultCategoryGroups = require(path.resolve(__dirname, '..', 'categories', 'default_category_groups.json'));
+const categoryGroups = loadJSON(path.resolve(dataDir, 'category-groups.json')) || defaultCategoryGroups;
 const deductibleCategories = loadJSON(path.resolve(__dirname, '..', 'deductible-categories.json')) || [];
 
 // Helper: group transactions by month
