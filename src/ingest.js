@@ -123,7 +123,7 @@ async function ingest() {
   const seen = new Set();
   let duplicates = 0;
   const uniqueTx = validTx.filter(tx => {
-    const key = `${tx.date}|${tx.amount}|${tx.description}`;
+    const key = JSON.stringify([tx.date, tx.amount, tx.description]);
     if (seen.has(key)) {
       duplicates++;
       return false;
