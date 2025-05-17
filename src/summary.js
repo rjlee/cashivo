@@ -152,7 +152,41 @@ function generateTrends(monthly, txs) {
       });
     }
   });
-  return { monthlyTrends, recurringBills: recurring };
+
+  // Monthly recurring bills: only include recurring items that occur in each month
+  const monthlyDescMap = {};
+  txs.forEach(tx => {
+    if (tx.amount < 0 && tx.date) {
+      const mo = tx.date.slice(0, 7);
+      const key = JSON.stringify([tx.description, tx.category || '']);
+      if (!monthlyDescMap[mo]) monthlyDescMap[mo] = {};
+      if (!monthlyDescMap[mo][key]) monthlyDescMap[mo][key] = [];
+      monthlyDescMap[mo][key].push(tx);
+    }
+  });
+  const monthlyRecurringBills = {};
+  sortedMonths.forEach(mo => {
+    const recs = [];
+    recurring.forEach(item => {
+      const key = JSON.stringify([item.description, item.category]);
+      const arr = (monthlyDescMap[mo] && monthlyDescMap[mo][key]) || [];
+      if (arr.length > 0) {
+        const total = arr.reduce((s, t) => s + Math.abs(t.amount), 0);
+        const occurrences = arr.length;
+        const avgAmount = total / occurrences;
+        recs.push({
+          description: item.description,
+          category: item.category,
+          occurrences,
+          total: Number(total.toFixed(2)),
+          avgAmount: Number(avgAmount.toFixed(2))
+        });
+      }
+    });
+    monthlyRecurringBills[mo] = recs;
+  });
+
+  return { monthlyTrends, recurringBills: recurring, monthlyRecurringBills };
 }
 
 // 4. Lifestyle & Discretionary Spending Summary
@@ -194,12 +228,9 @@ function generateMerchantInsights(txs) {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
     .map(([merchant, total]) => ({ merchant, total: Number(total.toFixed(2)) }));
-  // usage over time for top merchants
-  const usage = {};
-  topMerchants.forEach(({ merchant }) => {
-    usage[merchant] = monthMap[merchant] || {};
-  });
-  return { topMerchants, transactionCounts: countMap, usageOverTime: usage };
+  // usage over time for all merchants
+  const usageOverTime = monthMap;
+  return { topMerchants, transactionCounts: countMap, usageOverTime };
 }
 
 // 6. Budget Adherence Report
