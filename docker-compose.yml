@@ -6,6 +6,11 @@ services:
       context: .
       dockerfile: Dockerfile
     image: cashivo:latest
+    # Read environment variables from .env file
+    env_file:
+      - .env
+    # Always restart container on failure or system restart
+    restart: always
     ports:
       - "3000:3000"
     environment:
