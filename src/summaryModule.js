@@ -1,0 +1,507 @@
+// summaryModule.js
+// Provides functions to load generated summary data and render it in text or HTML formats.
+const fs = require('fs');
+const path = require('path');
+// Currency symbols map
+const currencySymbols = { USD: '$', GBP: '£', EUR: '€', JPY: '¥', CAD: 'CA$', AUD: 'A$', INR: '₹' };
+/**
+ * Format a numeric amount with the given or default currency.
+ * @param {number|string} val
+ * @param {string} [currencyRawParam] - Optional 3-letter currency code override
+ * @returns {string}
+ */
+function fmtAmount(val, currencyRawParam) {
+  const num = typeof val === 'number' ? val : Number(val) || 0;
+  const cr = currencyRawParam && typeof currencyRawParam === 'string'
+    ? currencyRawParam.toUpperCase()
+    : (process.env.DEFAULT_CURRENCY || 'GBP');
+  const symbol = (cr.length === 3 && currencySymbols[cr]) ? currencySymbols[cr] : cr;
+  const formatter = new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return `${symbol}${formatter.format(num)}`;
+}
+// Month-year display helper: format "YYYY-MM" as "Mon YY", e.g., "Jan 25"
+const monthShortNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/**
+ * Format a YYYY-MM string into short month name and two-digit year.
+ * @param {string} ym - Month string in "YYYY-MM" format
+ * @returns {string} Formatted month-year, e.g., "Jan 25"
+ */
+function formatYearMonth(ym) {
+  if (typeof ym !== 'string') return '';
+  const parts = ym.split('-');
+  if (parts.length !== 2) return ym;
+  const [year, mon] = parts;
+  const idx = parseInt(mon, 10) - 1;
+  const name = monthShortNames[idx] || mon;
+  const shortY = year.slice(-2);
+  return `${name} ${shortY}`;
+}
+// Format YYYY-MM to short month name and two-digit year, e.g. "Jan 25"
+const _monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtMonth(ym) {
+  if (typeof ym !== 'string') return '';
+  const [yr, mo] = ym.split('-');
+  const m = parseInt(mo, 10);
+  if (!yr || isNaN(m) || m < 1 || m > 12) return ym;
+  const name = _monthNames[m - 1];
+  const shortYr = yr.length === 4 ? yr.slice(2) : yr;
+  return `${name} ${shortYr}`;
+}
+
+/**
+ * Render an HTML page listing all transactions for a given category/month.
+ * @param {string} year - Four-digit year (e.g., "2025").
+ * @param {string} month - Two-digit month (e.g., "05").
+ * @param {string} category - Category name.
+ * @param {Array} transactions - Array of transaction objects with date, description, amount, notes.
+ * @returns {string} HTML string
+ */
+function renderCategoryTransactionsHtml(year, month, category, transactions, currencyRawParam) {
+  let html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Transactions: ${category} (${fmtMonth(year + '-' + month)})</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1>Transactions for ${category} in ${fmtMonth(year + '-' + month)}</h1>
+  <p><a href="/years/${year}/${month}">← Back to month summary</a></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Amount</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  transactions.forEach(tx => {
+    html += `
+      <tr>
+        <td>${tx.date || ''}</td>
+        <td>${tx.description || ''}</td>
+        <td>${fmtAmount(tx.amount, currencyRawParam)}</td>
+        <td>${tx.notes || ''}</td>
+      </tr>`;
+  });
+  html += `
+    </tbody>
+  </table>
+</body>
+</html>`;
+  return html;
+}
+/**
+ * Render an index of all yearly summaries as HTML.
+ * @param {object} summary
+ * @param {string} [currencyRawParam] - Optional currency code override
+ * @returns {string} HTML string
+ */
+function renderAllYearsHtml(summary, currencyRawParam) {
+  const years = Array.isArray(summary.yearlySummary) ? summary.yearlySummary : [];
+  let html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Annual Summaries</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1>Annual Summaries</h1>`;
+  if (years.length) {
+    html += `
+  <table>
+    <thead>
+      <tr>
+        <th title="Calendar year">Year</th>
+        <th title="Total inflows for the year">Income</th>
+        <th title="Total outflows (all expenses, transfers, savings, etc.) for the year">Expenses</th>
+        <th title="Net cash flow: Income minus Expenses">Net Cash Flow</th>
+        <th title="(Net Cash Flow / Income) * 100">Savings Rate</th>
+      </tr>
+    </thead>
+    <tbody>`;
+    years.forEach(y => {
+      html += `
+      <tr>
+        <td><a href="/years/${y.year}">${y.year}</a></td>
+        <td>${fmtAmount(y.totalIncome, currencyRawParam)}</td>
+        <td>${fmtAmount(y.totalExpenses, currencyRawParam)}</td>
+        <td>${fmtAmount(y.netCashFlow, currencyRawParam)}</td>
+        <td>${y.savingsRate.toFixed(2)}%</td>
+      </tr>`;
+    });
+    html += `
+    </tbody>
+  </table>
+  <p><a href="/manage">Upload Transactions</a></p>`;
+  } else {
+    html += `<p>No annual summaries available.</p>`;
+    html += `<p><a href="/manage">Upload Transactions</a></p>`;
+  }
+  html += `
+</body>
+</html>`;
+  return html;
+}
+
+/**
+ * Load summary data from JSON file, optionally filtering by month (YYYY-MM).
+ * @param {{month?: string}} options
+ * @returns {object} summary data
+ */
+function getSummary({ month } = {}) {
+  const summaryPath = path.resolve(__dirname, '..', 'data', 'summary.json');
+  // Load or initialize empty summary if file is missing
+  let summary;
+  if (fs.existsSync(summaryPath)) {
+    const raw = fs.readFileSync(summaryPath, 'utf-8');
+    summary = JSON.parse(raw);
+  } else {
+    // No summary generated yet: return empty data structures
+    summary = {
+      yearlySummary: [],
+      monthlyOverview: [],
+      monthlySpending: []
+    };
+  }
+  if (month) {
+    if (Array.isArray(summary.monthlyOverview)) {
+      summary.monthlyOverview = summary.monthlyOverview.filter(item => item.month === month);
+    }
+  }
+  return summary;
+}
+
+
+/**
+ * Render summary data as a simple HTML page.
+ * @param {object} summary
+ * @param {string} [currencyRawParam] - Optional currency code override
+ * @returns {string} HTML string
+ */
+function renderHtml(summary, currencyRawParam) {
+  const title = (summary.monthlyOverview && summary.monthlyOverview.length === 1)
+    ? `Summary for ${fmtMonth(summary.monthlyOverview[0].month)}`
+    : 'Overall Summary';
+  let html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>${title}</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>${title}</h1>`;
+  // Add simple prev/next navigation for single-month view
+  // Simple prev/next navigation for single-month view
+  const isMonthView = Array.isArray(summary.monthlyOverview) && summary.monthlyOverview.length === 1;
+  if (isMonthView) {
+    const current = summary.monthlyOverview[0].month;
+    const allMonths = Array.isArray(summary.monthlySpending)
+      ? summary.monthlySpending.map(s => s.month).sort()
+      : [];
+    const idx = allMonths.indexOf(current);
+    const prev = idx > 0 ? allMonths[idx - 1] : null;
+    const next = idx >= 0 && idx < allMonths.length - 1 ? allMonths[idx + 1] : null;
+    // extract current year for navigation
+    const [curY] = current.split('-');
+    // navigation links
+    html += '<div class="month-nav">';
+    if (prev) {
+      const [pY, pM] = prev.split('-');
+      html += `<a class="prev-month" href="/years/${pY}/${pM}">← ${fmtMonth(prev)}</a>`;
+    } else {
+      html += '<span></span>';
+    }
+    // central link back to annual overview
+    html += `<a class="year-link" href="/years/${curY}">${curY}</a>`;
+    if (next) {
+      const [nY, nM] = next.split('-');
+      html += `<a class="next-month" href="/years/${nY}/${nM}">${fmtMonth(next)} →</a>`;
+    } else {
+      html += '<span></span>';
+    }
+    html += '</div>';
+  }
+  // If this is a single-month view, render a 6-month spending bar chart
+  if (Array.isArray(summary.monthlyOverview) && summary.monthlyOverview.length === 1) {
+    const sel = summary.monthlyOverview[0].month;
+    html += `
+  <canvas id="spendingChart" width="600" height="300"></canvas>
+  <script>
+    const spendData = ${JSON.stringify(summary.monthlySpending)};
+    const selMonth = '${sel}';
+    const idx = spendData.findIndex(s => s.month === selMonth);
+    let slice = [];
+    if (idx >= 0) {
+      // Capture the current month and the previous 5 months
+      slice = spendData.slice(idx, idx + 6).reverse();
+    }
+    const labels = slice.map(e => e.month);
+    const values = slice.map(e => e.spending);
+    const ctx = document.getElementById('spendingChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets: [{ label: 'Spending', data: values, backgroundColor: 'rgba(75, 192, 192, 0.5)' }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+  </script>`;
+  }
+  if (Array.isArray(summary.monthlyOverview)) {
+    // Find spending per month
+    const spendArr = Array.isArray(summary.monthlySpending) ? summary.monthlySpending : [];
+    html += `
+  <table>
+    <thead>
+      <tr>
+        <th title="Calendar month in YYYY-MM format">Month</th>
+        <th title="Total inflows for the month">Income</th>
+        <th title="Total outflows (all expenses, transfers, savings) for the month">Expenses</th>
+        <th title="Total spending excluding transfers and savings">Spending</th>
+        <th title="Net cash flow: Income minus Expenses">Net Cash Flow</th>
+        <th title="(Net Cash Flow / Income) * 100">Savings Rate</th>
+      </tr>
+    </thead>
+    <tbody>`;
+    summary.monthlyOverview.forEach(item => {
+      const sp = spendArr.find(s => s.month === item.month);
+      const spVal = sp ? sp.spending : 0;
+      const [iyear, imonth] = item.month.split('-');
+      html += `
+      <tr>
+        <td><a href="/years/${iyear}/${imonth}">${fmtMonth(item.month)}</a></td>
+        <td>${fmtAmount(item.totalIncome, currencyRawParam)}</td>
+        <td>${fmtAmount(item.totalExpenses, currencyRawParam)}</td>
+        <td>${fmtAmount(spVal, currencyRawParam)}</td>
+        <td>${fmtAmount(item.netCashFlow, currencyRawParam)}</td>
+        <td>${item.savingsRate.toFixed(2)}%</td>
+      </tr>`;
+    });
+    html += `
+    </tbody>
+  </table>`;
+  }
+  // If single-month view, add Category Breakdown
+  if (Array.isArray(summary.monthlyOverview) && summary.monthlyOverview.length === 1) {
+    const month = summary.monthlyOverview[0].month;
+    // parse year and month for links
+    const [cy, cm] = month.split('-');
+    const cb = summary.categoryBreakdown && summary.categoryBreakdown.perMonth
+      ? summary.categoryBreakdown.perMonth[month]
+      : null;
+    if (cb) {
+      html += `
+  <h2>Category Breakdown (${fmtMonth(month)})</h2>
+  <table>
+    <thead>
+      <tr>
+        <th title="Category name">Category</th>
+        <th title="Amount spent this month">Amount</th>
+        <th title="Change vs previous month">Δ vs Prev</th>
+        <th title="Budget allocated for this category">Budget</th>
+        <th title="Actual spending vs budget">Actual</th>
+        <th title="Variance: actual minus budget">Variance</th>
+        <th title="Percent of budget used">% Used</th>
+      </tr>
+    </thead>
+    <tbody>`;
+      // sort categories by Δ vs Prev descending
+      const sortedCats = Object.keys(cb.categories).sort((a, b) => {
+        const aVal = (cb.changeVsPrevious && cb.changeVsPrevious[a] != null)
+          ? cb.changeVsPrevious[a] : Number.NEGATIVE_INFINITY;
+        const bVal = (cb.changeVsPrevious && cb.changeVsPrevious[b] != null)
+          ? cb.changeVsPrevious[b] : Number.NEGATIVE_INFINITY;
+        return bVal - aVal;
+      });
+      sortedCats.forEach(cat => {
+        const amt = cb.categories[cat] || 0;
+        const changeVal = (cb.changeVsPrevious && cb.changeVsPrevious[cat] != null)
+          ? cb.changeVsPrevious[cat] : null;
+        let changeHtml = '';
+        if (changeVal != null) {
+          const arrow = changeVal > 0
+            ? '<span style="color:red;">▲</span>'
+            : changeVal < 0
+              ? '<span style="color:green;">▼</span>'
+              : '';
+          changeHtml = `${arrow} ${fmtAmount(changeVal, currencyRawParam)}`;
+        }
+        const bud = cb.budgetVsActual && cb.budgetVsActual[cat] ? cb.budgetVsActual[cat] : {};
+        html += `
+      <tr>
+        <td>
+          <a href="/years/${cy}/${cm}/category/${encodeURIComponent(cat)}">${cat}</a>
+        </td>
+        <td>${fmtAmount(amt, currencyRawParam)}</td>
+        <td>${changeHtml}</td>
+        <td>${bud.budget != null ? fmtAmount(bud.budget, currencyRawParam) : ''}</td>
+        <td>${bud.actual != null ? fmtAmount(bud.actual, currencyRawParam) : ''}</td>
+        <td>${bud.variance != null ? fmtAmount(bud.variance, currencyRawParam) : ''}</td>
+        <td>${bud.pctUsed != null ? bud.pctUsed + '%' : ''}</td>
+      </tr>`;
+      });
+      html += `
+    </tbody>
+  </table>`;
+    }
+  }
+  html += `
+</body>
+</html>`;
+  return html;
+}
+/**
+ * Render a yearly report as HTML, showing the yearly summary and monthly breakdown for the given year.
+ * @param {object} summary
+ * @param {string} year
+ * @param {string} [currencyRawParam] - Optional currency code override
+ * @returns {string} HTML string
+ */
+function renderYearHtml(summary, year, currencyRawParam) {
+  const selYear = year || new Date().getFullYear().toString();
+  // Find yearly summary for the selected year
+  const yearly = Array.isArray(summary.yearlySummary)
+    ? summary.yearlySummary.find(y => y.year === selYear)
+    : null;
+  // Filter monthly overview for months in the selected year
+  const months = Array.isArray(summary.monthlyOverview)
+    ? summary.monthlyOverview.filter(m => m.month.startsWith(selYear + '-'))
+    : [];
+  // Filter monthly spending for the selected year
+  const spendingArr = Array.isArray(summary.monthlySpending)
+    ? summary.monthlySpending.filter(s => s.month.startsWith(selYear + '-'))
+    : [];
+  // Build HTML
+  // Begin HTML document with Chart.js included for bar charts
+  let html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Annual Summary for ${selYear}</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Annual Summary for ${selYear}</h1>`;
+  // Year navigation links
+  const yearsList = Array.isArray(summary.yearlySummary)
+    ? summary.yearlySummary.map(y => y.year).sort()
+    : [];
+  const idxY = yearsList.indexOf(selYear);
+  const prevY = idxY > 0 ? yearsList[idxY - 1] : null;
+  const nextY = idxY >= 0 && idxY < yearsList.length - 1 ? yearsList[idxY + 1] : null;
+  html += '<div class="year-nav">';
+  if (prevY) {
+    html += `<a class="prev-year" href="/years/${prevY}">← ${prevY}</a>`;
+  } else {
+    html += '<span></span>';
+  }
+  // link back to full years list
+  html += `<a class="years-index" href="/years">Years</a>`;
+  if (nextY) {
+    html += `<a class="next-year" href="/years/${nextY}">${nextY} →</a>`;
+  } else {
+    html += '<span></span>';
+  }
+  html += '</div>';
+  // Add spending bar chart for the selected year (only if data exists)
+  if (spendingArr.length) {
+    html += `
+  <canvas id="yearSpendingChart" width="600" height="300"></canvas>
+  <script>
+    const spendData = ${JSON.stringify(spendingArr)};
+    const labels = spendData.map(e => e.month).reverse();
+    const values = spendData.map(e => e.spending).reverse();
+    const ctx = document.getElementById('yearSpendingChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{ label: 'Spending', data: values, backgroundColor: 'rgba(75, 192, 192, 0.5)' }]
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+  </script>
+  `;
+  }
+  // Yearly summary table
+  if (yearly) {
+    html += `
+  <table>
+    <thead>
+      <tr>
+        <th title="Calendar year">Year</th>
+        <th title="Total inflows for the year">Income</th>
+        <th title="Total outflows (all expenses, transfers, savings, etc.) for the year">Expenses</th>
+        <th title="Net cash flow: Income minus Expenses">Net Cash Flow</th>
+        <th title="(Net Cash Flow / Income) * 100">Savings Rate</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>${yearly.year}</td>
+        <td>${fmtAmount(yearly.totalIncome, currencyRawParam)}</td>
+        <td>${fmtAmount(yearly.totalExpenses, currencyRawParam)}</td>
+        <td>${fmtAmount(yearly.netCashFlow, currencyRawParam)}</td>
+        <td>${yearly.savingsRate.toFixed(2)}%</td>
+      </tr>
+    </tbody>
+  </table>`;
+  } else {
+    html += `<p>No data for year ${selYear}</p>`;
+  }
+
+  // Monthly breakdown table for the selected year
+  if (months.length) {
+    html += `
+  <h2>Monthly Breakdown</h2>
+  <table>
+    <thead>
+      <tr>
+        <th title="Calendar month in YYYY-MM format">Month</th>
+        <th title="Total inflows for the month">Income</th>
+        <th title="Total outflows (all expenses, transfers, savings) for the month">Expenses</th>
+        <th title="Total spending excluding transfers and savings">Spending</th>
+        <th title="Net cash flow: Income minus Expenses">Net Cash Flow</th>
+        <th title="(Net Cash Flow / Income) * 100">Savings Rate</th>
+      </tr>
+    </thead>
+    <tbody>`;
+    months.forEach(item => {
+      const sp = spendingArr.find(s => s.month === item.month);
+      const spVal = sp ? sp.spending : 0;
+      const [iyear, imonth] = item.month.split('-');
+      html += `
+      <tr>
+        <td><a href="/years/${iyear}/${imonth}">${fmtMonth(item.month)}</a></td>
+        <td>${fmtAmount(item.totalIncome, currencyRawParam)}</td>
+        <td>${fmtAmount(item.totalExpenses, currencyRawParam)}</td>
+        <td>${fmtAmount(spVal, currencyRawParam)}</td>
+        <td>${fmtAmount(item.netCashFlow, currencyRawParam)}</td>
+        <td>${item.savingsRate.toFixed(2)}%</td>
+      </tr>`;
+    });
+    html += `
+    </tbody>
+  </table>`;
+  } else {
+    html += `<p>No monthly data for year ${selYear}</p>`;
+  }
+
+  html += `
+</body>
+</html>`;
+  return html;
+}
+
+module.exports = {
+  getSummary,
+  renderHtml,
+  renderYearHtml,
+  renderAllYearsHtml,
+  renderCategoryTransactionsHtml
+};
