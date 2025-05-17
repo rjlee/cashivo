@@ -164,12 +164,47 @@ function getSummary({ month } = {}) {
     summary = {
       yearlySummary: [],
       monthlyOverview: [],
-      monthlySpending: []
+      monthlySpending: [],
+      dailySpending: [],
+      categoryBreakdown: { perMonth: {}, groups: {} },
+      trends: { monthlyTrends: [], recurringBills: [], seasonalPatterns: {} },
+      lifestyle: [],
+      merchantInsights: { topMerchants: [], transactionCounts: {}, usageOverTime: {} },
+      budgetAdherence: {},
+      savingsGoals: {},
+      anomalies: { outliers: [], spikes: [], duplicates: [] }
     };
   }
   if (month) {
+    // Filter for single-month views
     if (Array.isArray(summary.monthlyOverview)) {
       summary.monthlyOverview = summary.monthlyOverview.filter(item => item.month === month);
+    }
+    if (Array.isArray(summary.monthlySpending)) {
+      summary.monthlySpending = summary.monthlySpending.filter(item => item.month === month);
+    }
+    if (Array.isArray(summary.dailySpending)) {
+      summary.dailySpending = summary.dailySpending.filter(d => d.date.startsWith(month));
+    }
+    if (summary.categoryBreakdown && summary.categoryBreakdown.perMonth) {
+      summary.categoryBreakdown.perMonth = { [month]: summary.categoryBreakdown.perMonth[month] };
+    }
+    if (summary.trends && Array.isArray(summary.trends.monthlyTrends)) {
+      summary.trends.monthlyTrends = summary.trends.monthlyTrends.filter(t => t.month === month);
+    }
+    if (Array.isArray(summary.lifestyle)) {
+      summary.lifestyle = summary.lifestyle.filter(l => l.month === month);
+    }
+    if (summary.anomalies) {
+      if (Array.isArray(summary.anomalies.outliers)) {
+        summary.anomalies.outliers = summary.anomalies.outliers.filter(o => o.date.startsWith(month));
+      }
+      if (Array.isArray(summary.anomalies.spikes)) {
+        summary.anomalies.spikes = summary.anomalies.spikes.filter(s => s.month === month);
+      }
+      if (Array.isArray(summary.anomalies.duplicates)) {
+        summary.anomalies.duplicates = summary.anomalies.duplicates.filter(d => d.date.startsWith(month));
+      }
     }
   }
   return summary;
@@ -299,7 +334,63 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     }
   }
 
-  
+  // Spikes for this month
+  if (summary.anomalies && Array.isArray(summary.anomalies.spikes)) {
+    const spikes = summary.anomalies.spikes.filter(s => s.month === sel);
+    html += `
+  <h2>Spikes</h2>`;
+    if (spikes.length) {
+      html += `
+  <table>
+    <thead><tr><th>Category</th><th>Month</th><th>Amount</th><th>Mean</th><th>SD</th></tr></thead>
+    <tbody>`;
+      spikes.forEach(s => {
+        html += `
+      <tr>
+        <td>${s.category}</td>
+        <td>${fmtMonth(s.month)}</td>
+        <td>${fmtAmount(s.amount, currencyRawParam)}</td>
+        <td>${fmtAmount(s.mean, currencyRawParam)}</td>
+        <td>${fmtAmount(s.sd, currencyRawParam)}</td>
+      </tr>`;
+      });
+      html += `
+    </tbody>
+  </table>`;
+    } else {
+      html += `
+  <p>No spending spikes detected.</p>`;
+    }
+  }
+
+  // Duplicate transactions for this month
+  if (summary.anomalies && Array.isArray(summary.anomalies.duplicates)) {
+    const dups = summary.anomalies.duplicates.filter(d => d.date.startsWith(sel));
+    html += `
+  <h2>Duplicate Transactions</h2>`;
+    if (dups.length) {
+      html += `
+  <table>
+    <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Occurrences</th></tr></thead>
+    <tbody>`;
+      dups.forEach(d => {
+        html += `
+      <tr>
+        <td>${d.date}</td>
+        <td>${d.description}</td>
+        <td>${fmtAmount(d.amount, currencyRawParam)}</td>
+        <td>${d.occurrences}</td>
+      </tr>`;
+      });
+      html += `
+    </tbody>
+  </table>`;
+    } else {
+      html += `
+  <p>No duplicate transactions found.</p>`;
+    }
+  }
+
   html += `
   <h2>Recurring Bills & Subscriptions</h2>
   <table>
@@ -315,7 +406,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   (summary.trends.recurringBills || []).forEach(item => {
     html += `
       <tr>
-        <td><a href="/years/${year}/${month}/category/${encodeURIComponent(item.category)}">${item.description}</a></td>
+        <td>${item.description}</td>
         <td>${item.occurrences}</td>
         <td>${fmtAmount(item.total, currencyRawParam)}</td>
         <td>${fmtAmount(item.avgAmount, currencyRawParam)}</td>
@@ -652,6 +743,63 @@ function renderYearHtml(summary, year, currencyRawParam) {
   </table>`;
   } else {
     html += `<p>No monthly data for year ${selYear}</p>`;
+  }
+
+  // Spikes for this month
+  if (summary.anomalies && Array.isArray(summary.anomalies.spikes)) {
+    const spikes = summary.anomalies.spikes.filter(s => s.month === sel);
+    html += `
+  <h2>Spikes</h2>`;
+    if (spikes.length) {
+      html += `
+  <table>
+    <thead><tr><th>Category</th><th>Month</th><th>Amount</th><th>Mean</th><th>SD</th></tr></thead>
+    <tbody>`;
+      spikes.forEach(s => {
+        html += `
+      <tr>
+        <td>${s.category}</td>
+        <td>${fmtMonth(s.month)}</td>
+        <td>${fmtAmount(s.amount, currencyRawParam)}</td>
+        <td>${fmtAmount(s.mean, currencyRawParam)}</td>
+        <td>${fmtAmount(s.sd, currencyRawParam)}</td>
+      </tr>`;
+      });
+      html += `
+    </tbody>
+  </table>`;
+    } else {
+      html += `
+  <p>No spending spikes detected.</p>`;
+    }
+  }
+
+  // Duplicate transactions for this month
+  if (summary.anomalies && Array.isArray(summary.anomalies.duplicates)) {
+    const dups = summary.anomalies.duplicates.filter(d => d.date.startsWith(sel));
+    html += `
+  <h2>Duplicate Transactions</h2>`;
+    if (dups.length) {
+      html += `
+  <table>
+    <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Occurrences</th></tr></thead>
+    <tbody>`;
+      dups.forEach(d => {
+        html += `
+      <tr>
+        <td>${d.date}</td>
+        <td>${d.description}</td>
+        <td>${fmtAmount(d.amount, currencyRawParam)}</td>
+        <td>${d.occurrences}</td>
+      </tr>`;
+      });
+      html += `
+    </tbody>
+  </table>`;
+    } else {
+      html += `
+  <p>No duplicate transactions found.</p>`;
+    }
   }
 
   html += `
