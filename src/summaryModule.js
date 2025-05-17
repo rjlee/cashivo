@@ -416,33 +416,6 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     }
   }
 
-  // Duplicate transactions for this month
-  if (summary.anomalies && Array.isArray(summary.anomalies.duplicates)) {
-    const dups = summary.anomalies.duplicates.filter(d => d.date.startsWith(sel));
-    html += `
-  <h2>Duplicate Transactions</h2>`;
-    if (dups.length) {
-      html += `
-  <table>
-    <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Occurrences</th></tr></thead>
-    <tbody>`;
-      dups.forEach(d => {
-        html += `
-      <tr>
-        <td>${d.date}</td>
-        <td>${d.description}</td>
-        <td>${fmtAmount(d.amount, currencyRawParam)}</td>
-        <td>${d.occurrences}</td>
-      </tr>`;
-      });
-      html += `
-    </tbody>
-  </table>`;
-    } else {
-      html += `
-  <p>No duplicate transactions found.</p>`;
-    }
-  }
 
   // Recurring bills & subscriptions for the selected month
   html += `
