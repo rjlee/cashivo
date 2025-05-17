@@ -49,7 +49,8 @@ const deductibleCategories = loadJSON(path.resolve(__dirname, '..', 'deductible-
 function getMonthlyData(txs) {
   const monthly = {};
   txs.forEach(tx => {
-    const month = tx.date ? tx.date.slice(0, 7) : 'unknown';
+    if (!tx.date) return;
+    const month = tx.date.slice(0, 7);
     if (!monthly[month]) monthly[month] = { income: 0, expenses: 0, categories: {} };
     const amt = tx.amount || 0;
     if (amt >= 0) {
@@ -115,15 +116,7 @@ function generateCategoryBreakdown(monthly) {
     }
   });
   // custom category groups
-  const groupsOut = {};
-  Object.entries(categoryGroups).forEach(([groupName, cats]) => {
-    groupsOut[groupName] = {};
-    sortedMonths.forEach(month => {
-      const total = cats.reduce((sum, c) => sum + (monthly[month].categories[c] || 0), 0);
-      groupsOut[groupName][month] = Number(total.toFixed(2));
-    });
-  });
-  return { perMonth: breakdown, groups: groupsOut };
+  return { perMonth: breakdown };
 }
 
 // 3. Trends Over Time
@@ -139,39 +132,27 @@ function generateTrends(monthly, txs) {
   const descMap = {};
   txs.forEach(tx => {
     if (tx.amount < 0) {
-      const key = tx.description;
+      const key = JSON.stringify([tx.description, tx.category || '']);
       descMap[key] = descMap[key] || [];
       descMap[key].push(tx);
     }
   });
   const recurring = [];
-  Object.entries(descMap).forEach(([desc, arr]) => {
+  Object.entries(descMap).forEach(([key, arr]) => {
     if (arr.length >= 3) {
+      const [description, category] = JSON.parse(key);
       const total = arr.reduce((s, t) => s + Math.abs(t.amount), 0);
       const avg = total / arr.length;
       recurring.push({
-        description: desc,
+        description,
+        category,
         occurrences: arr.length,
         total: Number(total.toFixed(2)),
         avgAmount: Number(avg.toFixed(2))
       });
     }
   });
-  // seasonal patterns: avg spend per calendar month
-  const monthVals = {};
-  txs.forEach(tx => {
-    if (tx.amount < 0) {
-      const mo = tx.date.slice(5, 7);
-      monthVals[mo] = monthVals[mo] || [];
-      monthVals[mo].push(Math.abs(tx.amount));
-    }
-  });
-  const seasonal = {};
-  Object.entries(monthVals).forEach(([mo, arr]) => {
-    const avg = arr.reduce((s, v) => s + v, 0) / arr.length;
-    seasonal[mo] = Number(avg.toFixed(2));
-  });
-  return { monthlyTrends, recurringBills: recurring, seasonalPatterns: seasonal };
+  return { monthlyTrends, recurringBills: recurring };
 }
 
 // 4. Lifestyle & Discretionary Spending Summary
@@ -283,15 +264,29 @@ function generateAnomalies(txs, monthly) {
     const sd = Math.sqrt(arr.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / arr.length);
     stats[cat] = { mean, sd };
   });
-  const outliers = txs.filter(t => {
-    if (t.amount < 0) {
+  const outliers = txs
+    .filter(t => {
+      if (t.amount < 0) {
+        const cat = t.category || 'Other expenses';
+        const amt = Math.abs(t.amount);
+        const { mean, sd } = stats[cat] || {};
+        return typeof sd === 'number' && (sd > 0 ? Math.abs(amt - mean) > 2 * sd : amt > mean);
+      }
+      return false;
+    })
+    .map(t => {
       const cat = t.category || 'Other expenses';
       const amt = Math.abs(t.amount);
       const { mean, sd } = stats[cat] || {};
-      return sd && Math.abs(amt - mean) > 2 * sd;
-    }
-    return false;
-  });
+      return {
+        date: t.date,
+        description: t.description || '',
+        category: cat,
+        amount: amt,
+        mean: Number(mean.toFixed(2)),
+        sd: Number(sd.toFixed(2))
+      };
+    });
   // spikes: months where cat spend > mean+2sd
   const spikes = [];
   const monthlyCats = {};
