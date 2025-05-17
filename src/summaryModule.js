@@ -175,6 +175,162 @@ function getSummary({ month } = {}) {
   return summary;
 }
 
+/**
+ * Render an insights page for a specific month
+ * (daily spending, category distribution, top merchants,
+ *  flagged transactions, recurring bills & subscriptions).
+ *
+ * @param {object} summary
+ * @param {string} year   – Four-digit year (e.g., "2025").
+ * @param {string} month  – Two-digit month (e.g., "05").
+ * @param {string} [currencyRawParam] – Optional currency code override.
+ * @returns {string} HTML string
+ */
+function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
+  const sel = `${year}-${month}`;
+  let html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Insights for ${fmtMonth(sel)}</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Insights for ${fmtMonth(sel)}</h1>
+  <p><a href="/years/${year}/${month}">← Back to Summary</a></p>
+`;
+
+  
+  if (Array.isArray(summary.dailySpending)) {
+    const dailyData = summary.dailySpending.filter(d => d.date.startsWith(sel));
+    html += `
+  <h2>Daily Spending</h2>
+  <canvas id="dailySpendingChart" width="600" height="300"></canvas>
+  <script>
+    const dailyData = ${JSON.stringify(dailyData)};
+    const dailyLabels = dailyData.map(d => d.date);
+    const dailyValues = dailyData.map(d => d.spending);
+    const ctxDaily = document.getElementById('dailySpendingChart').getContext('2d');
+    new Chart(ctxDaily, {
+      type: 'line',
+      data: {
+        labels: dailyLabels,
+        datasets: [{
+          label: 'Daily Spending',
+          data: dailyValues,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          fill: true
+        }]
+      },
+      options: { scales: { x: { display: true, title: { display: true, text: 'Date' } }, y: { beginAtZero: true } } }
+    });
+  </script>`;
+  }
+
+  
+  const cb = summary.categoryBreakdown && summary.categoryBreakdown.perMonth && summary.categoryBreakdown.perMonth[sel];
+  if (cb) {
+    const monthCategories = cb.categories;
+    html += `
+  <h2>Category Distribution</h2>
+  <canvas id="categoryDistributionChart" width="600" height="300"></canvas>
+  <script>
+    const catMap = ${JSON.stringify(monthCategories)};
+    const labelsCat = Object.keys(catMap);
+    const dataCat = labelsCat.map(c => catMap[c]);
+    const ctxCat = document.getElementById('categoryDistributionChart').getContext('2d');
+    new Chart(ctxCat, {
+      type: 'pie',
+      data: { labels: labelsCat, datasets: [{ data: dataCat, backgroundColor: labelsCat.map((_,i) => 'hsl(' + (i*360/labelsCat.length) + ',70%,70%)') }] },
+      options: { plugins: { legend: { position: 'right' } } }
+    });
+  </script>`;
+  }
+
+  
+  if (summary.merchantInsights && Array.isArray(summary.merchantInsights.topMerchants)) {
+    html += `
+  <h2>Top Merchants</h2>
+  <canvas id="topMerchantsChart" width="600" height="300"></canvas>
+  <script>
+    const topM = ${JSON.stringify(summary.merchantInsights.topMerchants)};
+    const usage = ${JSON.stringify(summary.merchantInsights.usageOverTime)};
+    const monthlyUsage = topM.map(m => ({ merchant: m.merchant, total: (usage[m.merchant] && usage[m.merchant]['${sel}']) || 0 }));
+    const filteredM = monthlyUsage.filter(x => x.total > 0).sort((a,b) => b.total - a.total);
+    const labelsM = filteredM.map(x => x.merchant);
+    const dataM = filteredM.map(x => x.total);
+    const ctxM = document.getElementById('topMerchantsChart').getContext('2d');
+    new Chart(ctxM, {
+      type: 'bar',
+      data: { labels: labelsM, datasets: [{ label: 'Total Spend', data: dataM, backgroundColor: labelsM.map((_,i) => 'hsl(' + (i*360/labelsM.length) + ',70%,70%)') }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+  </script>`;
+  }
+
+  
+  if (summary.anomalies && Array.isArray(summary.anomalies.outliers)) {
+    const flagged = summary.anomalies.outliers.filter(o => o.date.startsWith(sel));
+    html += `
+  <h2>Flagged Transactions</h2>`;
+    if (flagged.length) {
+      html += `
+  <table>
+    <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th><th>Details</th></tr></thead>
+    <tbody>`;
+      flagged.forEach(o => {
+        html += `
+      <tr>
+        <td>${o.date}</td>
+        <td>${o.description || ''}</td>
+        <td>${fmtAmount(Math.abs(o.amount), currencyRawParam)}</td>
+        <td>${o.category || ''}</td>
+        <td><a href="/years/${year}/${month}/category/${encodeURIComponent(o.category)}">View Category</a></td>
+      </tr>`;
+      });
+      html += `
+    </tbody>
+  </table>`;
+    } else {
+      html += `
+  <p>No flagged transactions.</p>`;
+    }
+  }
+
+  
+  html += `
+  <h2>Recurring Bills & Subscriptions</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Merchant</th>
+        <th>Occurrences</th>
+        <th>Total Spend</th>
+        <th>Avg per Occurrence</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  (summary.trends.recurringBills || []).forEach(item => {
+    html += `
+      <tr>
+        <td><a href="/years/${year}/${month}/category/${encodeURIComponent(item.category)}">${item.description}</a></td>
+        <td>${item.occurrences}</td>
+        <td>${fmtAmount(item.total, currencyRawParam)}</td>
+        <td>${fmtAmount(item.avgAmount, currencyRawParam)}</td>
+      </tr>`;
+  });
+  html += `
+    </tbody>
+  </table>`;
+
+  html += `
+</body>
+</html>`;
+  return html;
+}
+
 
 /**
  * Render summary data as a simple HTML page.
@@ -352,6 +508,12 @@ function renderHtml(summary, currencyRawParam) {
   html += `
 </body>
 </html>`;
+  
+  if (Array.isArray(summary.monthlyOverview) && summary.monthlyOverview.length === 1) {
+    const [cy, cm] = summary.monthlyOverview[0].month.split('-');
+    html += `
+  <p><a href="/years/${cy}/${cm}/insights">View Insights for ${fmtMonth(summary.monthlyOverview[0].month)}</a></p>`;
+  }
   return html;
 }
 /**
@@ -495,6 +657,7 @@ function renderYearHtml(summary, year, currencyRawParam) {
   html += `
 </body>
 </html>`;
+  
   return html;
 }
 
@@ -503,5 +666,6 @@ module.exports = {
   renderHtml,
   renderYearHtml,
   renderAllYearsHtml,
-  renderCategoryTransactionsHtml
+  renderCategoryTransactionsHtml,
+  renderMonthInsightsHtml
 };

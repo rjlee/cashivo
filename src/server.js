@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 // summaryModule for loading and rendering summary data
-const { getSummary, renderHtml, renderYearHtml, renderAllYearsHtml, renderCategoryTransactionsHtml } = require('./summaryModule');
+const { getSummary, renderHtml, renderYearHtml, renderAllYearsHtml, renderCategoryTransactionsHtml, renderMonthInsightsHtml } = require('./summaryModule');
 
 const app = express();
 // Basic HTTP auth if USERNAME and PASSWORD are set in env
@@ -230,6 +230,19 @@ app.get('/years/:year/:month', (req, res, next) => {
     const summary = getSummary({ month: `${y}-${m}` });
     const currency = req.query.currency;
     res.type('html').send(renderHtml(summary, currency));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Monthly insights report under /years/:year/:month/insights
+app.get('/years/:year/:month/insights', (req, res, next) => {
+  try {
+    const y = req.params.year;
+    const m = req.params.month.padStart(2, '0');
+    const summary = getSummary({ month: `${y}-${m}` });
+    const currency = req.query.currency;
+    res.type('html').send(renderMonthInsightsHtml(summary, y, m, currency));
   } catch (err) {
     next(err);
   }
