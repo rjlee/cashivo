@@ -11,6 +11,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
+# Ensure data directory exists (empty if not present in build context)
+RUN mkdir -p data
 # Copy application source
 COPY . .
 
