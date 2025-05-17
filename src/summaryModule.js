@@ -436,7 +436,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   recs.forEach(item => {
     html += `
       <tr>
-        <td><a href="/years/${year}/${month}/category/${encodeURIComponent(item.description)}">${item.description}</a></td>
+        <td><a href="/years/${year}/${month}/category/${encodeURIComponent(item.category)}">${item.description}</a></td>
         <td>${item.occurrences}</td>
         <td>${fmtAmount(item.total, currencyRawParam)}</td>
         <td>${fmtAmount(item.avgAmount, currencyRawParam)}</td>
