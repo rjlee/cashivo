@@ -166,8 +166,8 @@ function getSummary({ month } = {}) {
       monthlyOverview: [],
       monthlySpending: [],
       dailySpending: [],
-      categoryBreakdown: { perMonth: {}, groups: {} },
-      trends: { monthlyTrends: [], recurringBills: [], seasonalPatterns: {} },
+      categoryBreakdown: { perMonth: {} },
+      trends: { monthlyTrends: [], recurringBills: [] },
       lifestyle: [],
       merchantInsights: { topMerchants: [], transactionCounts: {}, usageOverTime: {} },
       budgetAdherence: {},
@@ -206,6 +206,35 @@ function getSummary({ month } = {}) {
         summary.anomalies.duplicates = summary.anomalies.duplicates.filter(d => d.date.startsWith(month));
       }
     }
+    if (summary.merchantInsights) {
+      const usage = summary.merchantInsights.usageOverTime || {};
+      summary.merchantInsights.usageOverTime = Object.fromEntries(
+        Object.entries(usage)
+          .map(([m, data]) => [m, data[month] != null ? { [month]: data[month] } : {}])
+      );
+      if (Array.isArray(summary.merchantInsights.topMerchants)) {
+        summary.merchantInsights.topMerchants = summary.merchantInsights.topMerchants.filter(
+          m => (summary.merchantInsights.usageOverTime[m.merchant] || {})[month] > 0
+        );
+      }
+      summary.merchantInsights.transactionCounts = Object.fromEntries(
+        Object.entries(summary.merchantInsights.transactionCounts || {}).filter(
+          ([m]) => (summary.merchantInsights.usageOverTime[m] || {})[month] > 0
+        )
+      );
+    }
+    if (summary.budgetAdherence && summary.budgetAdherence[month]) {
+      summary.budgetAdherence = { [month]: summary.budgetAdherence[month] };
+    } else {
+      summary.budgetAdherence = {};
+    }
+    if (summary.savingsGoals) {
+      Object.values(summary.savingsGoals).forEach(g => {
+        if (g.monthlyContributions) {
+          g.monthlyContributions = { [month]: g.monthlyContributions[month] || 0 };
+        }
+      });
+    }
   }
   return summary;
 }
@@ -238,7 +267,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
 
   
   if (Array.isArray(summary.dailySpending)) {
-    const dailyData = summary.dailySpending.filter(d => d.date.startsWith(sel));
+    const dailyData = summary.dailySpending;
     html += `
   <h2>Daily Spending</h2>
   <canvas id="dailySpendingChart" width="600" height="300"></canvas>
@@ -406,7 +435,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   (summary.trends.recurringBills || []).forEach(item => {
     html += `
       <tr>
-        <td>${item.description}</td>
+        <td><a href="/years/${year}/${month}/category/${encodeURIComponent(item.description)}">${item.description}</a></td>
         <td>${item.occurrences}</td>
         <td>${fmtAmount(item.total, currencyRawParam)}</td>
         <td>${fmtAmount(item.avgAmount, currencyRawParam)}</td>
