@@ -57,7 +57,7 @@ function getMonthlyData(txs) {
     } else {
       const expense = Math.abs(amt);
       monthly[month].expenses += expense;
-      const cat = tx.category || 'other';
+      const cat = tx.category || 'Other expenses';
       monthly[month].categories[cat] = (monthly[month].categories[cat] || 0) + expense;
     }
   });
@@ -272,7 +272,7 @@ function generateAnomalies(txs, monthly) {
   const catVals = {};
   txs.forEach(t => {
     if (t.amount < 0) {
-      const cat = t.category || 'other';
+      const cat = t.category || 'Other expenses';
       catVals[cat] = catVals[cat] || [];
       catVals[cat].push(Math.abs(t.amount));
     }
@@ -285,7 +285,7 @@ function generateAnomalies(txs, monthly) {
   });
   const outliers = txs.filter(t => {
     if (t.amount < 0) {
-      const cat = t.category || 'other';
+      const cat = t.category || 'Other expenses';
       const amt = Math.abs(t.amount);
       const { mean, sd } = stats[cat] || {};
       return sd && Math.abs(amt - mean) > 2 * sd;
@@ -319,7 +319,7 @@ function generateAnomalies(txs, monthly) {
   const duplicates = Object.entries(dupMap)
     .filter(([, c]) => c > 1)
     .map(([k, c]) => {
-      const [date, amount, description] = k.split('|');
+      const [date, amount, description] = JSON.parse(k);
       return { date, amount: Number(amount), description, occurrences: c };
     });
   return { outliers, spikes, duplicates };
@@ -336,7 +336,7 @@ function generateYearlySummary(txs) {
     else {
       const ex = Math.abs(amt);
       years[yr].expenses += ex;
-      const cat = t.category || 'other';
+      const cat = t.category || 'Other expenses';
       years[yr].categories[cat] = (years[yr].categories[cat] || 0) + ex;
     }
   });
@@ -411,6 +411,21 @@ function generateMonthlySpending(monthly) {
     }, 0);
     return { month, spending: Number(total.toFixed(2)) };
   });
+}
+
+// Daily Spending: total expenses per day across all transactions
+function generateDailySpending(txs) {
+  const daily = {};
+  txs.forEach(tx => {
+    if (tx.amount < 0 && tx.date) {
+      const date = tx.date;
+      daily[date] = (daily[date] || 0) + Math.abs(tx.amount);
+    }
+  });
+  return Object.keys(daily).sort().map(date => ({
+    date,
+    spending: Number(daily[date].toFixed(2))
+  }));
 }
 
 // Console renderer for human-friendly output
@@ -586,7 +601,8 @@ const summary = {
   budgetAdherence: generateBudgetAdherence(monthlyData),
   savingsGoals: generateSavingsGoals(txsToProcess),
   anomalies: generateAnomalies(txsToProcess, monthlyData),
-  yearlySummary: generateYearlySummary(txsToProcess)
+  yearlySummary: generateYearlySummary(txsToProcess),
+  dailySpending: generateDailySpending(txsToProcess)
 };
 
 // persist JSON summary
