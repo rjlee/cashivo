@@ -141,6 +141,7 @@ function renderAllYearsHtml(summary, currencyRawParam) {
     html += `<p>No annual summaries available.</p>`;
     html += `<p><a href="/manage">Upload Transactions</a></p>`;
   }
+
   html += `
 </body>
 </html>`;
@@ -249,6 +250,8 @@ function getSummary({ month } = {}) {
  */
 function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   const sel = `${year}-${month}`;
+  const cbMonth = summary.categoryBreakdown && summary.categoryBreakdown.perMonth && summary.categoryBreakdown.perMonth[sel];
+  const monthCategoryList = cbMonth ? Object.keys(cbMonth.categories) : [];
   let html = `<!doctype html>
 <html lang="en">
 <head>
@@ -282,6 +285,20 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     html += '<span></span>';
   }
   html += '</div>';
+  if (monthCategoryList.length) {
+    html += `
+  <form id="category-filter" style="margin-bottom:1em;">
+    <fieldset style="border:1px solid #ccc; padding:.5em;">
+      <legend>Show categories</legend>
+      ${monthCategoryList.map(cat => `
+      <label style="margin-right:.5em;">
+        <input type="checkbox" name="category" value="${cat}" checked>
+        ${cat}
+      </label>`).join('')}
+    </fieldset>
+  </form>
+`;
+  }
 
   
   if (Array.isArray(summary.dailySpending)) {
@@ -294,7 +311,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     const dailyLabels = dailyData.map(d => d.date);
     const dailyValues = dailyData.map(d => d.spending);
     const ctxDaily = document.getElementById('dailySpendingChart').getContext('2d');
-    new Chart(ctxDaily, {
+    const dailyChart = new Chart(ctxDaily, {
       type: 'line',
       data: {
         labels: dailyLabels,
@@ -323,11 +340,22 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     const labelsCat = Object.keys(catMap);
     const dataCat = labelsCat.map(c => catMap[c]);
     const ctxCat = document.getElementById('categoryDistributionChart').getContext('2d');
-    new Chart(ctxCat, {
+    const pieChart = new Chart(ctxCat, {
       type: 'pie',
       data: { labels: labelsCat, datasets: [{ data: dataCat, backgroundColor: labelsCat.map((_,i) => 'hsl(' + (i*360/labelsCat.length) + ',70%,70%)') }] },
       options: { plugins: { legend: { position: 'right' } } }
     });
+    const form = document.getElementById('category-filter');
+    if (form) {
+      form.addEventListener('change', () => {
+        const selected = Array.from(form.querySelectorAll('input[name="category"]:checked')).map(cb => cb.value);
+        const newLabels = selected;
+        const newData = newLabels.map(c => catMap[c]);
+        pieChart.data.labels = newLabels;
+        pieChart.data.datasets[0].data = newData;
+        pieChart.update();
+      });
+    }
   </script>`;
   }
 
@@ -338,6 +366,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   <canvas id="topMerchantsChart" width="600" height="300"></canvas>
   <script>
     const usageMap = ${JSON.stringify(summary.merchantInsights.usageOverTime)};
+    const usageByCatMap = ${JSON.stringify(summary.merchantInsights.usageOverTimeByCategory || {})};
     const txCounts = ${JSON.stringify(summary.merchantInsights.transactionCounts)};
     const monthlyArr = Object.entries(usageMap)
       .map(([m, data]) => ({ merchant: m, total: data['${sel}'] || 0, count: txCounts[m] || 0 }))
@@ -347,7 +376,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     const labelsM = monthlyArr.map(x => x.merchant);
     const dataM = monthlyArr.map(x => x.total);
     const ctxM = document.getElementById('topMerchantsChart').getContext('2d');
-    new Chart(ctxM, {
+    const topMerchantsChart = new Chart(ctxM, {
       type: 'bar',
       data: {
         labels: labelsM,

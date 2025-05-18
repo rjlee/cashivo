@@ -211,7 +211,7 @@ function generateLifestyleSummary(monthly) {
 
 // 5. Merchant Insights
 function generateMerchantInsights(txs) {
-  const spendMap = {}, countMap = {}, monthMap = {};
+  const spendMap = {}, countMap = {}, monthMap = {}, usageOverTimeByCategory = {};
   txs.forEach(tx => {
     const desc = tx.description || 'Unknown';
     const amt = Math.abs(tx.amount) || 0;
@@ -221,6 +221,10 @@ function generateMerchantInsights(txs) {
       const mo = tx.date.slice(0, 7);
       monthMap[desc] = monthMap[desc] || {};
       monthMap[desc][mo] = (monthMap[desc][mo] || 0) + amt;
+      usageOverTimeByCategory[desc] = usageOverTimeByCategory[desc] || {};
+      usageOverTimeByCategory[desc][mo] = usageOverTimeByCategory[desc][mo] || {};
+      const cat = tx.category || 'Other expenses';
+      usageOverTimeByCategory[desc][mo][cat] = (usageOverTimeByCategory[desc][mo][cat] || 0) + amt;
     }
   });
   // top 5 merchants
@@ -230,7 +234,7 @@ function generateMerchantInsights(txs) {
     .map(([merchant, total]) => ({ merchant, total: Number(total.toFixed(2)) }));
   // usage over time for all merchants
   const usageOverTime = monthMap;
-  return { topMerchants, transactionCounts: countMap, usageOverTime };
+  return { topMerchants, transactionCounts: countMap, usageOverTime, usageOverTimeByCategory };
 }
 
 // 6. Budget Adherence Report
@@ -439,18 +443,28 @@ function generateMonthlySpending(monthly) {
   });
 }
 
-// Daily Spending: total expenses per day across all transactions
+// Daily Spending: total expenses per day and breakdown by category
 function generateDailySpending(txs) {
-  const daily = {};
+  const dailyMap = {};
   txs.forEach(tx => {
     if (tx.amount < 0 && tx.date) {
       const date = tx.date;
-      daily[date] = (daily[date] || 0) + Math.abs(tx.amount);
+      const cat = tx.category || 'Other expenses';
+      const amt = Math.abs(tx.amount);
+      if (!dailyMap[date]) {
+        dailyMap[date] = { total: 0, catMap: {} };
+      }
+      dailyMap[date].total += amt;
+      dailyMap[date].catMap[cat] = (dailyMap[date].catMap[cat] || 0) + amt;
     }
   });
-  return Object.keys(daily).sort().map(date => ({
+  return Object.keys(dailyMap).sort().map(date => ({
     date,
-    spending: Number(daily[date].toFixed(2))
+    spending: Number(dailyMap[date].total.toFixed(2)),
+    byCategory: Object.entries(dailyMap[date].catMap).map(([category, amount]) => ({
+      category,
+      amount: Number(amount.toFixed(2))
+    }))
   }));
 }
 
