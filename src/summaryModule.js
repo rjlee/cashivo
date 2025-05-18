@@ -47,6 +47,46 @@ function fmtMonth(ym) {
   const shortYr = yr.length === 4 ? yr.slice(2) : yr;
   return `${name} ${shortYr}`;
 }
+// Generic collapse script: hide extra rows in tables (except Month/Year listings)
+const collapseScript = `<script>
+(function() {
+  // Collapse extra rows in tables (except Month/Year listings)
+  document.querySelectorAll('table').forEach(function(table) {
+    var firstTh = table.querySelector('thead th');
+    if (!firstTh) return;
+    var header = firstTh.textContent.trim();
+    if (header === 'Month' || header === 'Year') return;
+    var rows = table.querySelectorAll('tbody tr');
+    var max = 5;
+    var total = rows.length;
+    if (total <= max) return;
+    Array.prototype.forEach.call(rows, function(row, i) {
+      if (i >= max) row.style.display = 'none';
+    });
+    var tfoot = document.createElement('tfoot');
+    var tr = document.createElement('tr');
+    var td = document.createElement('td');
+    td.colSpan = table.querySelectorAll('thead th').length;
+    td.style.textAlign = 'center';
+    var link = document.createElement('a');
+    link.href = '#';
+    link.textContent = 'Show all (' + total + ')';
+    td.appendChild(link);
+    tr.appendChild(td);
+    tfoot.appendChild(tr);
+    table.appendChild(tfoot);
+    var expanded = false;
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      Array.prototype.forEach.call(rows, function(row, i) {
+        if (i >= max) row.style.display = expanded ? 'none' : '';
+      });
+      link.textContent = expanded ? 'Show all (' + total + ')' : 'Show fewer';
+      expanded = !expanded;
+    });
+  });
+})();
+</script>`;
 
 /**
  * Render an HTML page listing all transactions for a given category/month.
@@ -89,6 +129,7 @@ function renderCategoryTransactionsHtml(year, month, category, transactions, cur
   html += `
     </tbody>
   </table>
+  ${collapseScript}
 </body>
 </html>`;
   return html;
@@ -143,6 +184,7 @@ function renderAllYearsHtml(summary, currencyRawParam) {
   }
 
   html += `
+  ${collapseScript}
 </body>
 </html>`;
   return html;
@@ -286,7 +328,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   }
   html += '</div>';
   if (monthCategoryList.length) {
-    html += `
+  html += `
   <form id="category-filter" style="margin-bottom:1em;">
     <fieldset style="border:1px solid #ccc; padding:.5em;">
       <legend>Show categories</legend>
@@ -297,6 +339,69 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
       </label>`).join('')}
     </fieldset>
   </form>
+  <script>
+    (function(){
+      console.log('Category filter script loaded');
+      var form = document.getElementById('category-filter');
+      if (!form) return;
+      var tableIds = ['flagged-transactions-table','spikes-table','recurring-table'];
+      var monthSel = '${sel}';
+      function update() {
+        var selCats = Array.from(form.querySelectorAll('input[name="category"]:checked')).map(function(cb){ return cb.value; });
+        console.log('Filtering tables with selected categories:', selCats);
+        // filter tables
+        tableIds.forEach(function(id){
+          var t = document.getElementById(id);
+          if (!t) return;
+          Array.prototype.forEach.call(t.querySelectorAll('tbody tr'), function(r){
+            r.style.display = selCats.includes(r.dataset.category) ? '' : 'none';
+          });
+        });
+        // filter pie chart
+        var pie = window.monthInsightsPieChart;
+        var pcm = window.monthCategories || {};
+        if (pie && pcm) {
+          var newLabels = selCats.filter(function(c){ return pcm.hasOwnProperty(c); });
+          var newData = newLabels.map(function(c){ return pcm[c]; });
+          pie.data.labels = newLabels;
+          pie.data.datasets[0].data = newData;
+          pie.update();
+        }
+        // filter top merchants chart
+        var topChart = window.monthInsightsTopMerchantsChart;
+        var ubc = window.monthInsightsUsageByCatMap || {};
+        if (topChart) {
+          var arr = [];
+          Object.keys(ubc).forEach(function(m){
+            var monthMap = ubc[m][monthSel] || {};
+            var total = selCats.reduce(function(sum, c){ return sum + (monthMap[c]||0); }, 0);
+            if (total > 0) arr.push({ merchant: m, total: total });
+          });
+          arr.sort(function(a,b){ return b.total - a.total; });
+          var top = arr.slice(0,5);
+          topChart.data.labels = top.map(function(x){ return x.merchant; });
+          topChart.data.datasets[0].data = top.map(function(x){ return x.total; });
+          topChart.update();
+        }
+        // filter daily spending chart
+        var dailyChart = window.monthInsightsDailyChart;
+        var rawDaily = window.monthInsightsDailyData || [];
+        if (dailyChart && rawDaily.length) {
+          var labels = rawDaily.map(function(d){ return d.date; });
+          var values = rawDaily.map(function(d){
+            return d.byCategory.reduce(function(sum, item){
+              return sum + (selCats.includes(item.category) ? item.amount : 0);
+            }, 0);
+          });
+          dailyChart.data.labels = labels;
+          dailyChart.data.datasets[0].data = values;
+          dailyChart.update();
+        }
+      }
+      form.addEventListener('change', update);
+      update();
+    })();
+  </script>
 `;
   }
 
@@ -305,26 +410,28 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     const dailyData = summary.dailySpending;
     html += `
   <h2>Daily Spending</h2>
-  <canvas id="dailySpendingChart" width="600" height="300"></canvas>
+  <canvas id="dailySpendingChart" width="600" height="150"></canvas>
   <script>
-    const dailyData = ${JSON.stringify(dailyData)};
-    const dailyLabels = dailyData.map(d => d.date);
-    const dailyValues = dailyData.map(d => d.spending);
-    const ctxDaily = document.getElementById('dailySpendingChart').getContext('2d');
-    const dailyChart = new Chart(ctxDaily, {
-      type: 'line',
-      data: {
-        labels: dailyLabels,
-        datasets: [{
-          label: 'Daily Spending',
-          data: dailyValues,
-          borderColor: 'rgba(75, 192, 192, 1)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          fill: true
-        }]
-      },
-      options: { scales: { x: { display: true, title: { display: true, text: 'Date' } }, y: { beginAtZero: true } } }
-    });
+    (function() {
+      const rawDaily = ${JSON.stringify(dailyData)};
+      window.monthInsightsDailyData = rawDaily;
+      const ctxDaily = document.getElementById('dailySpendingChart').getContext('2d');
+      const dailyChart = new Chart(ctxDaily, {
+        type: 'line',
+        data: {
+          labels: rawDaily.map(d => d.date),
+          datasets: [{
+            label: 'Daily Spending',
+            data: rawDaily.map(d => d.spending),
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            fill: true
+          }]
+        },
+        options: { scales: { x: { display: true, title: { display: true, text: 'Date' } }, y: { beginAtZero: true } } }
+      });
+      window.monthInsightsDailyChart = dailyChart;
+    })();
   </script>`;
   }
 
@@ -336,26 +443,20 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   <h2>Category Distribution</h2>
   <canvas id="categoryDistributionChart" width="600" height="300"></canvas>
   <script>
-    const catMap = ${JSON.stringify(monthCategories)};
-    const labelsCat = Object.keys(catMap);
-    const dataCat = labelsCat.map(c => catMap[c]);
-    const ctxCat = document.getElementById('categoryDistributionChart').getContext('2d');
-    const pieChart = new Chart(ctxCat, {
-      type: 'pie',
-      data: { labels: labelsCat, datasets: [{ data: dataCat, backgroundColor: labelsCat.map((_,i) => 'hsl(' + (i*360/labelsCat.length) + ',70%,70%)') }] },
-      options: { plugins: { legend: { position: 'right' } } }
-    });
-    const form = document.getElementById('category-filter');
-    if (form) {
-      form.addEventListener('change', () => {
-        const selected = Array.from(form.querySelectorAll('input[name="category"]:checked')).map(cb => cb.value);
-        const newLabels = selected;
-        const newData = newLabels.map(c => catMap[c]);
-        pieChart.data.labels = newLabels;
-        pieChart.data.datasets[0].data = newData;
-        pieChart.update();
+    (function() {
+      const catMap = ${JSON.stringify(monthCategories)};
+      // Store for filtering
+      window.monthCategories = Object.assign({}, catMap);
+      const labelsCat = Object.keys(catMap);
+      const dataCat = labelsCat.map(c => catMap[c]);
+      const ctxCat = document.getElementById('categoryDistributionChart').getContext('2d');
+      // Create chart and store instance
+      window.monthInsightsPieChart = new Chart(ctxCat, {
+        type: 'pie',
+        data: { labels: labelsCat, datasets: [{ data: dataCat, backgroundColor: labelsCat.map((_,i) => 'hsl(' + (i*360/labelsCat.length) + ',70%,70%)') }] },
+        options: { plugins: { legend: { position: 'right' } } }
       });
-    }
+    })();
   </script>`;
   }
 
@@ -365,25 +466,29 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   <h2>Top Merchants</h2>
   <canvas id="topMerchantsChart" width="600" height="300"></canvas>
   <script>
-    const usageMap = ${JSON.stringify(summary.merchantInsights.usageOverTime)};
-    const usageByCatMap = ${JSON.stringify(summary.merchantInsights.usageOverTimeByCategory || {})};
-    const txCounts = ${JSON.stringify(summary.merchantInsights.transactionCounts)};
-    const monthlyArr = Object.entries(usageMap)
-      .map(([m, data]) => ({ merchant: m, total: data['${sel}'] || 0, count: txCounts[m] || 0 }))
-      .filter(x => x.total > 0)
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
-    const labelsM = monthlyArr.map(x => x.merchant);
-    const dataM = monthlyArr.map(x => x.total);
-    const ctxM = document.getElementById('topMerchantsChart').getContext('2d');
-    const topMerchantsChart = new Chart(ctxM, {
-      type: 'bar',
-      data: {
-        labels: labelsM,
-        datasets: [{ label: 'Total Spend', data: dataM, backgroundColor: labelsM.map((_, i) => 'hsl(' + (i * 360 / labelsM.length) + ',70%,70%)') }]
-      },
-      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-    });
+    (function() {
+      const usageByCatMap = ${JSON.stringify(summary.merchantInsights.usageOverTimeByCategory || {})};
+      window.monthInsightsUsageByCatMap = usageByCatMap;
+      const usageMap = ${JSON.stringify(summary.merchantInsights.usageOverTime)};
+      const txCounts = ${JSON.stringify(summary.merchantInsights.transactionCounts)};
+      // initial top merchants (total spend)
+      const monthlyArrInit = Object.entries(usageMap)
+        .map(([m, data]) => ({ merchant: m, total: data['${sel}'] || 0 }))
+        .filter(x => x.total > 0)
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
+      const labelsM = monthlyArrInit.map(x => x.merchant);
+      const dataM = monthlyArrInit.map(x => x.total);
+      const ctxM = document.getElementById('topMerchantsChart').getContext('2d');
+      window.monthInsightsTopMerchantsChart = new Chart(ctxM, {
+        type: 'bar',
+        data: {
+          labels: labelsM,
+          datasets: [{ label: 'Total Spend', data: dataM, backgroundColor: labelsM.map((_, i) => 'hsl(' + (i * 360 / labelsM.length) + ',70%,70%)') }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+      });
+    })();
   </script>`;
   }
 
@@ -394,12 +499,12 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   <h2>Flagged Transactions</h2>`;
     if (flagged.length) {
       html += `
-  <table>
+  <table id="flagged-transactions-table">
     <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th><th>Details</th></tr></thead>
     <tbody>`;
       flagged.forEach(o => {
         html += `
-      <tr>
+      <tr data-category="${o.category}">
         <td>${o.date}</td>
         <td>${o.description || ''}</td>
         <td>${fmtAmount(Math.abs(o.amount), currencyRawParam)}</td>
@@ -423,12 +528,12 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   <h2>Spikes</h2>`;
     if (spikes.length) {
       html += `
-  <table>
+  <table id="spikes-table">
     <thead><tr><th>Category</th><th>Month</th><th>Amount</th><th>Mean</th><th>SD</th></tr></thead>
     <tbody>`;
       spikes.forEach(s => {
         html += `
-      <tr>
+      <tr data-category="${s.category}">
         <td>${s.category}</td>
         <td>${fmtMonth(s.month)}</td>
         <td>${fmtAmount(s.amount, currencyRawParam)}</td>
@@ -449,7 +554,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   // Recurring bills & subscriptions for the selected month
   html += `
   <h2>Recurring Bills & Subscriptions</h2>
-  <table>
+  <table id="recurring-table">
     <thead>
       <tr>
         <th>Merchant</th>
@@ -464,7 +569,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   );
   recs.forEach(item => {
     html += `
-      <tr>
+      <tr data-category="${item.category}">
         <td><a href="/years/${year}/${month}/category/${encodeURIComponent(item.category)}">${item.description}</a></td>
         <td>${item.occurrences}</td>
         <td>${fmtAmount(item.total, currencyRawParam)}</td>
@@ -476,6 +581,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   </table>`;
 
   html += `
+  ${collapseScript}
 </body>
 </html>`;
   return html;
@@ -536,11 +642,14 @@ function renderHtml(summary, currencyRawParam) {
   if (Array.isArray(summary.monthlyOverview) && summary.monthlyOverview.length === 1) {
     const sel = summary.monthlyOverview[0].month;
     html += `
-  <canvas id="spendingChart" width="600" height="300"></canvas>
+  <canvas id="spendingChart" width="600" height="150"></canvas>
   <script>
     const spendData = ${JSON.stringify(summary.monthlySpending)};
     const selMonth = '${sel}';
-    const slice = spendData.filter(s => s.month === selMonth);
+    // Show last 5 months plus current
+    const sorted = spendData.slice().sort((a, b) => a.month.localeCompare(b.month));
+    const idx = sorted.findIndex(s => s.month === selMonth);
+    const slice = idx >= 0 ? sorted.slice(Math.max(0, idx - 5), idx + 1) : [];
     const labels = slice.map(e => e.month);
     const values = slice.map(e => e.spending);
     const ctx = document.getElementById('spendingChart').getContext('2d');
@@ -596,7 +705,7 @@ function renderHtml(summary, currencyRawParam) {
     if (cb) {
       html += `
   <h2>Category Breakdown (${fmtMonth(month)})</h2>
-  <table>
+  <table id="category-breakdown-table">
     <thead>
       <tr>
         <th title="Category name">Category</th>
@@ -650,6 +759,7 @@ function renderHtml(summary, currencyRawParam) {
     }
   }
   html += `
+  ${collapseScript}
 </body>
 </html>`;
   
@@ -856,6 +966,7 @@ function renderYearHtml(summary, year, currencyRawParam) {
   }
 
   html += `
+  ${collapseScript}
 </body>
 </html>`;
   
