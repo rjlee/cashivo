@@ -109,8 +109,24 @@ document.addEventListener('DOMContentLoaded', function() {
   if (window.topMerchantsChartRawData && document.getElementById('topMerchantsChart')) {
     const usageMap = window.topMerchantsChartRawData;
     const form = document.getElementById('category-filter');
-    const monthSel = form ? form.getAttribute('data-month') : null;
-    let arr = Object.entries(usageMap).map(([m, data]) => ({ merchant: m, total: data[monthSel] || 0 }));
+    const sel = form ? form.getAttribute('data-month') : null;
+    let arr = [];
+    if (sel && /^\d{4}-\d{2}$/.test(sel)) {
+      // monthly insights
+      arr = Object.entries(usageMap).map(([m, data]) => ({ merchant: m, total: data[sel] || 0 }));
+    } else if (sel && /^\d{4}$/.test(sel)) {
+      // yearly insights: sum all months in the year
+      arr = Object.entries(usageMap).map(([m, data]) => ({
+        merchant: m,
+        total: Object.entries(data).reduce((sum, [mo, v]) => mo.startsWith(sel + '-') ? sum + v : sum, 0)
+      }));
+    } else {
+      // fallback: all-time
+      arr = Object.entries(usageMap).map(([m, data]) => ({
+        merchant: m,
+        total: Object.values(data).reduce((sum, v) => sum + v, 0)
+      }));
+    }
     arr = arr.filter(x => x.total > 0).sort((a, b) => b.total - a.total).slice(0, 5);
     const topMerchantsChartLabels = arr.map(x => x.merchant);
     const topMerchantsChartData = arr.map(x => x.total);

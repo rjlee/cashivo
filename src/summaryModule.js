@@ -19,6 +19,195 @@ function fmtAmount(val, currencyRawParam) {
   const formatter = new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return `${symbol}${formatter.format(num)}`;
 }
+
+/**
+ * Render an insights page for a specific year
+ * (monthly spending trends, category distribution, top merchants,
+ *  flagged transactions, spending spikes, recurring bills & subscriptions).
+ *
+ * @param {object} summary
+ * @param {string} year   – Four-digit year (e.g., "2025").
+ * @param {string} [currencyRawParam] – Optional currency code override.
+ * @returns {string} HTML string
+ */
+function renderYearInsightsHtml(summary, year, currencyRawParam) {
+  const selYear = year;
+  // Months in the year
+  const allMonths = Array.isArray(summary.monthlySpending)
+    ? summary.monthlySpending.map(s => s.month).filter(m => m.startsWith(selYear + '-')).sort()
+    : [];
+  // Aggregate category distribution over the year
+  const catDist = {};
+  allMonths.forEach(m => {
+    const cb = summary.categoryBreakdown && summary.categoryBreakdown.perMonth && summary.categoryBreakdown.perMonth[m];
+    if (cb && cb.categories) {
+      Object.entries(cb.categories).forEach(([c, v]) => { catDist[c] = (catDist[c] || 0) + v; });
+    }
+  });
+  // Begin HTML
+  let html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Insights for ${year}</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Insights for ${year}</h1>`;
+  // Year navigation for insights
+  const yearsList = Array.isArray(summary.yearlySummary) ? summary.yearlySummary.map(y => y.year).sort() : [];
+  const idxY = yearsList.indexOf(year);
+  const prevY = idxY > 0 ? yearsList[idxY - 1] : null;
+  const nextY = idxY >= 0 && idxY < yearsList.length - 1 ? yearsList[idxY + 1] : null;
+  html += '<div class="year-nav">';
+  if (prevY) {
+    html += `<a class="prev-year" href="/years/${prevY}/insights">← ${prevY}</a>`;
+  } else {
+    html += '<span></span>';
+  }
+  html += `<a class="year-summary" href="/years/${year}">Summary</a>`;
+  if (nextY) {
+    html += `<a class="next-year" href="/years/${nextY}/insights">${nextY} →</a>`;
+  } else {
+    html += '<span></span>';
+  }
+  html += '</div>';
+  // Category filter panel
+  const yearCategoryList = Object.keys(catDist);
+  if (yearCategoryList.length) {
+    html += `
+  <details id="filter-panel" style="margin-bottom:1em;">
+    <summary>Filter Categories</summary>
+    <form id="category-filter" data-month="${selYear}" style="margin:0;">
+      <fieldset style="border:1px solid #ccc; padding:.5em;">
+        ${yearCategoryList.map(cat => {
+          const isSt = /saving|transfer/i.test(cat);
+          return `
+        <label style="margin-right:.5em;">
+          <input type="checkbox" name="category" value="${cat}" ${isSt ? '' : 'checked'}>
+          ${cat}
+        </label>`;
+        }).join('')}
+      </fieldset>
+    </form>
+    <div class="filter-actions" style="margin:.5em 0; font-size:.9em;">
+      <a href="#" id="clear-all">Clear all</a> |
+      <a href="#" id="select-all">Select all</a> |
+      <a href="#" id="hide-savings-transfers">Hide savings & transfers</a>
+    </div>
+  </details>`;
+  }
+  // Category Distribution
+  html += `
+  <h2>Spending Category Distribution</h2>
+  <canvas id="categoryDistributionChart" width="600" height="150"></canvas>
+  <script>
+    window.categoryDistributionChartRawData = ${JSON.stringify(catDist)};
+  </script>`;
+  // Top Merchants
+  html += `
+  <h2>Top Merchants</h2>
+  <canvas id="topMerchantsChart" width="600" height="150"></canvas>
+  <script>
+    window.topMerchantsChartRawData = ${JSON.stringify(summary.merchantInsights.usageOverTime)};
+    window.topMerchantsChartCategoryData = ${JSON.stringify(summary.merchantInsights.usageOverTimeByCategory || {})};
+  </script>`;
+  // Spikes
+  html += `
+  <h2>Spending Category Spikes</h2>`;
+  const yearSpikes = summary.anomalies && Array.isArray(summary.anomalies.spikes)
+    ? summary.anomalies.spikes.filter(s => s.month.startsWith(selYear + '-'))
+    : [];
+  if (yearSpikes.length) {
+    html += `
+  <table id="spikes-table">
+    <thead><tr><th>Category</th><th>Month</th><th>Amount</th><th>Mean</th><th>SD</th></tr></thead>
+    <tbody>`;
+    yearSpikes.forEach(s => {
+      html += `
+      <tr data-category="${s.category}">
+        <td>${s.category}</td>
+        <td>${fmtMonth(s.month)}</td>
+        <td>${fmtAmount(s.amount, currencyRawParam)}</td>
+        <td>${fmtAmount(s.mean, currencyRawParam)}</td>
+        <td>${fmtAmount(s.sd, currencyRawParam)}</td>
+      </tr>`;
+    });
+    html += `
+    </tbody>
+  </table>`;
+  } else {
+    html += `<p>No spending spikes detected.</p>`;
+  }
+  // Flagged Transactions
+  html += `
+  <h2>Flagged Transactions</h2>`;
+  const yearOutliers = summary.anomalies && Array.isArray(summary.anomalies.outliers)
+    ? summary.anomalies.outliers.filter(o => o.date.startsWith(selYear + '-'))
+    : [];
+  if (yearOutliers.length) {
+    html += `
+  <table id="flagged-transactions-table">
+    <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th><th>Details</th></tr></thead>
+    <tbody>`;
+    yearOutliers.forEach(o => {
+      html += `
+      <tr data-category="${o.category}">
+        <td>${o.date}</td>
+        <td>${o.description || ''}</td>
+        <td>${fmtAmount(Math.abs(o.amount), currencyRawParam)}</td>
+        <td>${o.category || ''}</td>
+        <td><a href="/years/${year}/insights?category=${encodeURIComponent(o.category)}">Filter</a></td>
+      </tr>`;
+    });
+    html += `
+    </tbody>
+  </table>`;
+  } else {
+    html += `<p>No flagged transactions.</p>`;
+  }
+  // Recurring Bills & Subscriptions
+  html += `
+  <h2>Recurring Bills & Subscriptions</h2>`;
+  const recDefs = Array.isArray(summary.trends.recurringBills) ? summary.trends.recurringBills : [];
+  const recs = recDefs.map(item => {
+    const usage = summary.merchantInsights.usageOverTime[item.description] || {};
+    const vals = allMonths.map(m => usage[m] || 0).filter(v => v > 0);
+    if (!vals.length) return null;
+    const occurrences = vals.length;
+    const total = vals.reduce((s, v) => s + v, 0);
+    const avgAmount = total / occurrences;
+    return { description: item.description, category: item.category, occurrences, total, avgAmount };
+  }).filter(x => x);
+  if (recs.length) {
+    html += `
+  <table id="recurring-table">
+    <thead><tr><th>Merchant</th><th>Occurrences</th><th>Total Spend</th><th>Avg per Occurrence</th></tr></thead>
+    <tbody>`;
+    recs.forEach(r => {
+      html += `
+      <tr data-category="${r.category}">
+        <td>${r.description}</td>
+        <td>${r.occurrences}</td>
+        <td>${fmtAmount(r.total, currencyRawParam)}</td>
+        <td>${fmtAmount(r.avgAmount, currencyRawParam)}</td>
+      </tr>`;
+    });
+    html += `
+    </tbody>
+  </table>`;
+  } else {
+    html += `<p>No recurring bills detected.</p>`;
+  }
+  // Include scripts
+  html += `
+<script src="/charts.js"></script>
+<script src="/insights.js"></script>
+</body>
+</html>`;
+  return html;
+}
 // Month-year display helper: format "YYYY-MM" as "Mon YY", e.g., "Jan 25"
 const monthShortNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 /**
@@ -327,7 +516,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     const monthCategories = cb.categories;
     html += `
   <h2>Spending Category Distribution</h2>
-  <canvas id="categoryDistributionChart" width="600" height="300"></canvas>
+  <canvas id="categoryDistributionChart" width="600" height="150"></canvas>
   <script>
     window.categoryDistributionChartRawData = ${JSON.stringify(monthCategories)};
   </script>`;
@@ -665,6 +854,8 @@ function renderYearHtml(summary, year, currencyRawParam) {
     html += '<span></span>';
   }
   html += '</div>';
+  // Link to Insights page for this year
+  html += `<p><a href="/years/${selYear}/insights">View Insights for ${selYear}</a></p>`;
   // Add spending bar chart for the selected year (only if data exists)
   if (spendingArr.length) {
     html += `
@@ -809,5 +1000,6 @@ module.exports = {
   renderYearHtml,
   renderAllYearsHtml,
   renderCategoryTransactionsHtml,
-  renderMonthInsightsHtml
+  renderMonthInsightsHtml,
+  renderYearInsightsHtml
 };

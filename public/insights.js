@@ -84,13 +84,22 @@ document.addEventListener('DOMContentLoaded', function() {
       pie.data.datasets[0].data = labels.map(function(c) { return pcm[c]; });
       pie.update();
     }
-    // Update top merchants bar chart
+    // Update top merchants bar chart (handles monthly and yearly views)
     var topChart = window.topMerchantsChart;
     var ubc = window.topMerchantsChartCategoryData || {};
     if (topChart) {
       var arr = [];
       Object.keys(ubc).forEach(function(m) {
-        var monthMap = ubc[m][monthSel] || {};
+        // Aggregate category usage for selected period (month or year)
+        var monthMap = {};
+        Object.keys(ubc[m]).forEach(function(mo) {
+          if (mo === monthSel || mo.startsWith(monthSel + '-')) {
+            Object.entries(ubc[m][mo]).forEach(function(_ref) {
+              var cat = _ref[0], val = _ref[1];
+              monthMap[cat] = (monthMap[cat] || 0) + val;
+            });
+          }
+        });
         var total = selCats.reduce(function(sum, c) {
           return sum + (monthMap[c] || 0);
         }, 0);
