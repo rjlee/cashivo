@@ -854,12 +854,10 @@ function renderYearHtml(summary, year, currencyRawParam) {
     html += '<span></span>';
   }
   html += '</div>';
-  // Link to Insights page for this year
-  html += `<p><a href="/years/${selYear}/insights">View Insights for ${selYear}</a></p>`;
   // Add spending bar chart for the selected year (only if data exists)
   if (spendingArr.length) {
     html += `
-  <canvas id="yearSpendingChart" width="600" height="300"></canvas>
+  <canvas id="yearSpendingChart" width="600" height="150"></canvas>
   <script>
     window.yearSpendingChartRawData = ${JSON.stringify(spendingArr)};
   </script>
@@ -929,19 +927,19 @@ function renderYearHtml(summary, year, currencyRawParam) {
     html += `<p>No monthly data for year ${selYear}</p>`;
   }
 
-  // Spikes for this year
+  // Spending Category Spikes for this year
   if (summary.anomalies && Array.isArray(summary.anomalies.spikes)) {
     const spikes = summary.anomalies.spikes.filter(s => s.month.startsWith(selYear + '-'));
     html += `
-  <h2>Spikes</h2>`;
+  <h2>Spending Category Spikes</h2>`;
     if (spikes.length) {
       html += `
-  <table>
+  <table id="spikes-table">
     <thead><tr><th>Category</th><th>Month</th><th>Amount</th><th>Mean</th><th>SD</th></tr></thead>
     <tbody>`;
       spikes.forEach(s => {
         html += `
-      <tr>
+      <tr data-category="${s.category}">
         <td>${s.category}</td>
         <td>${fmtMonth(s.month)}</td>
         <td>${fmtAmount(s.amount, currencyRawParam)}</td>
@@ -953,44 +951,18 @@ function renderYearHtml(summary, year, currencyRawParam) {
     </tbody>
   </table>`;
     } else {
-      html += `
-  <p>No spending spikes detected.</p>`;
+      html += `<p>No spending spikes detected.</p>`;
     }
   }
 
-  // Duplicate transactions for this year
-  if (summary.anomalies && Array.isArray(summary.anomalies.duplicates)) {
-    const dups = summary.anomalies.duplicates.filter(d => d.date.startsWith(selYear + '-'));
-    html += `
-  <h2>Duplicate Transactions</h2>`;
-    if (dups.length) {
-      html += `
-  <table>
-    <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Occurrences</th></tr></thead>
-    <tbody>`;
-      dups.forEach(d => {
-        html += `
-      <tr>
-        <td>${d.date}</td>
-        <td>${d.description}</td>
-        <td>${fmtAmount(d.amount, currencyRawParam)}</td>
-        <td>${d.occurrences}</td>
-      </tr>`;
-      });
-      html += `
-    </tbody>
-  </table>`;
-    } else {
-      html += `
-  <p>No duplicate transactions found.</p>`;
-    }
-  }
 
   html += `
 <script src="/charts.js"></script>
 </body>
 </html>`;
   
+  // Link to insights at bottom of page
+  html += `<p><a href="/years/${selYear}/insights">View Insights for ${selYear}</a></p>`;
   return html;
 }
 
