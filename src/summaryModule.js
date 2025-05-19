@@ -71,6 +71,23 @@ const insightsScriptsHtml = `
 <script src="/insights.js"></script>
 </body>
 </html>`;
+/**
+ * Shared head for insights pages
+ * @param {string} titleText
+ * @returns {string}
+ */
+function insightsHeadHtml(titleText) {
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>${titleText}</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+`;
+}
 
 /**
  * Render a recurring bills table (with heading) given precomputed rows.
@@ -138,16 +155,9 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
     }
   });
   // Begin HTML
-  let html = `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Insights for ${year}</title>
-  <link rel="stylesheet" href="/styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-  <h1>Insights for ${year}</h1>`;
+  // Page header
+  let html =
+    insightsHeadHtml(`Insights for ${year}`) + `<h1>Insights for ${year}</h1>`;
   // Year navigation for insights
   const yearsList = Array.isArray(summary.yearlySummary)
     ? summary.yearlySummary.map((y) => y.year).sort()
@@ -549,17 +559,10 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     summary.categoryBreakdown.perMonth &&
     summary.categoryBreakdown.perMonth[sel];
   const monthCategoryList = cbMonth ? Object.keys(cbMonth.categories) : [];
-  let html = `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Insights for ${fmtMonth(sel)}</title>
-  <link rel="stylesheet" href="/styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-  <h1>Insights for ${fmtMonth(sel)}</h1>
-`;
+  // Page header
+  let html =
+    insightsHeadHtml(`Insights for ${fmtMonth(sel)}`) +
+    `<h1>Insights for ${fmtMonth(sel)}</h1>`;
 
   const allMonths = Array.isArray(summary.monthlySpending)
     ? summary.monthlySpending.map((s) => s.month).sort()
