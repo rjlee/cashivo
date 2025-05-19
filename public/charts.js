@@ -72,8 +72,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const dailySpendingChartCtx = document.getElementById('dailySpendingChart').getContext('2d');
     window.dailySpendingChart = new Chart(dailySpendingChartCtx, {
       type: 'line',
-      data: { labels: dailySpendingChartLabels, datasets: [{ label: 'Daily Spending', data: dailySpendingChartData, borderColor: 'rgba(75, 192, 192, 1)', backgroundColor: 'rgba(75, 192, 192, 0.2)', fill: true }] },
-      options: { scales: { x: { display: true, title: { display: true, text: 'Date' } }, y: { beginAtZero: true } } }
+      data: {
+        labels: dailySpendingChartLabels,
+        datasets: [{
+          label: 'Daily Spending',
+          data: dailySpendingChartData,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          fill: true
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { display: true, title: { display: true, text: 'Date' } },
+          y: { beginAtZero: true }
+        }
+      }
     });
   }
 
