@@ -113,33 +113,7 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
     window.topMerchantsChartRawData = ${JSON.stringify(summary.merchantInsights.usageOverTime)};
     window.topMerchantsChartCategoryData = ${JSON.stringify(summary.merchantInsights.usageOverTimeByCategory || {})};
   </script>`;
-  // Spikes
-  html += `
-  <h2>Spending Category Spikes</h2>`;
-  const yearSpikes = summary.anomalies && Array.isArray(summary.anomalies.spikes)
-    ? summary.anomalies.spikes.filter(s => s.month.startsWith(selYear + '-'))
-    : [];
-  if (yearSpikes.length) {
-    html += `
-  <table id="spikes-table">
-    <thead><tr><th>Category</th><th>Month</th><th>Amount</th><th>Mean</th><th>SD</th></tr></thead>
-    <tbody>`;
-    yearSpikes.forEach(s => {
-      html += `
-      <tr data-category="${s.category}">
-        <td>${s.category}</td>
-        <td>${fmtMonth(s.month)}</td>
-        <td>${fmtAmount(s.amount, currencyRawParam)}</td>
-        <td>${fmtAmount(s.mean, currencyRawParam)}</td>
-        <td>${fmtAmount(s.sd, currencyRawParam)}</td>
-      </tr>`;
-    });
-    html += `
-    </tbody>
-  </table>`;
-  } else {
-    html += `<p>No spending spikes detected.</p>`;
-  }
+  // (Spikes section removed)
   // Flagged Transactions
   html += `
   <h2>Flagged Transactions</h2>`;
@@ -544,7 +518,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
       spikes.forEach(s => {
         html += `
       <tr data-category="${s.category}">
-        <td>${s.category}</td>
+        <td><a href="/years/${year}/${month}/category/${encodeURIComponent(s.category)}">${s.category}</a></td>
         <td>${fmtMonth(s.month)}</td>
         <td>${fmtAmount(s.amount, currencyRawParam)}</td>
         <td>${fmtAmount(s.mean, currencyRawParam)}</td>
@@ -555,8 +529,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     </tbody>
   </table>`;
     } else {
-      html += `
-  <p>No spending spikes detected.</p>`;
+      html += `<p>No spending spikes detected.</p>`;
     }
   }
 
@@ -579,16 +552,15 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     if (flagged.length) {
       html += `
   <table id="flagged-transactions-table">
-    <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th><th>Details</th></tr></thead>
+    <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th></tr></thead>
     <tbody>`;
       flagged.forEach(o => {
-        html += `
+      html += `
       <tr data-category="${o.category}">
         <td>${o.date}</td>
         <td>${o.description || ''}</td>
         <td>${fmtAmount(Math.abs(o.amount), currencyRawParam)}</td>
-        <td>${o.category || ''}</td>
-        <td><a href="/years/${year}/${month}/category/${encodeURIComponent(o.category)}">View Category</a></td>
+        <td><a href="/years/${year}/${month}/category/${encodeURIComponent(o.category)}">${o.category || ''}</a></td>
       </tr>`;
       });
       html += `
@@ -941,33 +913,6 @@ function renderYearHtml(summary, year, currencyRawParam) {
     html += `<p>No monthly data for year ${selYear}</p>`;
   }
 
-  // Spending Category Spikes for this year
-  if (summary.anomalies && Array.isArray(summary.anomalies.spikes)) {
-    const spikes = summary.anomalies.spikes.filter(s => s.month.startsWith(selYear + '-'));
-    html += `
-  <h2>Spending Category Spikes</h2>`;
-    if (spikes.length) {
-      html += `
-  <table id="spikes-table">
-    <thead><tr><th>Category</th><th>Month</th><th>Amount</th><th>Mean</th><th>SD</th></tr></thead>
-    <tbody>`;
-      spikes.forEach(s => {
-        html += `
-      <tr data-category="${s.category}">
-        <td>${s.category}</td>
-        <td>${fmtMonth(s.month)}</td>
-        <td>${fmtAmount(s.amount, currencyRawParam)}</td>
-        <td>${fmtAmount(s.mean, currencyRawParam)}</td>
-        <td>${fmtAmount(s.sd, currencyRawParam)}</td>
-      </tr>`;
-      });
-      html += `
-    </tbody>
-  </table>`;
-    } else {
-      html += `<p>No spending spikes detected.</p>`;
-    }
-  }
 
 
   html += `
