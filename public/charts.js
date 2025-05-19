@@ -16,6 +16,29 @@ document.addEventListener('DOMContentLoaded', function() {
       options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
     });
   }
+  // Summary Page: Collapse Category Breakdown table to top 5 with "Show all"
+  var catTbl = document.getElementById('category-breakdown-table');
+  if (catTbl) {
+    var rows = Array.from(catTbl.querySelectorAll('tbody tr'));
+    rows.forEach(function(r, i) { if (i >= 5) r.style.display = 'none'; });
+    var tfoot = document.createElement('tfoot');
+    var tr = document.createElement('tr');
+    var td = document.createElement('td');
+    td.colSpan = catTbl.tHead.rows[0].cells.length;
+    td.style.textAlign = 'center';
+    var a = document.createElement('a');
+    a.href = '#';
+    a.textContent = 'Show all (' + rows.length + ')';
+    a.addEventListener('click', function(e) {
+      e.preventDefault();
+      rows.forEach(function(r) { r.style.display = ''; });
+      a.remove();
+    });
+    td.appendChild(a);
+    tr.appendChild(td);
+    tfoot.appendChild(tr);
+    catTbl.appendChild(tfoot);
+  }
 
   // Yearly Summary: Year Spending Chart
   if (window.yearSpendingChartRawData && document.getElementById('yearSpendingChart')) {

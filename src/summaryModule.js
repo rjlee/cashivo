@@ -534,7 +534,7 @@ function renderHtml(summary, currencyRawParam) {
       : null;
     if (cb) {
       html += `
-  <h2>Category Breakdown (${fmtMonth(month)})</h2>
+  <h2>Spending Category Breakdown (${fmtMonth(month)})</h2>
   <table id="category-breakdown-table">
     <thead>
       <tr>
