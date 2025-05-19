@@ -34,6 +34,39 @@ function fmtAmount(val, currencyRawParam) {
 }
 
 /**
+ * Render a recurring bills table (with heading) given precomputed rows.
+ * @param {Array<{description:string,category:string,occurrences:number,total:number,avgAmount:number}>} recs
+ * @param {(row:Object)=>string} buildLink  - function to build the URL for each merchant link
+ * @param {string} currencyRawParam         - Optional currency code override
+ * @returns {string} HTML fragment for the recurring table or a placeholder if empty
+ */
+function renderRecurringTableHtml(recs, buildLink, currencyRawParam) {
+  if (!Array.isArray(recs) || recs.length === 0) {
+    return '<p>No recurring bills detected.</p>';
+  }
+  let html = `
+  <h2>Recurring Bills & Subscriptions</h2>
+  <table id="recurring-table">
+    <thead>
+      <tr><th>Merchant</th><th>Occurrences</th><th>Total Spend</th><th>Avg per Occurrence</th></tr>
+    </thead>
+    <tbody>`;
+  recs.forEach((r) => {
+    html += `
+      <tr data-category="${r.category}">
+        <td><a href="${buildLink(r)}">${r.description}</a></td>
+        <td>${r.occurrences}</td>
+        <td>${fmtAmount(r.total, currencyRawParam)}</td>
+        <td>${fmtAmount(r.avgAmount, currencyRawParam)}</td>
+      </tr>`;
+  });
+  html += `
+    </tbody>
+  </table>`;
+  return html;
+}
+
+/**
  * Render an insights page for a specific year
  * (monthly spending trends, category distribution, top merchants,
  *  flagged transactions, spending spikes, recurring bills & subscriptions).
@@ -170,49 +203,25 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
     html += `<p>No flagged transactions.</p>`;
   }
   // Recurring Bills & Subscriptions
-  html += `
-  <h2>Recurring Bills & Subscriptions</h2>`;
   const recDefs = Array.isArray(summary.trends.recurringBills)
     ? summary.trends.recurringBills
     : [];
   const recs = recDefs
     .map((item) => {
-      const usage =
-        summary.merchantInsights.usageOverTime[item.description] || {};
+      const usage = summary.merchantInsights.usageOverTime[item.description] || {};
       const vals = allMonths.map((m) => usage[m] || 0).filter((v) => v > 0);
       if (!vals.length) return null;
       const occurrences = vals.length;
       const total = vals.reduce((s, v) => s + v, 0);
       const avgAmount = total / occurrences;
-      return {
-        description: item.description,
-        category: item.category,
-        occurrences,
-        total,
-        avgAmount,
-      };
+      return { description: item.description, category: item.category, occurrences, total, avgAmount };
     })
     .filter((x) => x);
-  if (recs.length) {
-    html += `
-  <table id="recurring-table">
-    <thead><tr><th>Merchant</th><th>Occurrences</th><th>Total Spend</th><th>Avg per Occurrence</th></tr></thead>
-    <tbody>`;
-    recs.forEach((r) => {
-      html += `
-      <tr data-category="${r.category}">
-        <td><a href="/years/${year}/insights?category=${encodeURIComponent(r.category)}">${r.description}</a></td>
-        <td>${r.occurrences}</td>
-        <td>${fmtAmount(r.total, currencyRawParam)}</td>
-        <td>${fmtAmount(r.avgAmount, currencyRawParam)}</td>
-      </tr>`;
-    });
-    html += `
-    </tbody>
-  </table>`;
-  } else {
-    html += `<p>No recurring bills detected.</p>`;
-  }
+  html += renderRecurringTableHtml(
+    recs,
+    (r) => `/years/${year}/insights?category=${encodeURIComponent(r.category)}`,
+    currencyRawParam
+  );
   // Include scripts
   html += `
 <script src="/charts.js"></script>
@@ -674,34 +683,14 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   }
 
   // Recurring bills & subscriptions for the selected month
-  html += `
-  <h2>Recurring Bills & Subscriptions</h2>
-  <table id="recurring-table">
-    <thead>
-      <tr>
-        <th>Merchant</th>
-        <th>Occurrences</th>
-        <th>Total Spend</th>
-        <th>Avg per Occurrence</th>
-      </tr>
-    </thead>
-    <tbody>`;
   const recs = (summary.trends.recurringBills || []).filter(
-    (item) =>
-      (summary.merchantInsights.usageOverTime[item.description] || {})[sel] > 0
+    (item) => (summary.merchantInsights.usageOverTime[item.description] || {})[sel] > 0
   );
-  recs.forEach((item) => {
-    html += `
-      <tr data-category="${item.category}">
-        <td><a href="/years/${year}/${month}/category/${encodeURIComponent(item.category)}">${item.description}</a></td>
-        <td>${item.occurrences}</td>
-        <td>${fmtAmount(item.total, currencyRawParam)}</td>
-        <td>${fmtAmount(item.avgAmount, currencyRawParam)}</td>
-      </tr>`;
-  });
-  html += `
-    </tbody>
-  </table>`;
+  html += renderRecurringTableHtml(
+    recs,
+    (r) => `/years/${year}/${month}/category/${encodeURIComponent(r.category)}`,
+    currencyRawParam
+  );
 
   html += `
 <script src="/charts.js"></script>
