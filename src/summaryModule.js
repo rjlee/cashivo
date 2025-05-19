@@ -306,26 +306,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   <h2>Daily Spending</h2>
   <canvas id="dailySpendingChart" width="600" height="150"></canvas>
   <script>
-    (function() {
-      const rawDaily = ${JSON.stringify(dailyData)};
-      window.monthInsightsDailyData = rawDaily;
-      const ctxDaily = document.getElementById('dailySpendingChart').getContext('2d');
-      const dailyChart = new Chart(ctxDaily, {
-        type: 'line',
-        data: {
-          labels: rawDaily.map(d => d.date),
-          datasets: [{
-            label: 'Daily Spending',
-            data: rawDaily.map(d => d.spending),
-            borderColor: 'rgba(75, 192, 192, 1)',
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            fill: true
-          }]
-        },
-        options: { scales: { x: { display: true, title: { display: true, text: 'Date' } }, y: { beginAtZero: true } } }
-      });
-      window.monthInsightsDailyChart = dailyChart;
-    })();
+    window.dailySpendingChartRawData = ${JSON.stringify(dailyData)};
   </script>`;
   }
 
@@ -337,20 +318,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   <h2>Category Distribution</h2>
   <canvas id="categoryDistributionChart" width="600" height="300"></canvas>
   <script>
-    (function() {
-      const catMap = ${JSON.stringify(monthCategories)};
-      // Store for filtering
-      window.monthCategories = Object.assign({}, catMap);
-      const labelsCat = Object.keys(catMap);
-      const dataCat = labelsCat.map(c => catMap[c]);
-      const ctxCat = document.getElementById('categoryDistributionChart').getContext('2d');
-      // Create chart and store instance
-      window.monthInsightsPieChart = new Chart(ctxCat, {
-        type: 'pie',
-        data: { labels: labelsCat, datasets: [{ data: dataCat, backgroundColor: labelsCat.map((_,i) => 'hsl(' + (i*360/labelsCat.length) + ',70%,70%)') }] },
-        options: { plugins: { legend: { position: 'right' } } }
-      });
-    })();
+    window.categoryDistributionChartRawData = ${JSON.stringify(monthCategories)};
   </script>`;
   }
 
@@ -360,29 +328,8 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   <h2>Top Merchants</h2>
   <canvas id="topMerchantsChart" width="600" height="300"></canvas>
   <script>
-    (function() {
-      const usageByCatMap = ${JSON.stringify(summary.merchantInsights.usageOverTimeByCategory || {})};
-      window.monthInsightsUsageByCatMap = usageByCatMap;
-      const usageMap = ${JSON.stringify(summary.merchantInsights.usageOverTime)};
-      const txCounts = ${JSON.stringify(summary.merchantInsights.transactionCounts)};
-      // initial top merchants (total spend)
-      const monthlyArrInit = Object.entries(usageMap)
-        .map(([m, data]) => ({ merchant: m, total: data['${sel}'] || 0 }))
-        .filter(x => x.total > 0)
-        .sort((a, b) => b.total - a.total)
-        .slice(0, 5);
-      const labelsM = monthlyArrInit.map(x => x.merchant);
-      const dataM = monthlyArrInit.map(x => x.total);
-      const ctxM = document.getElementById('topMerchantsChart').getContext('2d');
-      window.monthInsightsTopMerchantsChart = new Chart(ctxM, {
-        type: 'bar',
-        data: {
-          labels: labelsM,
-          datasets: [{ label: 'Total Spend', data: dataM, backgroundColor: labelsM.map((_, i) => 'hsl(' + (i * 360 / labelsM.length) + ',70%,70%)') }]
-        },
-        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-      });
-    })();
+    window.topMerchantsChartRawData = ${JSON.stringify(summary.merchantInsights.usageOverTime)};
+    window.topMerchantsChartCategoryData = ${JSON.stringify(summary.merchantInsights.usageOverTimeByCategory || {})};
   </script>`;
   }
 
@@ -475,7 +422,8 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   </table>`;
 
   html += `
-  <script src="/insights.js"></script>
+<script src="/charts.js"></script>
+<script src="/insights.js"></script>
 </body>
 </html>`;
   return html;
@@ -538,20 +486,8 @@ function renderHtml(summary, currencyRawParam) {
     html += `
   <canvas id="spendingChart" width="600" height="150"></canvas>
   <script>
-    const spendData = ${JSON.stringify(summary.monthlySpending)};
-    const selMonth = '${sel}';
-    // Show last 5 months plus current
-    const sorted = spendData.slice().sort((a, b) => a.month.localeCompare(b.month));
-    const idx = sorted.findIndex(s => s.month === selMonth);
-    const slice = idx >= 0 ? sorted.slice(Math.max(0, idx - 5), idx + 1) : [];
-    const labels = slice.map(e => e.month);
-    const values = slice.map(e => e.spending);
-    const ctx = document.getElementById('spendingChart').getContext('2d');
-    new Chart(ctx, {
-      type: 'bar',
-      data: { labels, datasets: [{ label: 'Spending', data: values, backgroundColor: 'rgba(75, 192, 192, 0.5)' }] },
-      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-    });
+    window.spendingChartRawData = ${JSON.stringify(summary.monthlySpending)};
+    window.spendingChartSelMonth = '${sel}';
   </script>`;
   }
   if (Array.isArray(summary.monthlyOverview)) {
@@ -653,6 +589,7 @@ function renderHtml(summary, currencyRawParam) {
     }
   }
   html += `
+<script src="/charts.js"></script>
 </body>
 </html>`;
   
@@ -722,18 +659,7 @@ function renderYearHtml(summary, year, currencyRawParam) {
     html += `
   <canvas id="yearSpendingChart" width="600" height="300"></canvas>
   <script>
-    const spendData = ${JSON.stringify(spendingArr)};
-    const labels = spendData.map(e => e.month).reverse();
-    const values = spendData.map(e => e.spending).reverse();
-    const ctx = document.getElementById('yearSpendingChart').getContext('2d');
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{ label: 'Spending', data: values, backgroundColor: 'rgba(75, 192, 192, 0.5)' }]
-      },
-      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-    });
+    window.yearSpendingChartRawData = ${JSON.stringify(spendingArr)};
   </script>
   `;
   }
@@ -859,6 +785,7 @@ function renderYearHtml(summary, year, currencyRawParam) {
   }
 
   html += `
+<script src="/charts.js"></script>
 </body>
 </html>`;
   

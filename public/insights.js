@@ -59,17 +59,17 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     // Update category distribution pie chart
-    var pie = window.monthInsightsPieChart;
-    var pcm = window.monthCategories || {};
-    if (pie && pcm) {
+    var pie = window.categoryDistributionChart;
+    var pcm = window.categoryDistributionChartRawData || {};
+    if (pie) {
       var labels = selCats.filter(function(c) { return pcm.hasOwnProperty(c); });
       pie.data.labels = labels;
       pie.data.datasets[0].data = labels.map(function(c) { return pcm[c]; });
       pie.update();
     }
     // Update top merchants bar chart
-    var topChart = window.monthInsightsTopMerchantsChart;
-    var ubc = window.monthInsightsUsageByCatMap || {};
+    var topChart = window.topMerchantsChart;
+    var ubc = window.topMerchantsChartCategoryData || {};
     if (topChart) {
       var arr = [];
       Object.keys(ubc).forEach(function(m) {
@@ -86,8 +86,8 @@ document.addEventListener('DOMContentLoaded', function() {
       topChart.update();
     }
     // Update daily spending line chart
-    var dailyChart = window.monthInsightsDailyChart;
-    var rawDaily = window.monthInsightsDailyData || [];
+    var dailyChart = window.dailySpendingChart;
+    var rawDaily = window.dailySpendingChartRawData || [];
     if (dailyChart && rawDaily.length) {
       dailyChart.data.labels = rawDaily.map(function(d) { return d.date; });
       dailyChart.data.datasets[0].data = rawDaily.map(function(d) {
