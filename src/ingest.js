@@ -12,7 +12,9 @@ async function ingest() {
   }
   const outputDir = path.resolve(__dirname, '..', 'data');
   const outputFile = path.join(outputDir, 'transactions.json');
-  if (!fs.existsSync(outputDir)) { fs.mkdirSync(outputDir, { recursive: true }); }
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
   // Load existing transactions for incremental merge
   let existingTx = [];
   if (fs.existsSync(outputFile)) {
@@ -20,13 +22,17 @@ async function ingest() {
     console.log(`Loaded ${existingTx.length} existing transactions`);
   }
   // Pick up any files in import/ (multer may rename without .csv extension)
-  const files = fs.readdirSync(transactionsDir).filter(f => {
+  const files = fs.readdirSync(transactionsDir).filter((f) => {
     const fp = path.join(transactionsDir, f);
     // include regular files only
     return fs.statSync(fp).isFile() && !f.startsWith('.');
   });
   if (files.length === 0) {
-    console.warn('No CSV files found in', transactionsDir, '- skipping ingestion');
+    console.warn(
+      'No CSV files found in',
+      transactionsDir,
+      '- skipping ingestion'
+    );
   }
   // Collect newly parsed transactions using pluggable importers
   const newTx = [];
@@ -36,32 +42,40 @@ async function ingest() {
   const importersDir = path.resolve(__dirname, 'importers');
   let importers = [];
   if (fs.existsSync(importersDir)) {
-    importers = fs.readdirSync(importersDir)
-      .filter(f => f.endsWith('.js'))
-      .map(f => require(path.join(importersDir, f)));
+    importers = fs
+      .readdirSync(importersDir)
+      .filter((f) => f.endsWith('.js'))
+      .map((f) => require(path.join(importersDir, f)));
   }
 
   // Allow overriding the format via ENV or CLI, e.g. --format=moneyhub
-  const overrideFormat = process.env.INGEST_FORMAT
-    || process.argv.find(arg => arg.startsWith('--format='))?.split('=')[1];
+  const overrideFormat =
+    process.env.INGEST_FORMAT ||
+    process.argv.find((arg) => arg.startsWith('--format='))?.split('=')[1];
 
   // Helper to read first line (headers) of a CSV file
   async function peekCsvHeaders(fp) {
     return new Promise((resolve, reject) => {
       const rs = fs.createReadStream(fp);
       let data = '';
-      rs.on('data', chunk => {
+      rs.on('data', (chunk) => {
         data += chunk.toString();
         const idx = data.indexOf('\n');
         if (idx !== -1) {
           rs.destroy();
-          const headers = data.slice(0, idx).split(',').map(h => h.trim());
+          const headers = data
+            .slice(0, idx)
+            .split(',')
+            .map((h) => h.trim());
           resolve(headers);
         }
       });
       rs.on('error', reject);
       rs.on('end', () => {
-        const headers = data.split('\n')[0].split(',').map(h => h.trim());
+        const headers = data
+          .split('\n')[0]
+          .split(',')
+          .map((h) => h.trim());
         resolve(headers);
       });
     });
@@ -78,13 +92,15 @@ async function ingest() {
       continue;
     }
     if (overrideFormat) {
-      importer = importers.find(i => i.name === overrideFormat);
+      importer = importers.find((i) => i.name === overrideFormat);
       if (!importer) {
-        console.warn(`No importer found for format "${overrideFormat}", skipping ${file}`);
+        console.warn(
+          `No importer found for format "${overrideFormat}", skipping ${file}`
+        );
         continue;
       }
     } else {
-      importer = importers.find(i => i.detect(headers));
+      importer = importers.find((i) => i.detect(headers));
       if (!importer) {
         console.warn(`No importer detected for file "${file}", skipping`);
         continue;
@@ -94,10 +110,15 @@ async function ingest() {
     try {
       parsed = await importer.parse(filePath);
       fileCounts[file] = parsed.length;
-      console.log(`Processed ${file}: ${parsed.length} rows using "${importer.name}" importer`);
+      console.log(
+        `Processed ${file}: ${parsed.length} rows using "${importer.name}" importer`
+      );
       newTx.push(...parsed);
     } catch (err) {
-      console.error(`Error parsing ${file} with importer "${importer.name}":`, err);
+      console.error(
+        `Error parsing ${file} with importer "${importer.name}":`,
+        err
+      );
       continue;
     }
     try {
@@ -112,7 +133,7 @@ async function ingest() {
   const combined = existingTx.concat(newTx);
   console.log(`Total before QC: ${combined.length}`);
   let invalidDates = 0;
-  const validTx = combined.filter(tx => {
+  const validTx = combined.filter((tx) => {
     const dt = new Date(tx.date);
     if (!tx.date || isNaN(dt.getTime())) {
       invalidDates++;
@@ -122,7 +143,7 @@ async function ingest() {
   });
   const seen = new Set();
   let duplicates = 0;
-  const uniqueTx = validTx.filter(tx => {
+  const uniqueTx = validTx.filter((tx) => {
     const key = JSON.stringify([tx.date, tx.amount, tx.description]);
     if (seen.has(key)) {
       duplicates++;
@@ -133,14 +154,17 @@ async function ingest() {
   });
   // Logs
   console.log(`Ingestion summary:`);
-  Object.entries(fileCounts).forEach(([f, c]) => console.log(`  ${f}: ${c} rows`));
-  if (invalidDates) console.log(`  Removed ${invalidDates} rows with invalid dates`);
+  Object.entries(fileCounts).forEach(([f, c]) =>
+    console.log(`  ${f}: ${c} rows`)
+  );
+  if (invalidDates)
+    console.log(`  Removed ${invalidDates} rows with invalid dates`);
   if (duplicates) console.log(`  Removed ${duplicates} duplicate transactions`);
   console.log(`  After dedupe: ${uniqueTx.length} total valid transactions`);
   // Write output
   // Exclude months with insufficient day coverage
   const monthToDays = {};
-  uniqueTx.forEach(tx => {
+  uniqueTx.forEach((tx) => {
     const ym = tx.date.slice(0, 7);
     const day = parseInt(tx.date.slice(8, 10), 10);
     if (!monthToDays[ym]) monthToDays[ym] = new Set();
@@ -151,7 +175,7 @@ async function ingest() {
   const completeMonths = [];
   const incompleteMonths = [];
   Object.entries(monthToDays).forEach(([ym, daysSet]) => {
-    const [year, mon] = ym.split('-').map(v => parseInt(v, 10));
+    const [year, mon] = ym.split('-').map((v) => parseInt(v, 10));
     const daysInMonth = new Date(year, mon, 0).getDate();
     const coverage = daysSet.size / daysInMonth;
     if (coverage >= coverageThreshold) {
@@ -161,13 +185,21 @@ async function ingest() {
     }
   });
   if (incompleteMonths.length) {
-    console.log(`Excluding months with <${(coverageThreshold*100).toFixed(0)}% coverage:`, incompleteMonths.join(', '));
+    console.log(
+      `Excluding months with <${(coverageThreshold * 100).toFixed(0)}% coverage:`,
+      incompleteMonths.join(', ')
+    );
   }
-  const filteredTx = uniqueTx.filter(tx => completeMonths.includes(tx.date.slice(0, 7)));
+  const filteredTx = uniqueTx.filter((tx) =>
+    completeMonths.includes(tx.date.slice(0, 7))
+  );
   const finalCount = filteredTx.length;
   console.log(`Transactions after filtering incomplete months: ${finalCount}`);
   // Write merged output
   fs.writeFileSync(outputFile, JSON.stringify(filteredTx, null, 2));
   console.log(`Saved ${finalCount} transactions to ${outputFile}`);
 }
-ingest().catch(err => { console.error('Error during ingestion:', err); process.exit(1); });
+ingest().catch((err) => {
+  console.error('Error during ingestion:', err);
+  process.exit(1);
+});

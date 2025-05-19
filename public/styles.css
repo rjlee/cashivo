@@ -152,6 +152,20 @@ th[title] {
 .year-nav a:hover {
   text-decoration: underline;
 }
+/* Utility margin top */
+.mt-1 {
+  margin-top: 1rem !important;
+}
+/* Danger button */
+.btn-danger {
+  background-color: #c00 !important;
+  color: #fff !important;
+}
+/* Alert messages */
+.alert-success {
+  color: green;
+  margin-bottom: 1rem;
+}
 /* Enhanced Professional Styling */
 
 body {

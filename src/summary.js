@@ -28,30 +28,42 @@ const startMonth = process.env.START_MONTH;
 const endMonth = process.env.END_MONTH;
 let txsToProcess = transactions;
 if (startMonth) {
-  txsToProcess = txsToProcess.filter(tx => tx.date && tx.date.slice(0,7) >= startMonth);
+  txsToProcess = txsToProcess.filter(
+    (tx) => tx.date && tx.date.slice(0, 7) >= startMonth
+  );
 }
 if (endMonth) {
-  txsToProcess = txsToProcess.filter(tx => tx.date && tx.date.slice(0,7) <= endMonth);
+  txsToProcess = txsToProcess.filter(
+    (tx) => tx.date && tx.date.slice(0, 7) <= endMonth
+  );
 }
 if (startMonth || endMonth) {
-  console.log(`Filtering transactions${startMonth ? ` from ${startMonth}` : ''}${endMonth ? ` to ${endMonth}` : ''}: ${txsToProcess.length} records`);
+  console.log(
+    `Filtering transactions${startMonth ? ` from ${startMonth}` : ''}${endMonth ? ` to ${endMonth}` : ''}: ${txsToProcess.length} records`
+  );
 }
 
 // Optional configs
 const budgets = loadJSON(path.resolve(__dirname, '..', 'budgets.json')) || {};
 const goalsConfig = loadJSON(path.resolve(__dirname, '..', 'goals.json')) || {};
 // Load category groups: user-provided or default
-const defaultCategoryGroups = require(path.resolve(__dirname, '..', 'categories', 'default_category_groups.json'));
-const categoryGroups = loadJSON(path.resolve(dataDir, 'category-groups.json')) || defaultCategoryGroups;
-const deductibleCategories = loadJSON(path.resolve(__dirname, '..', 'deductible-categories.json')) || [];
+const defaultCategoryGroups = require(
+  path.resolve(__dirname, '..', 'categories', 'default_category_groups.json')
+);
+const categoryGroups =
+  loadJSON(path.resolve(dataDir, 'category-groups.json')) ||
+  defaultCategoryGroups;
+const deductibleCategories =
+  loadJSON(path.resolve(__dirname, '..', 'deductible-categories.json')) || [];
 
 // Helper: group transactions by month
 function getMonthlyData(txs) {
   const monthly = {};
-  txs.forEach(tx => {
+  txs.forEach((tx) => {
     if (!tx.date) return;
     const month = tx.date.slice(0, 7);
-    if (!monthly[month]) monthly[month] = { income: 0, expenses: 0, categories: {} };
+    if (!monthly[month])
+      monthly[month] = { income: 0, expenses: 0, categories: {} };
     const amt = tx.amount || 0;
     if (amt >= 0) {
       monthly[month].income += amt;
@@ -59,7 +71,8 @@ function getMonthlyData(txs) {
       const expense = Math.abs(amt);
       monthly[month].expenses += expense;
       const cat = tx.category || 'Other expenses';
-      monthly[month].categories[cat] = (monthly[month].categories[cat] || 0) + expense;
+      monthly[month].categories[cat] =
+        (monthly[month].categories[cat] || 0) + expense;
     }
   });
   return monthly;
@@ -69,7 +82,7 @@ function getMonthlyData(txs) {
 function generateMonthlyOverview(monthly) {
   // Sort months newest first (YYYY-MM format)
   const sortedMonths = Object.keys(monthly).sort().reverse();
-  return sortedMonths.map(month => {
+  return sortedMonths.map((month) => {
     const data = monthly[month];
     const net = data.income - data.expenses;
     const rate = data.income ? (net / data.income) * 100 : 0;
@@ -83,7 +96,7 @@ function generateMonthlyOverview(monthly) {
       totalExpenses: Number(data.expenses.toFixed(2)),
       netCashFlow: Number(net.toFixed(2)),
       savingsRate: Number(rate.toFixed(2)),
-      topCategories: topCats
+      topCategories: topCats,
     };
   });
 }
@@ -95,11 +108,17 @@ function generateCategoryBreakdown(monthly) {
   sortedMonths.forEach((month, idx) => {
     const data = monthly[month];
     const prev = idx > 0 ? monthly[sortedMonths[idx - 1]].categories : {};
-    breakdown[month] = { categories: data.categories, changeVsPrevious: {}, budgetVsActual: {} };
+    breakdown[month] = {
+      categories: data.categories,
+      changeVsPrevious: {},
+      budgetVsActual: {},
+    };
     // change vs previous
-    Object.keys(data.categories).forEach(cat => {
+    Object.keys(data.categories).forEach((cat) => {
       const prevAmt = prev[cat] || 0;
-      breakdown[month].changeVsPrevious[cat] = Number((data.categories[cat] - prevAmt).toFixed(2));
+      breakdown[month].changeVsPrevious[cat] = Number(
+        (data.categories[cat] - prevAmt).toFixed(2)
+      );
     });
     // budgets if available
     if (budgets && Object.keys(budgets).length) {
@@ -110,7 +129,9 @@ function generateCategoryBreakdown(monthly) {
           budget: budgetAmt,
           actual: Number(actual.toFixed(2)),
           variance: Number(variance.toFixed(2)),
-          pctUsed: budgetAmt ? Number(((actual / budgetAmt) * 100).toFixed(2)) : null
+          pctUsed: budgetAmt
+            ? Number(((actual / budgetAmt) * 100).toFixed(2))
+            : null,
         };
       });
     }
@@ -123,14 +144,14 @@ function generateCategoryBreakdown(monthly) {
 function generateTrends(monthly, txs) {
   const sortedMonths = Object.keys(monthly).sort();
   // monthly trends
-  const monthlyTrends = sortedMonths.map(m => ({
+  const monthlyTrends = sortedMonths.map((m) => ({
     month: m,
     income: Number(monthly[m].income.toFixed(2)),
-    expenses: Number(monthly[m].expenses.toFixed(2))
+    expenses: Number(monthly[m].expenses.toFixed(2)),
   }));
   // recurring bills (simple detection: descriptions with >=3 occurrences)
   const descMap = {};
-  txs.forEach(tx => {
+  txs.forEach((tx) => {
     if (tx.amount < 0) {
       const key = JSON.stringify([tx.description, tx.category || '']);
       descMap[key] = descMap[key] || [];
@@ -148,14 +169,14 @@ function generateTrends(monthly, txs) {
         category,
         occurrences: arr.length,
         total: Number(total.toFixed(2)),
-        avgAmount: Number(avg.toFixed(2))
+        avgAmount: Number(avg.toFixed(2)),
       });
     }
   });
 
   // Monthly recurring bills: only include recurring items that occur in each month
   const monthlyDescMap = {};
-  txs.forEach(tx => {
+  txs.forEach((tx) => {
     if (tx.amount < 0 && tx.date) {
       const mo = tx.date.slice(0, 7);
       const key = JSON.stringify([tx.description, tx.category || '']);
@@ -165,9 +186,9 @@ function generateTrends(monthly, txs) {
     }
   });
   const monthlyRecurringBills = {};
-  sortedMonths.forEach(mo => {
+  sortedMonths.forEach((mo) => {
     const recs = [];
-    recurring.forEach(item => {
+    recurring.forEach((item) => {
       const key = JSON.stringify([item.description, item.category]);
       const arr = (monthlyDescMap[mo] && monthlyDescMap[mo][key]) || [];
       if (arr.length > 0) {
@@ -179,7 +200,7 @@ function generateTrends(monthly, txs) {
           category: item.category,
           occurrences,
           total: Number(total.toFixed(2)),
-          avgAmount: Number(avgAmount.toFixed(2))
+          avgAmount: Number(avgAmount.toFixed(2)),
         });
       }
     });
@@ -191,28 +212,47 @@ function generateTrends(monthly, txs) {
 
 // 4. Lifestyle & Discretionary Spending Summary
 function generateLifestyleSummary(monthly) {
-  if (!categoryGroups || !categoryGroups.Essentials || !categoryGroups.Lifestyle) return null;
+  if (
+    !categoryGroups ||
+    !categoryGroups.Essentials ||
+    !categoryGroups.Lifestyle
+  )
+    return null;
   const sortedMonths = Object.keys(monthly).sort();
-  return sortedMonths.map(m => {
+  return sortedMonths.map((m) => {
     const data = monthly[m];
-    const essentials = categoryGroups.Essentials.reduce((s, c) => s + (data.categories[c] || 0), 0);
-    const lifestyle = categoryGroups.Lifestyle.reduce((s, c) => s + (data.categories[c] || 0), 0);
+    const essentials = categoryGroups.Essentials.reduce(
+      (s, c) => s + (data.categories[c] || 0),
+      0
+    );
+    const lifestyle = categoryGroups.Lifestyle.reduce(
+      (s, c) => s + (data.categories[c] || 0),
+      0
+    );
     const income = data.income;
-    const discretionaryPct = income ? Number(((lifestyle / income) * 100).toFixed(2)) : null;
+    const discretionaryPct = income
+      ? Number(((lifestyle / income) * 100).toFixed(2))
+      : null;
     return {
       month: m,
       essentials: Number(essentials.toFixed(2)),
       lifestyle: Number(lifestyle.toFixed(2)),
       discretionaryPct,
-      wantsVsNeeds: { wants: Number(lifestyle.toFixed(2)), needs: Number(essentials.toFixed(2)) }
+      wantsVsNeeds: {
+        wants: Number(lifestyle.toFixed(2)),
+        needs: Number(essentials.toFixed(2)),
+      },
     };
   });
 }
 
 // 5. Merchant Insights
 function generateMerchantInsights(txs) {
-  const spendMap = {}, countMap = {}, monthMap = {}, usageOverTimeByCategory = {};
-  txs.forEach(tx => {
+  const spendMap = {},
+    countMap = {},
+    monthMap = {},
+    usageOverTimeByCategory = {};
+  txs.forEach((tx) => {
     const desc = tx.description || 'Unknown';
     const amt = Math.abs(tx.amount) || 0;
     if (tx.amount < 0) {
@@ -222,19 +262,29 @@ function generateMerchantInsights(txs) {
       monthMap[desc] = monthMap[desc] || {};
       monthMap[desc][mo] = (monthMap[desc][mo] || 0) + amt;
       usageOverTimeByCategory[desc] = usageOverTimeByCategory[desc] || {};
-      usageOverTimeByCategory[desc][mo] = usageOverTimeByCategory[desc][mo] || {};
+      usageOverTimeByCategory[desc][mo] =
+        usageOverTimeByCategory[desc][mo] || {};
       const cat = tx.category || 'Other expenses';
-      usageOverTimeByCategory[desc][mo][cat] = (usageOverTimeByCategory[desc][mo][cat] || 0) + amt;
+      usageOverTimeByCategory[desc][mo][cat] =
+        (usageOverTimeByCategory[desc][mo][cat] || 0) + amt;
     }
   });
   // top 5 merchants
   const topMerchants = Object.entries(spendMap)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
-    .map(([merchant, total]) => ({ merchant, total: Number(total.toFixed(2)) }));
+    .map(([merchant, total]) => ({
+      merchant,
+      total: Number(total.toFixed(2)),
+    }));
   // usage over time for all merchants
   const usageOverTime = monthMap;
-  return { topMerchants, transactionCounts: countMap, usageOverTime, usageOverTimeByCategory };
+  return {
+    topMerchants,
+    transactionCounts: countMap,
+    usageOverTime,
+    usageOverTimeByCategory,
+  };
 }
 
 // 6. Budget Adherence Report
@@ -250,7 +300,7 @@ function generateBudgetAdherence(monthly) {
         budget: b,
         actual: Number(actual.toFixed(2)),
         remaining: Number(rem.toFixed(2)),
-        pctUsed: b ? Number(((actual / b) * 100).toFixed(2)) : null
+        pctUsed: b ? Number(((actual / b) * 100).toFixed(2)) : null,
       };
     });
   });
@@ -264,11 +314,11 @@ function generateSavingsGoals(txs) {
   Object.entries(goalsConfig).forEach(([name, cfg]) => {
     const { category, target } = cfg;
     // Include all transactions for this category, regardless of sign
-    const relevant = txs.filter(t => t.category === category);
+    const relevant = txs.filter((t) => t.category === category);
     const actual = relevant.reduce((s, t) => s + Math.abs(t.amount), 0);
     // monthly contributions
     const monthly = {};
-    relevant.forEach(t => {
+    relevant.forEach((t) => {
       const mo = t.date.slice(0, 7);
       monthly[mo] = (monthly[mo] || 0) + Math.abs(t.amount);
     });
@@ -276,7 +326,7 @@ function generateSavingsGoals(txs) {
       target,
       actual: Number(actual.toFixed(2)),
       progressPct: target ? Number(((actual / target) * 100).toFixed(2)) : null,
-      monthlyContributions: monthly
+      monthlyContributions: monthly,
     };
   });
   return goals;
@@ -286,7 +336,7 @@ function generateSavingsGoals(txs) {
 function generateAnomalies(txs, monthly) {
   // outliers: transactions >2 std dev in their category
   const catVals = {};
-  txs.forEach(t => {
+  txs.forEach((t) => {
     if (t.amount < 0) {
       const cat = t.category || 'Other expenses';
       catVals[cat] = catVals[cat] || [];
@@ -296,20 +346,25 @@ function generateAnomalies(txs, monthly) {
   const stats = {};
   Object.entries(catVals).forEach(([cat, arr]) => {
     const mean = arr.reduce((s, v) => s + v, 0) / arr.length;
-    const sd = Math.sqrt(arr.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / arr.length);
+    const sd = Math.sqrt(
+      arr.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / arr.length
+    );
     stats[cat] = { mean, sd };
   });
   const outliers = txs
-    .filter(t => {
+    .filter((t) => {
       if (t.amount < 0) {
         const cat = t.category || 'Other expenses';
         const amt = Math.abs(t.amount);
         const { mean, sd } = stats[cat] || {};
-        return typeof sd === 'number' && (sd > 0 ? Math.abs(amt - mean) > 2 * sd : amt > mean);
+        return (
+          typeof sd === 'number' &&
+          (sd > 0 ? Math.abs(amt - mean) > 2 * sd : amt > mean)
+        );
       }
       return false;
     })
-    .map(t => {
+    .map((t) => {
       const cat = t.category || 'Other expenses';
       const amt = Math.abs(t.amount);
       const { mean, sd } = stats[cat] || {};
@@ -319,7 +374,7 @@ function generateAnomalies(txs, monthly) {
         category: cat,
         amount: amt,
         mean: Number(mean.toFixed(2)),
-        sd: Number(sd.toFixed(2))
+        sd: Number(sd.toFixed(2)),
       };
     });
   // spikes: months where cat spend > mean+2sd
@@ -332,16 +387,25 @@ function generateAnomalies(txs, monthly) {
     });
   });
   Object.entries(monthlyCats).forEach(([cat, arr]) => {
-    const vals = arr.map(x => x.amt);
+    const vals = arr.map((x) => x.amt);
     const mean = vals.reduce((s, v) => s + v, 0) / vals.length;
-    const sd = Math.sqrt(vals.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / vals.length);
+    const sd = Math.sqrt(
+      vals.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / vals.length
+    );
     arr.forEach(({ month, amt }) => {
-      if (amt > mean + 2 * sd) spikes.push({ category: cat, month, amount: amt, mean: Number(mean.toFixed(2)), sd: Number(sd.toFixed(2)) });
+      if (amt > mean + 2 * sd)
+        spikes.push({
+          category: cat,
+          month,
+          amount: amt,
+          mean: Number(mean.toFixed(2)),
+          sd: Number(sd.toFixed(2)),
+        });
     });
   });
   // duplicates
   const dupMap = {};
-  txs.forEach(t => {
+  txs.forEach((t) => {
     // Use JSON serialization to avoid separator collisions
     const key = JSON.stringify([t.date, t.amount, t.description]);
     dupMap[key] = (dupMap[key] || 0) + 1;
@@ -358,7 +422,7 @@ function generateAnomalies(txs, monthly) {
 // 10. Yearly Financial Summary
 function generateYearlySummary(txs) {
   const years = {};
-  txs.forEach(t => {
+  txs.forEach((t) => {
     const yr = t.date.slice(0, 4);
     if (!years[yr]) years[yr] = { income: 0, expenses: 0, categories: {} };
     const amt = t.amount || 0;
@@ -379,11 +443,19 @@ function generateYearlySummary(txs) {
     // category changes vs previous year
     const prevCats = idx > 0 ? years[sorted[idx - 1]].categories : {};
     const catChanges = { increased: [], decreased: [] };
-    Object.keys(data.categories).forEach(cat => {
+    Object.keys(data.categories).forEach((cat) => {
       const diff = data.categories[cat] - (prevCats[cat] || 0);
       if (idx > 0) {
-        if (diff > 0) catChanges.increased.push({ category: cat, change: Number(diff.toFixed(2)) });
-        else if (diff < 0) catChanges.decreased.push({ category: cat, change: Number(diff.toFixed(2)) });
+        if (diff > 0)
+          catChanges.increased.push({
+            category: cat,
+            change: Number(diff.toFixed(2)),
+          });
+        else if (diff < 0)
+          catChanges.decreased.push({
+            category: cat,
+            change: Number(diff.toFixed(2)),
+          });
       }
     });
     // deductible total
@@ -404,7 +476,7 @@ function generateYearlySummary(txs) {
         incomeDiff: Number(incomeDiff.toFixed(2)),
         expensesDiff: Number(expensesDiff.toFixed(2)),
         netDiff: Number(netDiff.toFixed(2)),
-        savingsRateDiff: Number(savingsRateDiff.toFixed(2))
+        savingsRateDiff: Number(savingsRateDiff.toFixed(2)),
       };
     }
     out.push({
@@ -415,7 +487,8 @@ function generateYearlySummary(txs) {
       savingsRate: Number(rate.toFixed(2)),
       categoryChanges: catChanges,
       yearOnYearComparison: yoy,
-      taxDeductibleTotal: dedTotal !== null ? Number(dedTotal.toFixed(2)) : null
+      taxDeductibleTotal:
+        dedTotal !== null ? Number(dedTotal.toFixed(2)) : null,
     });
   });
   return out;
@@ -426,11 +499,12 @@ function generateMonthlySpending(monthly) {
   const sortedMonths = Object.keys(monthly).sort().reverse();
   // Determine categories to skip: use categoryGroups.Internal if defined, else defaults
   const defaultSkip = ['Transfers', 'Savings', 'Income'];
-  const skipCats = Array.isArray(categoryGroups.Internal) && categoryGroups.Internal.length
-    ? categoryGroups.Internal
-    : defaultSkip;
+  const skipCats =
+    Array.isArray(categoryGroups.Internal) && categoryGroups.Internal.length
+      ? categoryGroups.Internal
+      : defaultSkip;
   const skipSet = new Set(skipCats);
-  return sortedMonths.map(month => {
+  return sortedMonths.map((month) => {
     const cats = monthly[month].categories || {};
     const total = Object.entries(cats).reduce((sum, [cat, amt]) => {
       // skip configured internal categories
@@ -446,7 +520,7 @@ function generateMonthlySpending(monthly) {
 // Daily Spending: total expenses per day and breakdown by category
 function generateDailySpending(txs) {
   const dailyMap = {};
-  txs.forEach(tx => {
+  txs.forEach((tx) => {
     if (tx.amount < 0 && tx.date) {
       const date = tx.date;
       const cat = tx.category || 'Other expenses';
@@ -458,33 +532,37 @@ function generateDailySpending(txs) {
       dailyMap[date].catMap[cat] = (dailyMap[date].catMap[cat] || 0) + amt;
     }
   });
-  return Object.keys(dailyMap).sort().map(date => ({
-    date,
-    spending: Number(dailyMap[date].total.toFixed(2)),
-    byCategory: Object.entries(dailyMap[date].catMap).map(([category, amount]) => ({
-      category,
-      amount: Number(amount.toFixed(2))
-    }))
-  }));
+  return Object.keys(dailyMap)
+    .sort()
+    .map((date) => ({
+      date,
+      spending: Number(dailyMap[date].total.toFixed(2)),
+      byCategory: Object.entries(dailyMap[date].catMap).map(
+        ([category, amount]) => ({
+          category,
+          amount: Number(amount.toFixed(2)),
+        })
+      ),
+    }));
 }
 
 // Console renderer for human-friendly output
 function renderConsole(summary) {
   // 1. Monthly Overview
   console.log('\n==== Monthly Overview ====');
-  const overviewTable = summary.monthlyOverview.map(r => ({
+  const overviewTable = summary.monthlyOverview.map((r) => ({
     Month: r.month,
     Income: fmtAmount(r.totalIncome),
     Expenses: fmtAmount(r.totalExpenses),
     Net: fmtAmount(r.netCashFlow),
-    'Savings %': r.savingsRate.toFixed(2)
+    'Savings %': r.savingsRate.toFixed(2),
   }));
   console.table(overviewTable);
   // Monthly spending
   console.log('\n==== Monthly spending ====');
-  const spendingTable = summary.monthlySpending.map(r => ({
+  const spendingTable = summary.monthlySpending.map((r) => ({
     Month: r.month,
-    Spending: fmtAmount(r.spending)
+    Spending: fmtAmount(r.spending),
   }));
   console.table(spendingTable);
 
@@ -504,7 +582,7 @@ function renderConsole(summary) {
           Category: cat,
           Amount: fmtAmount(amt),
           'Δ vs Prev': change,
-          'Budget %': budStr
+          'Budget %': budStr,
         };
       });
       console.table(catTable);
@@ -514,12 +592,15 @@ function renderConsole(summary) {
   // 3. Trends Over Time
   console.log('\n==== Trends Over Time ====');
   console.log('- Monthly Income/Expenses (most recent first):');
-  const trendME = summary.trends.monthlyTrends.slice().reverse().map(r => ({
-    Month: r.month,
-    Income: fmtAmount(r.income),
-    Expenses: fmtAmount(r.expenses),
-    Net: fmtAmount(r.income - r.expenses)
-  }));
+  const trendME = summary.trends.monthlyTrends
+    .slice()
+    .reverse()
+    .map((r) => ({
+      Month: r.month,
+      Income: fmtAmount(r.income),
+      Expenses: fmtAmount(r.expenses),
+      Net: fmtAmount(r.income - r.expenses),
+    }));
   console.table(trendME);
   // Cumulative savings removed per user request
   // Recurring Bills: show top 10 by transaction count
@@ -529,7 +610,7 @@ function renderConsole(summary) {
     .slice()
     .sort((a, b) => b.occurrences - a.occurrences)
     .slice(0, 10);
-  topRecurring.forEach(b => {
+  topRecurring.forEach((b) => {
     console.log(
       `  • ${b.description}: ${b.occurrences} transactions, total ${fmtAmount(b.total)}, avg ${fmtAmount(b.avgAmount)}`
     );
@@ -538,23 +619,29 @@ function renderConsole(summary) {
   // 4. Lifestyle & Discretionary
   console.log('\n==== Lifestyle & Discretionary (most recent first) ====');
   // Guard in case no lifestyle data is generated
-  const lifestyleData = Array.isArray(summary.lifestyle) ? summary.lifestyle : [];
+  const lifestyleData = Array.isArray(summary.lifestyle)
+    ? summary.lifestyle
+    : [];
   console.table(
-    lifestyleData.slice().reverse().map(r => ({
-      Month: r.month,
-      Essentials: fmtAmount(r.essentials),
-      Lifestyle: fmtAmount(r.lifestyle),
-      'Discretionary %': r.discretionaryPct != null ? r.discretionaryPct.toFixed(2) : 'N/A'
-    }))
+    lifestyleData
+      .slice()
+      .reverse()
+      .map((r) => ({
+        Month: r.month,
+        Essentials: fmtAmount(r.essentials),
+        Lifestyle: fmtAmount(r.lifestyle),
+        'Discretionary %':
+          r.discretionaryPct != null ? r.discretionaryPct.toFixed(2) : 'N/A',
+      }))
   );
 
   // 5. Merchant Insights
   console.log('\n==== Merchant Insights ====');
   console.table(
-    summary.merchantInsights.topMerchants.map(m => ({
+    summary.merchantInsights.topMerchants.map((m) => ({
       Merchant: m.merchant,
       Total: fmtAmount(m.total),
-      Count: summary.merchantInsights.transactionCounts[m.merchant] || 0
+      Count: summary.merchantInsights.transactionCounts[m.merchant] || 0,
     }))
   );
 
@@ -566,7 +653,7 @@ function renderConsole(summary) {
     Object.entries(ba).forEach(([cat, info]) => {
       console.log(
         `  • ${cat}: spent ${fmtAmount(info.actual)}/${fmtAmount(info.budget)}` +
-        ` (${info.pctUsed}%), remaining ${fmtAmount(info.remaining)}`
+          ` (${info.pctUsed}%), remaining ${fmtAmount(info.remaining)}`
       );
     });
   }
@@ -577,7 +664,7 @@ function renderConsole(summary) {
     Object.entries(summary.savingsGoals).forEach(([name, g]) => {
       console.log(
         `  • ${name}: ${fmtAmount(g.actual)}/${fmtAmount(g.target)}` +
-        ` (${g.progressPct}%)`
+          ` (${g.progressPct}%)`
       );
     });
   }
@@ -585,13 +672,13 @@ function renderConsole(summary) {
   // 9. Anomalies & Outliers
   console.log('\n==== Anomalies & Outliers ====');
   console.log('- Outliers (sample):');
-  summary.anomalies.outliers.slice(0, 5).forEach(o => {
+  summary.anomalies.outliers.slice(0, 5).forEach((o) => {
     console.log(
       `  • ${o.description} on ${o.date}: ${fmtAmount(Math.abs(o.amount))}`
     );
   });
   console.log('- Duplicates:');
-  summary.anomalies.duplicates.forEach(d => {
+  summary.anomalies.duplicates.forEach((d) => {
     console.log(
       `  • ${d.description} ${fmtAmount(d.amount)} x${d.occurrences} on ${d.date}`
     );
@@ -599,13 +686,15 @@ function renderConsole(summary) {
 
   // 10. Yearly Summary
   console.log('\n==== Yearly Summary ====');
-  console.table(summary.yearlySummary.map(y => ({
-    Year: y.year,
-    Income: fmtAmount(y.totalIncome),
-    Expenses: fmtAmount(y.totalExpenses),
-    Net: fmtAmount(y.netCashFlow),
-    'Savings %': y.savingsRate.toFixed(2)
-  })));
+  console.table(
+    summary.yearlySummary.map((y) => ({
+      Year: y.year,
+      Income: fmtAmount(y.totalIncome),
+      Expenses: fmtAmount(y.totalExpenses),
+      Net: fmtAmount(y.netCashFlow),
+      'Savings %': y.savingsRate.toFixed(2),
+    }))
+  );
 }
 // Main
 // Parse CLI options: --currency (default GBP)
@@ -620,11 +709,24 @@ function parseOptions() {
 }
 const { currencyRaw } = parseOptions();
 // Map currency codes to symbols
-const currencySymbols = { USD: '$', GBP: '£', EUR: '€', JPY: '¥', CAD: 'CA$', AUD: 'A$', INR: '₹' };
-const currencySymbol = (currencyRaw.length === 3 && currencySymbols[currencyRaw.toUpperCase()])
-  ? currencySymbols[currencyRaw.toUpperCase()] : currencyRaw;
+const currencySymbols = {
+  USD: '$',
+  GBP: '£',
+  EUR: '€',
+  JPY: '¥',
+  CAD: 'CA$',
+  AUD: 'A$',
+  INR: '₹',
+};
+const currencySymbol =
+  currencyRaw.length === 3 && currencySymbols[currencyRaw.toUpperCase()]
+    ? currencySymbols[currencyRaw.toUpperCase()]
+    : currencyRaw;
 // Helper: format amount with currency symbol and commas
-const currencyFormatter = new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const currencyFormatter = new Intl.NumberFormat(undefined, {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 function fmtAmount(val) {
   const num = typeof val === 'number' ? val : Number(val) || 0;
   return `${currencySymbol}${currencyFormatter.format(num)}`;
@@ -642,7 +744,7 @@ const summary = {
   savingsGoals: generateSavingsGoals(txsToProcess),
   anomalies: generateAnomalies(txsToProcess, monthlyData),
   yearlySummary: generateYearlySummary(txsToProcess),
-  dailySpending: generateDailySpending(txsToProcess)
+  dailySpending: generateDailySpending(txsToProcess),
 };
 
 // persist JSON summary

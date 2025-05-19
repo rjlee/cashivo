@@ -3,7 +3,15 @@
 const fs = require('fs');
 const path = require('path');
 // Currency symbols map
-const currencySymbols = { USD: '$', GBP: '£', EUR: '€', JPY: '¥', CAD: 'CA$', AUD: 'A$', INR: '₹' };
+const currencySymbols = {
+  USD: '$',
+  GBP: '£',
+  EUR: '€',
+  JPY: '¥',
+  CAD: 'CA$',
+  AUD: 'A$',
+  INR: '₹',
+};
 /**
  * Format a numeric amount with the given or default currency.
  * @param {number|string} val
@@ -12,11 +20,16 @@ const currencySymbols = { USD: '$', GBP: '£', EUR: '€', JPY: '¥', CAD: 'CA$'
  */
 function fmtAmount(val, currencyRawParam) {
   const num = typeof val === 'number' ? val : Number(val) || 0;
-  const cr = currencyRawParam && typeof currencyRawParam === 'string'
-    ? currencyRawParam.toUpperCase()
-    : (process.env.DEFAULT_CURRENCY || 'GBP');
-  const symbol = (cr.length === 3 && currencySymbols[cr]) ? currencySymbols[cr] : cr;
-  const formatter = new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const cr =
+    currencyRawParam && typeof currencyRawParam === 'string'
+      ? currencyRawParam.toUpperCase()
+      : process.env.DEFAULT_CURRENCY || 'GBP';
+  const symbol =
+    cr.length === 3 && currencySymbols[cr] ? currencySymbols[cr] : cr;
+  const formatter = new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
   return `${symbol}${formatter.format(num)}`;
 }
 
@@ -34,14 +47,22 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
   const selYear = year;
   // Months in the year
   const allMonths = Array.isArray(summary.monthlySpending)
-    ? summary.monthlySpending.map(s => s.month).filter(m => m.startsWith(selYear + '-')).sort()
+    ? summary.monthlySpending
+        .map((s) => s.month)
+        .filter((m) => m.startsWith(selYear + '-'))
+        .sort()
     : [];
   // Aggregate category distribution over the year
   const catDist = {};
-  allMonths.forEach(m => {
-    const cb = summary.categoryBreakdown && summary.categoryBreakdown.perMonth && summary.categoryBreakdown.perMonth[m];
+  allMonths.forEach((m) => {
+    const cb =
+      summary.categoryBreakdown &&
+      summary.categoryBreakdown.perMonth &&
+      summary.categoryBreakdown.perMonth[m];
     if (cb && cb.categories) {
-      Object.entries(cb.categories).forEach(([c, v]) => { catDist[c] = (catDist[c] || 0) + v; });
+      Object.entries(cb.categories).forEach(([c, v]) => {
+        catDist[c] = (catDist[c] || 0) + v;
+      });
     }
   });
   // Begin HTML
@@ -56,10 +77,13 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
 <body>
   <h1>Insights for ${year}</h1>`;
   // Year navigation for insights
-  const yearsList = Array.isArray(summary.yearlySummary) ? summary.yearlySummary.map(y => y.year).sort() : [];
+  const yearsList = Array.isArray(summary.yearlySummary)
+    ? summary.yearlySummary.map((y) => y.year).sort()
+    : [];
   const idxY = yearsList.indexOf(year);
   const prevY = idxY > 0 ? yearsList[idxY - 1] : null;
-  const nextY = idxY >= 0 && idxY < yearsList.length - 1 ? yearsList[idxY + 1] : null;
+  const nextY =
+    idxY >= 0 && idxY < yearsList.length - 1 ? yearsList[idxY + 1] : null;
   html += '<div class="year-nav">';
   if (prevY) {
     html += `<a class="prev-year" href="/years/${prevY}/insights">← ${prevY}</a>`;
@@ -81,14 +105,16 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
     <summary>Filter Categories</summary>
     <form id="category-filter" data-month="${selYear}" style="margin:0;">
       <fieldset style="border:1px solid #ccc; padding:.5em;">
-        ${yearCategoryList.map(cat => {
-          const isSt = /saving|transfer/i.test(cat);
-          return `
+        ${yearCategoryList
+          .map((cat) => {
+            const isSt = /saving|transfer/i.test(cat);
+            return `
         <label style="margin-right:.5em;">
           <input type="checkbox" name="category" value="${cat}" ${isSt ? '' : 'checked'}>
           ${cat}
         </label>`;
-        }).join('')}
+          })
+          .join('')}
       </fieldset>
     </form>
     <div class="filter-actions" style="margin:.5em 0; font-size:.9em;">
@@ -117,15 +143,18 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
   // Flagged Transactions
   html += `
   <h2>Flagged Transactions</h2>`;
-  const yearOutliers = summary.anomalies && Array.isArray(summary.anomalies.outliers)
-    ? summary.anomalies.outliers.filter(o => o.date.startsWith(selYear + '-'))
-    : [];
+  const yearOutliers =
+    summary.anomalies && Array.isArray(summary.anomalies.outliers)
+      ? summary.anomalies.outliers.filter((o) =>
+          o.date.startsWith(selYear + '-')
+        )
+      : [];
   if (yearOutliers.length) {
     html += `
   <table id="flagged-transactions-table">
     <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th></tr></thead>
     <tbody>`;
-    yearOutliers.forEach(o => {
+    yearOutliers.forEach((o) => {
       html += `
       <tr data-category="${o.category}">
         <td>${o.date}</td>
@@ -143,22 +172,33 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
   // Recurring Bills & Subscriptions
   html += `
   <h2>Recurring Bills & Subscriptions</h2>`;
-  const recDefs = Array.isArray(summary.trends.recurringBills) ? summary.trends.recurringBills : [];
-  const recs = recDefs.map(item => {
-    const usage = summary.merchantInsights.usageOverTime[item.description] || {};
-    const vals = allMonths.map(m => usage[m] || 0).filter(v => v > 0);
-    if (!vals.length) return null;
-    const occurrences = vals.length;
-    const total = vals.reduce((s, v) => s + v, 0);
-    const avgAmount = total / occurrences;
-    return { description: item.description, category: item.category, occurrences, total, avgAmount };
-  }).filter(x => x);
+  const recDefs = Array.isArray(summary.trends.recurringBills)
+    ? summary.trends.recurringBills
+    : [];
+  const recs = recDefs
+    .map((item) => {
+      const usage =
+        summary.merchantInsights.usageOverTime[item.description] || {};
+      const vals = allMonths.map((m) => usage[m] || 0).filter((v) => v > 0);
+      if (!vals.length) return null;
+      const occurrences = vals.length;
+      const total = vals.reduce((s, v) => s + v, 0);
+      const avgAmount = total / occurrences;
+      return {
+        description: item.description,
+        category: item.category,
+        occurrences,
+        total,
+        avgAmount,
+      };
+    })
+    .filter((x) => x);
   if (recs.length) {
     html += `
   <table id="recurring-table">
     <thead><tr><th>Merchant</th><th>Occurrences</th><th>Total Spend</th><th>Avg per Occurrence</th></tr></thead>
     <tbody>`;
-    recs.forEach(r => {
+    recs.forEach((r) => {
       html += `
       <tr data-category="${r.category}">
         <td><a href="/years/${year}/insights?category=${encodeURIComponent(r.category)}">${r.description}</a></td>
@@ -182,7 +222,20 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
   return html;
 }
 // Month-year display helper: format "YYYY-MM" as "Mon YY", e.g., "Jan 25"
-const monthShortNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const monthShortNames = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
 /**
  * Format a YYYY-MM string into short month name and two-digit year.
  * @param {string} ym - Month string in "YYYY-MM" format
@@ -199,7 +252,20 @@ function formatYearMonth(ym) {
   return `${name} ${shortY}`;
 }
 // Format YYYY-MM to short month name and two-digit year, e.g. "Jan 25"
-const _monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const _monthNames = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
 function fmtMonth(ym) {
   if (typeof ym !== 'string') return '';
   const [yr, mo] = ym.split('-');
@@ -218,7 +284,13 @@ function fmtMonth(ym) {
  * @param {Array} transactions - Array of transaction objects with date, description, amount, notes.
  * @returns {string} HTML string
  */
-function renderCategoryTransactionsHtml(year, month, category, transactions, currencyRawParam) {
+function renderCategoryTransactionsHtml(
+  year,
+  month,
+  category,
+  transactions,
+  currencyRawParam
+) {
   let html = `<!doctype html>
 <html lang="en">
 <head>
@@ -239,7 +311,7 @@ function renderCategoryTransactionsHtml(year, month, category, transactions, cur
       </tr>
     </thead>
     <tbody>`;
-  transactions.forEach(tx => {
+  transactions.forEach((tx) => {
     html += `
       <tr>
         <td>${tx.date || ''}</td>
@@ -262,11 +334,13 @@ function renderCategoryTransactionsHtml(year, month, category, transactions, cur
  * @returns {string} HTML string
  */
 function renderAllYearsHtml(summary, currencyRawParam) {
-  const years = Array.isArray(summary.yearlySummary) ? summary.yearlySummary : [];
+  const years = Array.isArray(summary.yearlySummary)
+    ? summary.yearlySummary
+    : [];
   // Compute spending per year (sum of monthlySpending excluding transfers/savings)
   const yearSpendingMap = {};
   if (Array.isArray(summary.monthlySpending)) {
-    summary.monthlySpending.forEach(ms => {
+    summary.monthlySpending.forEach((ms) => {
       const [yr] = ms.month.split('-');
       yearSpendingMap[yr] = (yearSpendingMap[yr] || 0) + ms.spending;
     });
@@ -294,7 +368,7 @@ function renderAllYearsHtml(summary, currencyRawParam) {
       </tr>
     </thead>
     <tbody>`;
-    years.forEach(y => {
+    years.forEach((y) => {
       html += `
       <tr>
         <td><a href="/years/${y.year}">${y.year}</a></td>
@@ -342,41 +416,60 @@ function getSummary({ month } = {}) {
       categoryBreakdown: { perMonth: {} },
       trends: { monthlyTrends: [], recurringBills: [] },
       lifestyle: [],
-      merchantInsights: { topMerchants: [], transactionCounts: {}, usageOverTime: {} },
+      merchantInsights: {
+        topMerchants: [],
+        transactionCounts: {},
+        usageOverTime: {},
+      },
       budgetAdherence: {},
       savingsGoals: {},
-      anomalies: { outliers: [], spikes: [], duplicates: [] }
+      anomalies: { outliers: [], spikes: [], duplicates: [] },
     };
   }
   if (month) {
     // Filter for single-month views
     if (Array.isArray(summary.monthlyOverview)) {
-      summary.monthlyOverview = summary.monthlyOverview.filter(item => item.month === month);
+      summary.monthlyOverview = summary.monthlyOverview.filter(
+        (item) => item.month === month
+      );
     }
     if (Array.isArray(summary.dailySpending)) {
-      summary.dailySpending = summary.dailySpending.filter(d => d.date.startsWith(month));
+      summary.dailySpending = summary.dailySpending.filter((d) =>
+        d.date.startsWith(month)
+      );
     }
     if (summary.categoryBreakdown && summary.categoryBreakdown.perMonth) {
-      summary.categoryBreakdown.perMonth = { [month]: summary.categoryBreakdown.perMonth[month] };
+      summary.categoryBreakdown.perMonth = {
+        [month]: summary.categoryBreakdown.perMonth[month],
+      };
     }
     if (summary.trends && Array.isArray(summary.trends.monthlyTrends)) {
-    summary.trends.monthlyTrends = summary.trends.monthlyTrends.filter(t => t.month === month);
-  }
-  if (summary.trends && summary.trends.monthlyRecurringBills) {
-    summary.trends.recurringBills = summary.trends.monthlyRecurringBills[month] || [];
-  }
+      summary.trends.monthlyTrends = summary.trends.monthlyTrends.filter(
+        (t) => t.month === month
+      );
+    }
+    if (summary.trends && summary.trends.monthlyRecurringBills) {
+      summary.trends.recurringBills =
+        summary.trends.monthlyRecurringBills[month] || [];
+    }
     if (Array.isArray(summary.lifestyle)) {
-      summary.lifestyle = summary.lifestyle.filter(l => l.month === month);
+      summary.lifestyle = summary.lifestyle.filter((l) => l.month === month);
     }
     if (summary.anomalies) {
       if (Array.isArray(summary.anomalies.outliers)) {
-        summary.anomalies.outliers = summary.anomalies.outliers.filter(o => o.date.startsWith(month));
+        summary.anomalies.outliers = summary.anomalies.outliers.filter((o) =>
+          o.date.startsWith(month)
+        );
       }
       if (Array.isArray(summary.anomalies.spikes)) {
-        summary.anomalies.spikes = summary.anomalies.spikes.filter(s => s.month === month);
+        summary.anomalies.spikes = summary.anomalies.spikes.filter(
+          (s) => s.month === month
+        );
       }
       if (Array.isArray(summary.anomalies.duplicates)) {
-        summary.anomalies.duplicates = summary.anomalies.duplicates.filter(d => d.date.startsWith(month));
+        summary.anomalies.duplicates = summary.anomalies.duplicates.filter(
+          (d) => d.date.startsWith(month)
+        );
       }
     }
     if (summary.merchantInsights) {
@@ -384,7 +477,7 @@ function getSummary({ month } = {}) {
       summary.merchantInsights.usageOverTime = Object.fromEntries(
         Object.entries(usage).map(([m, data]) => [
           m,
-          data[month] != null ? { [month]: data[month] } : {}
+          data[month] != null ? { [month]: data[month] } : {},
         ])
       );
       summary.merchantInsights.transactionCounts = Object.fromEntries(
@@ -399,9 +492,11 @@ function getSummary({ month } = {}) {
       summary.budgetAdherence = {};
     }
     if (summary.savingsGoals) {
-      Object.values(summary.savingsGoals).forEach(g => {
+      Object.values(summary.savingsGoals).forEach((g) => {
         if (g.monthlyContributions) {
-          g.monthlyContributions = { [month]: g.monthlyContributions[month] || 0 };
+          g.monthlyContributions = {
+            [month]: g.monthlyContributions[month] || 0,
+          };
         }
       });
     }
@@ -422,7 +517,10 @@ function getSummary({ month } = {}) {
  */
 function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   const sel = `${year}-${month}`;
-  const cbMonth = summary.categoryBreakdown && summary.categoryBreakdown.perMonth && summary.categoryBreakdown.perMonth[sel];
+  const cbMonth =
+    summary.categoryBreakdown &&
+    summary.categoryBreakdown.perMonth &&
+    summary.categoryBreakdown.perMonth[sel];
   const monthCategoryList = cbMonth ? Object.keys(cbMonth.categories) : [];
   let html = `<!doctype html>
 <html lang="en">
@@ -437,11 +535,12 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
 `;
 
   const allMonths = Array.isArray(summary.monthlySpending)
-    ? summary.monthlySpending.map(s => s.month).sort()
+    ? summary.monthlySpending.map((s) => s.month).sort()
     : [];
   const idx = allMonths.indexOf(sel);
   const prev = idx > 0 ? allMonths[idx - 1] : null;
-  const next = idx >= 0 && idx < allMonths.length - 1 ? allMonths[idx + 1] : null;
+  const next =
+    idx >= 0 && idx < allMonths.length - 1 ? allMonths[idx + 1] : null;
   html += '<div class="month-nav">';
   if (prev) {
     const [pY, pM] = prev.split('-');
@@ -463,14 +562,16 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     <summary>Filter Categories</summary>
     <form id="category-filter" data-month="${sel}">
       <fieldset style="border:1px solid #ccc; padding:.5em;">
-        ${monthCategoryList.map(cat => {
-          const isSt = /saving|transfer/i.test(cat);
-          return `
+        ${monthCategoryList
+          .map((cat) => {
+            const isSt = /saving|transfer/i.test(cat);
+            return `
         <label style="margin-right:.5em;">
           <input type="checkbox" name="category" value="${cat}" ${isSt ? '' : 'checked'}>
           ${cat}
         </label>`;
-        }).join('')}
+          })
+          .join('')}
       </fieldset>
     </form>
     <div class="filter-actions" style="margin: .5em 0; font-size: .9em;">
@@ -481,7 +582,6 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   </details>`;
   }
 
-  
   if (Array.isArray(summary.dailySpending)) {
     const dailyData = summary.dailySpending;
     html += `
@@ -492,8 +592,10 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   </script>`;
   }
 
-  
-  const cb = summary.categoryBreakdown && summary.categoryBreakdown.perMonth && summary.categoryBreakdown.perMonth[sel];
+  const cb =
+    summary.categoryBreakdown &&
+    summary.categoryBreakdown.perMonth &&
+    summary.categoryBreakdown.perMonth[sel];
   // Category Distribution section
   if (cb) {
     const monthCategories = cb.categories;
@@ -506,7 +608,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   }
   // Spending Category Spikes (moved next)
   if (summary.anomalies && Array.isArray(summary.anomalies.spikes)) {
-    const spikes = summary.anomalies.spikes.filter(s => s.month === sel);
+    const spikes = summary.anomalies.spikes.filter((s) => s.month === sel);
     html += `
   <h2>Spending Category Spikes</h2>`;
     if (spikes.length) {
@@ -514,7 +616,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   <table id="spikes-table">
     <thead><tr><th>Category</th><th>Month</th><th>Amount</th><th>Mean</th><th>SD</th></tr></thead>
     <tbody>`;
-      spikes.forEach(s => {
+      spikes.forEach((s) => {
         html += `
       <tr data-category="${s.category}">
         <td><a href="/years/${year}/${month}/category/${encodeURIComponent(s.category)}">${s.category}</a></td>
@@ -532,7 +634,6 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     }
   }
 
-  
   if (summary.merchantInsights && summary.merchantInsights.usageOverTime) {
     html += `
   <h2>Top Merchants</h2>
@@ -543,9 +644,10 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   </script>`;
   }
 
-  
   if (summary.anomalies && Array.isArray(summary.anomalies.outliers)) {
-    const flagged = summary.anomalies.outliers.filter(o => o.date.startsWith(sel));
+    const flagged = summary.anomalies.outliers.filter((o) =>
+      o.date.startsWith(sel)
+    );
     html += `
   <h2>Flagged Transactions</h2>`;
     if (flagged.length) {
@@ -553,8 +655,8 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   <table id="flagged-transactions-table">
     <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th></tr></thead>
     <tbody>`;
-      flagged.forEach(o => {
-      html += `
+      flagged.forEach((o) => {
+        html += `
       <tr data-category="${o.category}">
         <td>${o.date}</td>
         <td>${o.description || ''}</td>
@@ -571,8 +673,6 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     }
   }
 
-
-
   // Recurring bills & subscriptions for the selected month
   html += `
   <h2>Recurring Bills & Subscriptions</h2>
@@ -586,10 +686,11 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
       </tr>
     </thead>
     <tbody>`;
-  const recs = (summary.trends.recurringBills || []).filter(item =>
-    (summary.merchantInsights.usageOverTime[item.description] || {})[sel] > 0
+  const recs = (summary.trends.recurringBills || []).filter(
+    (item) =>
+      (summary.merchantInsights.usageOverTime[item.description] || {})[sel] > 0
   );
-  recs.forEach(item => {
+  recs.forEach((item) => {
     html += `
       <tr data-category="${item.category}">
         <td><a href="/years/${year}/${month}/category/${encodeURIComponent(item.category)}">${item.description}</a></td>
@@ -610,7 +711,6 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   return html;
 }
 
-
 /**
  * Render summary data as a simple HTML page.
  * @param {object} summary
@@ -618,9 +718,10 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
  * @returns {string} HTML string
  */
 function renderHtml(summary, currencyRawParam) {
-  const title = (summary.monthlyOverview && summary.monthlyOverview.length === 1)
-    ? `Summary for ${fmtMonth(summary.monthlyOverview[0].month)}`
-    : 'Overall Summary';
+  const title =
+    summary.monthlyOverview && summary.monthlyOverview.length === 1
+      ? `Summary for ${fmtMonth(summary.monthlyOverview[0].month)}`
+      : 'Overall Summary';
   let html = `<!doctype html>
 <html lang="en">
 <head>
@@ -633,15 +734,18 @@ function renderHtml(summary, currencyRawParam) {
   <h1>${title}</h1>`;
   // Add simple prev/next navigation for single-month view
   // Simple prev/next navigation for single-month view
-  const isMonthView = Array.isArray(summary.monthlyOverview) && summary.monthlyOverview.length === 1;
+  const isMonthView =
+    Array.isArray(summary.monthlyOverview) &&
+    summary.monthlyOverview.length === 1;
   if (isMonthView) {
     const current = summary.monthlyOverview[0].month;
     const allMonths = Array.isArray(summary.monthlySpending)
-      ? summary.monthlySpending.map(s => s.month).sort()
+      ? summary.monthlySpending.map((s) => s.month).sort()
       : [];
     const idx = allMonths.indexOf(current);
     const prev = idx > 0 ? allMonths[idx - 1] : null;
-    const next = idx >= 0 && idx < allMonths.length - 1 ? allMonths[idx + 1] : null;
+    const next =
+      idx >= 0 && idx < allMonths.length - 1 ? allMonths[idx + 1] : null;
     // extract current year for navigation
     const [curY] = current.split('-');
     // navigation links
@@ -662,7 +766,10 @@ function renderHtml(summary, currencyRawParam) {
     }
     html += '</div>';
   }
-  if (Array.isArray(summary.monthlyOverview) && summary.monthlyOverview.length === 1) {
+  if (
+    Array.isArray(summary.monthlyOverview) &&
+    summary.monthlyOverview.length === 1
+  ) {
     const sel = summary.monthlyOverview[0].month;
     html += `
   <canvas id="spendingChart" width="600" height="150"></canvas>
@@ -673,7 +780,9 @@ function renderHtml(summary, currencyRawParam) {
   }
   if (Array.isArray(summary.monthlyOverview)) {
     // Find spending per month
-    const spendArr = Array.isArray(summary.monthlySpending) ? summary.monthlySpending : [];
+    const spendArr = Array.isArray(summary.monthlySpending)
+      ? summary.monthlySpending
+      : [];
     html += `
   <table>
     <thead>
@@ -687,8 +796,8 @@ function renderHtml(summary, currencyRawParam) {
       </tr>
     </thead>
     <tbody>`;
-    summary.monthlyOverview.forEach(item => {
-      const sp = spendArr.find(s => s.month === item.month);
+    summary.monthlyOverview.forEach((item) => {
+      const sp = spendArr.find((s) => s.month === item.month);
       const spVal = sp ? sp.spending : 0;
       const [iyear, imonth] = item.month.split('-');
       html += `
@@ -706,13 +815,17 @@ function renderHtml(summary, currencyRawParam) {
   </table>`;
   }
   // If single-month view, add Category Breakdown
-  if (Array.isArray(summary.monthlyOverview) && summary.monthlyOverview.length === 1) {
+  if (
+    Array.isArray(summary.monthlyOverview) &&
+    summary.monthlyOverview.length === 1
+  ) {
     const month = summary.monthlyOverview[0].month;
     // parse year and month for links
     const [cy, cm] = month.split('-');
-    const cb = summary.categoryBreakdown && summary.categoryBreakdown.perMonth
-      ? summary.categoryBreakdown.perMonth[month]
-      : null;
+    const cb =
+      summary.categoryBreakdown && summary.categoryBreakdown.perMonth
+        ? summary.categoryBreakdown.perMonth[month]
+        : null;
     if (cb) {
       html += `
   <h2>Spending Category Breakdown (${fmtMonth(month)})</h2>
@@ -731,26 +844,36 @@ function renderHtml(summary, currencyRawParam) {
     <tbody>`;
       // sort categories by Δ vs Prev descending
       const sortedCats = Object.keys(cb.categories).sort((a, b) => {
-        const aVal = (cb.changeVsPrevious && cb.changeVsPrevious[a] != null)
-          ? cb.changeVsPrevious[a] : Number.NEGATIVE_INFINITY;
-        const bVal = (cb.changeVsPrevious && cb.changeVsPrevious[b] != null)
-          ? cb.changeVsPrevious[b] : Number.NEGATIVE_INFINITY;
+        const aVal =
+          cb.changeVsPrevious && cb.changeVsPrevious[a] != null
+            ? cb.changeVsPrevious[a]
+            : Number.NEGATIVE_INFINITY;
+        const bVal =
+          cb.changeVsPrevious && cb.changeVsPrevious[b] != null
+            ? cb.changeVsPrevious[b]
+            : Number.NEGATIVE_INFINITY;
         return bVal - aVal;
       });
-      sortedCats.forEach(cat => {
+      sortedCats.forEach((cat) => {
         const amt = cb.categories[cat] || 0;
-        const changeVal = (cb.changeVsPrevious && cb.changeVsPrevious[cat] != null)
-          ? cb.changeVsPrevious[cat] : null;
+        const changeVal =
+          cb.changeVsPrevious && cb.changeVsPrevious[cat] != null
+            ? cb.changeVsPrevious[cat]
+            : null;
         let changeHtml = '';
         if (changeVal != null) {
-          const arrow = changeVal > 0
-            ? '<span style="color:red;">▲</span>'
-            : changeVal < 0
-              ? '<span style="color:green;">▼</span>'
-              : '';
+          const arrow =
+            changeVal > 0
+              ? '<span style="color:red;">▲</span>'
+              : changeVal < 0
+                ? '<span style="color:green;">▼</span>'
+                : '';
           changeHtml = `${arrow} ${fmtAmount(changeVal, currencyRawParam)}`;
         }
-        const bud = cb.budgetVsActual && cb.budgetVsActual[cat] ? cb.budgetVsActual[cat] : {};
+        const bud =
+          cb.budgetVsActual && cb.budgetVsActual[cat]
+            ? cb.budgetVsActual[cat]
+            : {};
         html += `
       <tr>
         <td>
@@ -773,8 +896,11 @@ function renderHtml(summary, currencyRawParam) {
 <script src="/charts.js"></script>
 </body>
 </html>`;
-  
-  if (Array.isArray(summary.monthlyOverview) && summary.monthlyOverview.length === 1) {
+
+  if (
+    Array.isArray(summary.monthlyOverview) &&
+    summary.monthlyOverview.length === 1
+  ) {
     const [cy, cm] = summary.monthlyOverview[0].month.split('-');
     html += `
   <p><a href="/years/${cy}/${cm}/insights">View Insights for ${fmtMonth(summary.monthlyOverview[0].month)} →</a></p>`;
@@ -792,15 +918,15 @@ function renderYearHtml(summary, year, currencyRawParam) {
   const selYear = year || new Date().getFullYear().toString();
   // Find yearly summary for the selected year
   const yearly = Array.isArray(summary.yearlySummary)
-    ? summary.yearlySummary.find(y => y.year === selYear)
+    ? summary.yearlySummary.find((y) => y.year === selYear)
     : null;
   // Filter monthly overview for months in the selected year
   const months = Array.isArray(summary.monthlyOverview)
-    ? summary.monthlyOverview.filter(m => m.month.startsWith(selYear + '-'))
+    ? summary.monthlyOverview.filter((m) => m.month.startsWith(selYear + '-'))
     : [];
   // Filter monthly spending for the selected year
   const spendingArr = Array.isArray(summary.monthlySpending)
-    ? summary.monthlySpending.filter(s => s.month.startsWith(selYear + '-'))
+    ? summary.monthlySpending.filter((s) => s.month.startsWith(selYear + '-'))
     : [];
   // Build HTML
   // Begin HTML document with Chart.js included for bar charts
@@ -816,11 +942,12 @@ function renderYearHtml(summary, year, currencyRawParam) {
   <h1>Annual Summary for ${selYear}</h1>`;
   // Year navigation links
   const yearsList = Array.isArray(summary.yearlySummary)
-    ? summary.yearlySummary.map(y => y.year).sort()
+    ? summary.yearlySummary.map((y) => y.year).sort()
     : [];
   const idxY = yearsList.indexOf(selYear);
   const prevY = idxY > 0 ? yearsList[idxY - 1] : null;
-  const nextY = idxY >= 0 && idxY < yearsList.length - 1 ? yearsList[idxY + 1] : null;
+  const nextY =
+    idxY >= 0 && idxY < yearsList.length - 1 ? yearsList[idxY + 1] : null;
   html += '<div class="year-nav">';
   if (prevY) {
     html += `<a class="prev-year" href="/years/${prevY}">← ${prevY}</a>`;
@@ -891,8 +1018,8 @@ function renderYearHtml(summary, year, currencyRawParam) {
       </tr>
     </thead>
     <tbody>`;
-    months.forEach(item => {
-      const sp = spendingArr.find(s => s.month === item.month);
+    months.forEach((item) => {
+      const sp = spendingArr.find((s) => s.month === item.month);
       const spVal = sp ? sp.spending : 0;
       const [iyear, imonth] = item.month.split('-');
       html += `
@@ -912,13 +1039,11 @@ function renderYearHtml(summary, year, currencyRawParam) {
     html += `<p>No monthly data for year ${selYear}</p>`;
   }
 
-
-
   html += `
 <script src="/charts.js"></script>
 </body>
 </html>`;
-  
+
   // Link to insights at bottom of page
   html += `<p><a href="/years/${selYear}/insights">View Insights for ${selYear} →</a></p>`;
   return html;
@@ -931,5 +1056,5 @@ module.exports = {
   renderAllYearsHtml,
   renderCategoryTransactionsHtml,
   renderMonthInsightsHtml,
-  renderYearInsightsHtml
+  renderYearInsightsHtml,
 };

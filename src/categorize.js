@@ -7,7 +7,7 @@ process.env.TF_CPP_MIN_LOG_LEVEL = '3';
 {
   const util = require('util');
   util.isArray = Array.isArray;
-  util.isNullOrUndefined = v => v === null || v === undefined;
+  util.isNullOrUndefined = (v) => v === null || v === undefined;
 }
 require('dotenv').config();
 const fs = require('fs');
@@ -21,18 +21,26 @@ function loadJSON(filePath) {
   }
 }
 // Load category definitions: user-provided or default
-const userCategoriesPath = path.resolve(__dirname, '..', 'data', 'categories.json');
+const userCategoriesPath = path.resolve(
+  __dirname,
+  '..',
+  'data',
+  'categories.json'
+);
 const defaultCategories = require('../categories/default_categories.json');
 const categories = loadJSON(userCategoriesPath) || defaultCategories;
 // Concurrency limiter for AI requests
 const pLimit = require('p-limit');
 // Classification mode flags
 // Legacy keyword rules flag
-const rulesFlag = process.env.USE_RULES === 'true' || process.argv.includes('--rules');
+const rulesFlag =
+  process.env.USE_RULES === 'true' || process.argv.includes('--rules');
 // Pass-through flag: use originalCategory as category
-const passFlag = process.env.USE_PASS === 'true' || process.argv.includes('--pass');
+const passFlag =
+  process.env.USE_PASS === 'true' || process.argv.includes('--pass');
 // Embedding-based classification flag
-const embFlag = process.env.USE_EMBEDDINGS === 'true' || process.argv.includes('--emb');
+const embFlag =
+  process.env.USE_EMBEDDINGS === 'true' || process.argv.includes('--emb');
 // AI-based classification flag
 const aiFlag = process.env.USE_AI === 'true' || process.argv.includes('--ai');
 // Determine which classifier to use (precedence: rules > pass > embeddings > AI > default pass)
@@ -45,7 +53,8 @@ const apiKey = process.env.OPENAI_API_KEY;
 const aiConcurrency = parseInt(process.env.AI_CONCURRENCY || '10', 10);
 const aiModel = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
 // Embedding model for vector classification
-const embeddingModel = process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-ada-002';
+const embeddingModel =
+  process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-ada-002';
 // Initialize OpenAI client if API key is provided
 let openai;
 if (apiKey) {
@@ -54,12 +63,14 @@ if (apiKey) {
 }
 
 function categorizeTransactions(transactions) {
-  return transactions.map(tx => {
+  return transactions.map((tx) => {
     let assigned = 'other';
     for (const [cat, keywords] of Object.entries(categories)) {
       for (const kw of keywords) {
-        if ((tx.description || '').toLowerCase().includes(kw.toLowerCase()) ||
-            (tx.originalCategory || '').toLowerCase().includes(kw.toLowerCase())) {
+        if (
+          (tx.description || '').toLowerCase().includes(kw.toLowerCase()) ||
+          (tx.originalCategory || '').toLowerCase().includes(kw.toLowerCase())
+        ) {
           assigned = cat;
           break;
         }
@@ -77,31 +88,38 @@ async function categorizeWithAI(transactions) {
   let done = 0;
   // limit concurrency
   const limit = pLimit(aiConcurrency);
-  const tasks = transactions.map(tx => limit(async () => {
-    // progress indicator
-    done++;
-    process.stdout.write(`Categorizing using AI: ${done}/${total}\r`);
-    const prompt = `Categories: ${catKeys.join(', ')}\n` +
-      `Assign the best category to this transaction. ` +
-      `Reply with exactly one category from the list.\n` +
-      `Date: ${tx.date}\nAmount: ${tx.amount}\nDescription: ${tx.description}\nOriginal Category: ${tx.originalCategory}`;
-    try {
-      const resp = await openai.chat.completions.create({
-        model: aiModel,
-        messages: [
-          { role: 'system', content: 'You are a financial assistant that classifies transactions into categories.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0
-      });
-      let cat = resp.choices[0].message.content.trim();
-      if (!catKeys.includes(cat)) cat = 'other';
-      return { ...tx, category: cat };
-    } catch (err) {
-      console.error('AI categorization error:', err);
-      return { ...tx, category: 'other' };
-    }
-  }));
+  const tasks = transactions.map((tx) =>
+    limit(async () => {
+      // progress indicator
+      done++;
+      process.stdout.write(`Categorizing using AI: ${done}/${total}\r`);
+      const prompt =
+        `Categories: ${catKeys.join(', ')}\n` +
+        `Assign the best category to this transaction. ` +
+        `Reply with exactly one category from the list.\n` +
+        `Date: ${tx.date}\nAmount: ${tx.amount}\nDescription: ${tx.description}\nOriginal Category: ${tx.originalCategory}`;
+      try {
+        const resp = await openai.chat.completions.create({
+          model: aiModel,
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You are a financial assistant that classifies transactions into categories.',
+            },
+            { role: 'user', content: prompt },
+          ],
+          temperature: 0,
+        });
+        let cat = resp.choices[0].message.content.trim();
+        if (!catKeys.includes(cat)) cat = 'other';
+        return { ...tx, category: cat };
+      } catch (err) {
+        console.error('AI categorization error:', err);
+        return { ...tx, category: 'other' };
+      }
+    })
+  );
   const results = await Promise.all(tasks);
   // end progress line
   process.stdout.write('\n');
@@ -120,7 +138,7 @@ async function categorizeWithEmbeddings(transactions) {
   const catTensor = await model.embed(catKeys);
   const catEmbArray = await catTensor.array();
   console.log(`Embedding ${transactions.length} transactions...`);
-  const texts = transactions.map(tx => tx.description || '');
+  const texts = transactions.map((tx) => tx.description || '');
   const txTensor = await model.embed(texts);
   const txEmbArray = await txTensor.array();
   // Classify by nearest neighbor dot-product
@@ -144,15 +162,20 @@ async function categorizeWithEmbeddings(transactions) {
  * Pass-through classifier: use originalCategory field as the assigned category.
  */
 function categorizePassThrough(transactions) {
-  return transactions.map(tx => ({
+  return transactions.map((tx) => ({
     ...tx,
-    category: tx.originalCategory || 'other'
+    category: tx.originalCategory || 'other',
   }));
 }
 
 async function run() {
   const inputFile = path.resolve(__dirname, '..', 'data', 'transactions.json');
-  const outputFile = path.resolve(__dirname, '..', 'data', 'transactions_categorized.json');
+  const outputFile = path.resolve(
+    __dirname,
+    '..',
+    'data',
+    'transactions_categorized.json'
+  );
   if (!fs.existsSync(inputFile)) {
     console.error('Input file not found:', inputFile);
     process.exit(1);
@@ -166,10 +189,14 @@ async function run() {
   }
   // Dispatch classifier based on flags
   if (useRules) {
-    console.log('Keyword rules classification: using defined categories.json patterns');
+    console.log(
+      'Keyword rules classification: using defined categories.json patterns'
+    );
     categorized = categorizeTransactions(transactions);
   } else if (usePassThrough) {
-    console.log('Pass-through classification: using originalCategory for each transaction');
+    console.log(
+      'Pass-through classification: using originalCategory for each transaction'
+    );
     categorized = categorizePassThrough(transactions);
   } else if (useEmbeddings) {
     console.log('Categorizing transactions using local embedding model...');
@@ -179,15 +206,19 @@ async function run() {
     categorized = await categorizeWithAI(transactions);
   } else {
     // Fallback to pass-through
-    console.log('Default pass-through classification: using originalCategory for each transaction');
+    console.log(
+      'Default pass-through classification: using originalCategory for each transaction'
+    );
     categorized = categorizePassThrough(transactions);
   }
   fs.writeFileSync(outputFile, JSON.stringify(categorized, null, 2));
-  console.log(`Categorized ${categorized.length} transactions. Output to ${outputFile}`);
+  console.log(
+    `Categorized ${categorized.length} transactions. Output to ${outputFile}`
+  );
 }
 // If run directly, execute classification
 if (require.main === module) {
-  run().catch(err => {
+  run().catch((err) => {
     console.error('Error during categorization:', err);
     process.exit(1);
   });

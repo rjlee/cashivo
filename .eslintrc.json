@@ -1,0 +1,25 @@
+{
+  "env": {
+    "node": true,
+    "es2021": true,
+    "browser": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:prettier/recommended"
+  ],
+  "globals": {
+    "Chart": "readonly"
+  },
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "rules": {
+    // project-specific rule overrides
+    "no-prototype-builtins": "off",
+    "no-unused-vars": "off",
+    "no-case-declarations": "off",
+    "no-empty": "off"
+  }
+}

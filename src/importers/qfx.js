@@ -9,9 +9,11 @@ module.exports = {
   name: 'qfx',
   // Use keyword rules classification by default for QFX/OFX imports
   defaultClassifier: 'rules',
-  detect: headers => Array.isArray(headers)
-    && headers.length > 0
-    && (headers[0].trim().startsWith('<?xml') || headers[0].trim().startsWith('<OFX')),
+  detect: (headers) =>
+    Array.isArray(headers) &&
+    headers.length > 0 &&
+    (headers[0].trim().startsWith('<?xml') ||
+      headers[0].trim().startsWith('<OFX')),
   async parse(filePath) {
     const content = fs.readFileSync(filePath, 'utf8');
     const lines = content.split(/\r?\n/);
@@ -32,7 +34,7 @@ module.exports = {
           description: current.description || '',
           notes: current.notes || '',
           originalCategory: current.originalCategory || '',
-          originalCategoryGroup: ''
+          originalCategoryGroup: '',
         });
       } else if (inTrn) {
         if (line.startsWith('<DTPOSTED>')) {
@@ -54,5 +56,5 @@ module.exports = {
       }
     }
     return transactions;
-  }
+  },
 };

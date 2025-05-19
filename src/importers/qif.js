@@ -9,9 +9,10 @@ module.exports = {
   name: 'qif',
   // Use keyword rules classification by default for QIF imports
   defaultClassifier: 'rules',
-  detect: headers => Array.isArray(headers)
-    && headers.length > 0
-    && headers[0].trim().startsWith('!Type:'),
+  detect: (headers) =>
+    Array.isArray(headers) &&
+    headers.length > 0 &&
+    headers[0].trim().startsWith('!Type:'),
   async parse(filePath) {
     const content = fs.readFileSync(filePath, 'utf8');
     const lines = content.split(/\r?\n/);
@@ -60,7 +61,7 @@ module.exports = {
             description: current.description || '',
             notes: current.notes || '',
             originalCategory: current.originalCategory || '',
-            originalCategoryGroup: ''
+            originalCategoryGroup: '',
           });
           current = {};
           break;
@@ -70,5 +71,5 @@ module.exports = {
       }
     }
     return transactions;
-  }
+  },
 };

@@ -3,7 +3,15 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 // summaryModule for loading and rendering summary data
-const { getSummary, renderHtml, renderYearHtml, renderAllYearsHtml, renderCategoryTransactionsHtml, renderMonthInsightsHtml, renderYearInsightsHtml } = require('./summaryModule');
+const {
+  getSummary,
+  renderHtml,
+  renderYearHtml,
+  renderAllYearsHtml,
+  renderCategoryTransactionsHtml,
+  renderMonthInsightsHtml,
+  renderYearInsightsHtml,
+} = require('./summaryModule');
 
 const app = express();
 // Basic HTTP auth if USERNAME and PASSWORD are set in env
@@ -15,7 +23,9 @@ if (USERNAME && PASSWORD) {
       res.set('WWW-Authenticate', 'Basic realm="Protected"');
       return res.status(401).send('Authentication required');
     }
-    const creds = Buffer.from(auth.split(' ')[1], 'base64').toString().split(':');
+    const creds = Buffer.from(auth.split(' ')[1], 'base64')
+      .toString()
+      .split(':');
     const [user, pass] = creds;
     if (user === USERNAME && pass === PASSWORD) return next();
     res.set('WWW-Authenticate', 'Basic realm="Protected"');
@@ -41,7 +51,9 @@ if (!fs.existsSync(dataCategoriesFile)) {
       dataCategoriesFile
     );
   } catch (err) {
-    console.warn(`Warning: unable to copy default categories.json: ${err.message}`);
+    console.warn(
+      `Warning: unable to copy default categories.json: ${err.message}`
+    );
   }
 }
 // Persist default category-groups.json if missing
@@ -53,7 +65,9 @@ if (!fs.existsSync(dataCatGroupsFile)) {
       dataCatGroupsFile
     );
   } catch (err) {
-    console.warn(`Warning: unable to copy default category-groups.json: ${err.message}`);
+    console.warn(
+      `Warning: unable to copy default category-groups.json: ${err.message}`
+    );
   }
 }
 const port = process.env.PORT || 3000;
@@ -65,7 +79,9 @@ const port = process.env.PORT || 3000;
 app.get('/manage', (req, res) => {
   // Display alert if defaults were loaded
   const showMsg = req.query.msg === 'defaults_loaded';
-  const alertHtml = showMsg ? '<p style="color:green;">Default categories loaded successfully.</p>' : '';
+  const alertHtml = showMsg
+    ? '<p class="alert-success">Default categories loaded successfully.</p>'
+    : '';
   res.type('html').send(
     `<!doctype html>
 <html lang="en">
@@ -82,24 +98,24 @@ app.get('/manage', (req, res) => {
     <div>
       <input type="file" name="files" multiple accept=".csv,.qif,.qfx" required />
     </div>
-    <div style="margin-top:1rem;">
+    <div class="mt-1">
       <button type="submit">Upload & Process</button>
     </div>
   </form>
   <!-- Button to reset categories to defaults -->
-  <form method="POST" action="/manage/load-default-categories" style="margin-top:1rem;">
+  <form method="POST" action="/manage/load-default-categories" class="mt-1">
     <button type="submit">Load Default Categories</button>
   </form>
   <hr />
   <h2>Export Data</h2>
-  <form method="GET" action="/manage/export" style="margin-top:1rem;">
+  <form method="GET" action="/manage/export" class="mt-1">
     <input type="hidden" name="format" value="qif">
     <button type="submit">Download QIF Export</button>
   </form>
   <hr />
   <h2>Reset Data</h2>
-  <form method="POST" action="/manage/reset" onsubmit="return confirm('Are you sure you want to delete all transactions and reset data?');">
-    <button type="submit" style="background-color:#c00;color:#fff;padding:0.5rem 1rem;">Delete All Transactions & Reset Data</button>
+  <form method="POST" action="/manage/reset" class="mt-1" onsubmit="return confirm('Are you sure you want to delete all transactions and reset data?');">
+    <button type="submit" class="btn-danger">Delete All Transactions & Reset Data</button>
   </form>
 </body>
 </html>`
@@ -113,21 +129,27 @@ app.get('/manage/export', (req, res) => {
   }
   const txPath = path.join(dataDir, 'transactions_categorized.json');
   if (!fs.existsSync(txPath)) {
-    return res.status(404).send('No transaction data found. Please import transactions first.');
+    return res
+      .status(404)
+      .send('No transaction data found. Please import transactions first.');
   }
   let txs;
   try {
     txs = JSON.parse(fs.readFileSync(txPath, 'utf-8'));
   } catch (err) {
-    return res.status(500).send('Error reading transaction data: ' + err.message);
+    return res
+      .status(500)
+      .send('Error reading transaction data: ' + err.message);
   }
   // Sort transactions by date
   txs.sort((a, b) => a.date.localeCompare(b.date));
   // Build QIF content
   let qif = '!Type:Bank\n';
-  txs.forEach(tx => {
+  txs.forEach((tx) => {
     const [year, month, day] = tx.date.split('-');
-    const dateStr = [month.padStart(2, '0'), day.padStart(2, '0'), year].join('/');
+    const dateStr = [month.padStart(2, '0'), day.padStart(2, '0'), year].join(
+      '/'
+    );
     qif += 'D' + dateStr + '\n';
     qif += 'T' + tx.amount.toFixed(2) + '\n';
     qif += 'P' + tx.description + '\n';
@@ -151,20 +173,24 @@ app.post('/manage', upload.array('files'), (req, res) => {
   const importersDir = path.resolve(__dirname, 'importers');
   let importers = [];
   if (fs.existsSync(importersDir)) {
-    importers = fs.readdirSync(importersDir)
-      .filter(f => f.endsWith('.js'))
-      .map(f => require(path.join(importersDir, f)));
+    importers = fs
+      .readdirSync(importersDir)
+      .filter((f) => f.endsWith('.js'))
+      .map((f) => require(path.join(importersDir, f)));
   }
   const usedClassifiers = new Set();
-  files.forEach(f => {
+  files.forEach((f) => {
     const fp = f.path;
     let headerLine = '';
     try {
       headerLine = fs.readFileSync(fp, 'utf8').split(/\r?\n/)[0] || '';
-    } catch {};
-    const headers = headerLine.split(',').map(h => h.trim());
-    const importer = importers.find(i => typeof i.detect === 'function' && i.detect(headers));
-    if (importer && importer.defaultClassifier) usedClassifiers.add(importer.defaultClassifier);
+    } catch {}
+    const headers = headerLine.split(',').map((h) => h.trim());
+    const importer = importers.find(
+      (i) => typeof i.detect === 'function' && i.detect(headers)
+    );
+    if (importer && importer.defaultClassifier)
+      usedClassifiers.add(importer.defaultClassifier);
   });
   let classifyFlag = '';
   if (usedClassifiers.size === 1) {
@@ -176,11 +202,16 @@ app.post('/manage', upload.array('files'), (req, res) => {
   }
   // Build full pipeline command
   const ingestCmd = 'npm run ingest';
-  const categorizeCmd = classifyFlag ? `npm run categorize -- ${classifyFlag}` : 'npm run categorize';
+  const categorizeCmd = classifyFlag
+    ? `npm run categorize -- ${classifyFlag}`
+    : 'npm run categorize';
   const summaryCmd = 'npm run summary';
   const fullCmd = `${ingestCmd} && ${categorizeCmd} && ${summaryCmd}`;
-  exec(fullCmd, { cwd: path.resolve(__dirname, '..') }, (err, stdout, stderr) => {
-    let html = `<!doctype html>
+  exec(
+    fullCmd,
+    { cwd: path.resolve(__dirname, '..') },
+    (err, stdout, stderr) => {
+      let html = `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -191,16 +222,19 @@ app.post('/manage', upload.array('files'), (req, res) => {
   <h1>Upload Results</h1>
   <p><a href="/manage">← New Upload</a> | <a href="/years">Annual Summaries</a></p>
   <ul>`;
-    files.forEach(f => html += `<li>${f.originalname} → ${f.filename}</li>`);
-    html += '</ul>';
-    if (err) {
-      html += `<h2 style="color:red">Error processing files</h2><pre>${stderr}</pre>`;
-    } else {
-      html += `<h2 style="color:green">Processing complete</h2><pre>${stdout}</pre>`;
+      files.forEach(
+        (f) => (html += `<li>${f.originalname} → ${f.filename}</li>`)
+      );
+      html += '</ul>';
+      if (err) {
+        html += `<h2 style="color:red">Error processing files</h2><pre>${stderr}</pre>`;
+      } else {
+        html += `<h2 style="color:green">Processing complete</h2><pre>${stdout}</pre>`;
+      }
+      html += '</body></html>';
+      res.type('html').send(html);
     }
-    html += '</body></html>';
-    res.type('html').send(html);
-  });
+  );
 });
 // Reset data: delete all generated files in data/
 app.post('/manage/reset', (req, res) => {
@@ -228,21 +262,44 @@ app.post('/manage/reset', (req, res) => {
 // Load default categories and groups from templates
 app.post('/manage/load-default-categories', (req, res) => {
   try {
-    const srcCats = path.join(__dirname, '..', 'categories', 'default_categories.json');
+    const srcCats = path.join(
+      __dirname,
+      '..',
+      'categories',
+      'default_categories.json'
+    );
     const dstCats = path.join(__dirname, '..', 'data', 'categories.json');
     // Ensure data directory and file permissions are writable
     fs.mkdirSync(path.dirname(dstCats), { recursive: true });
-    try { fs.chmodSync(path.dirname(dstCats), 0o777); } catch {};
+    try {
+      fs.chmodSync(path.dirname(dstCats), 0o777);
+    } catch {}
     if (fs.existsSync(dstCats)) {
-      try { fs.chmodSync(dstCats, 0o666); } catch {};
+      try {
+        fs.chmodSync(dstCats, 0o666);
+      } catch {}
     }
     fs.copyFileSync(srcCats, dstCats);
-    const srcGroups = path.join(__dirname, '..', 'categories', 'default_category_groups.json');
-    const dstGroups = path.join(__dirname, '..', 'data', 'category-groups.json');
+    const srcGroups = path.join(
+      __dirname,
+      '..',
+      'categories',
+      'default_category_groups.json'
+    );
+    const dstGroups = path.join(
+      __dirname,
+      '..',
+      'data',
+      'category-groups.json'
+    );
     fs.mkdirSync(path.dirname(dstGroups), { recursive: true });
-    try { fs.chmodSync(path.dirname(dstGroups), 0o777); } catch {};
+    try {
+      fs.chmodSync(path.dirname(dstGroups), 0o777);
+    } catch {}
     if (fs.existsSync(dstGroups)) {
-      try { fs.chmodSync(dstGroups, 0o666); } catch {};
+      try {
+        fs.chmodSync(dstGroups, 0o666);
+      } catch {}
     }
     fs.copyFileSync(srcGroups, dstGroups);
     res.redirect('/manage?msg=defaults_loaded');
@@ -254,7 +311,9 @@ app.post('/manage/load-default-categories', (req, res) => {
 app.get('/api/summary', (req, res) => {
   const summaryPath = path.join(__dirname, '..', 'data', 'summary.json');
   if (!require('fs').existsSync(summaryPath)) {
-    return res.status(404).send({ error: 'summary.json not found. Run npm run start first.' });
+    return res
+      .status(404)
+      .send({ error: 'summary.json not found. Run npm run start first.' });
   }
   res.sendFile(summaryPath);
 });
@@ -323,16 +382,27 @@ app.get('/years/:year/:month/category/:category', (req, res, next) => {
     const year = req.params.year;
     const m = req.params.month.padStart(2, '0');
     const category = decodeURIComponent(req.params.category);
-    const txPath = path.join(__dirname, '..', 'data', 'transactions_categorized.json');
+    const txPath = path.join(
+      __dirname,
+      '..',
+      'data',
+      'transactions_categorized.json'
+    );
     if (!fs.existsSync(txPath)) {
-      return res.status(404).send('Transactions data not found. Run ingestion first.');
+      return res
+        .status(404)
+        .send('Transactions data not found. Run ingestion first.');
     }
     const allTx = JSON.parse(fs.readFileSync(txPath, 'utf-8'));
-    const filtered = allTx.filter(tx =>
-      tx.category === category && tx.date.startsWith(`${year}-${m}`)
+    const filtered = allTx.filter(
+      (tx) => tx.category === category && tx.date.startsWith(`${year}-${m}`)
     );
     const currency = req.query.currency;
-    res.type('html').send(renderCategoryTransactionsHtml(year, m, category, filtered, currency));
+    res
+      .type('html')
+      .send(
+        renderCategoryTransactionsHtml(year, m, category, filtered, currency)
+      );
   } catch (err) {
     next(err);
   }
