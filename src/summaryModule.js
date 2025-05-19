@@ -123,7 +123,7 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
   if (yearOutliers.length) {
     html += `
   <table id="flagged-transactions-table">
-    <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th><th>Details</th></tr></thead>
+    <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th></tr></thead>
     <tbody>`;
     yearOutliers.forEach(o => {
       html += `
@@ -131,8 +131,7 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
         <td>${o.date}</td>
         <td>${o.description || ''}</td>
         <td>${fmtAmount(Math.abs(o.amount), currencyRawParam)}</td>
-        <td>${o.category || ''}</td>
-        <td><a href="/years/${year}/insights?category=${encodeURIComponent(o.category)}">Filter</a></td>
+        <td><a href="/years/${year}/insights?category=${encodeURIComponent(o.category)}">${o.category || ''}</a></td>
       </tr>`;
     });
     html += `
