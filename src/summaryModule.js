@@ -335,10 +335,10 @@ function renderAllYearsHtml(summary, currencyRawParam) {
     html += `
     </tbody>
   </table>
-  <p><a href="/manage">Manage Data</a></p>`;
+  <p><a href="/manage">Manage Data →</a></p>`;
   } else {
     html += `<p>No annual summaries available.</p>`;
-    html += `<p><a href="/manage">Manage Data</a></p>`;
+    html += `<p><a href="/manage">Manage Data →</a></p>`;
   }
 
   html += `
@@ -806,7 +806,7 @@ function renderHtml(summary, currencyRawParam) {
   if (Array.isArray(summary.monthlyOverview) && summary.monthlyOverview.length === 1) {
     const [cy, cm] = summary.monthlyOverview[0].month.split('-');
     html += `
-  <p><a href="/years/${cy}/${cm}/insights">View Insights for ${fmtMonth(summary.monthlyOverview[0].month)}</a></p>`;
+  <p><a href="/years/${cy}/${cm}/insights">View Insights for ${fmtMonth(summary.monthlyOverview[0].month)} →</a></p>`;
   }
   return html;
 }
@@ -976,7 +976,7 @@ function renderYearHtml(summary, year, currencyRawParam) {
 </html>`;
   
   // Link to insights at bottom of page
-  html += `<p><a href="/years/${selYear}/insights">View Insights for ${selYear}</a></p>`;
+  html += `<p><a href="/years/${selYear}/insights">View Insights for ${selYear} →</a></p>`;
   return html;
 }
 
