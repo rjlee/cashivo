@@ -4,11 +4,12 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!form) return;
   var tableIds = ['flagged-transactions-table','spikes-table','recurring-table'];
   var monthSel = form.getAttribute('data-month');
-  // Collapse each table to first 5 rows and add a "Show all" link
+  // Collapse each data table to first 5 rows with a toggle link (Show all / Show less)
   tableIds.forEach(function(id) {
     var tbl = document.getElementById(id);
     if (!tbl) return;
     var rows = Array.from(tbl.querySelectorAll('tbody tr'));
+    // Initial collapse
     rows.forEach(function(r, idx) {
       if (idx >= 5) r.style.display = 'none';
     });
@@ -17,13 +18,25 @@ document.addEventListener('DOMContentLoaded', function() {
     var td = document.createElement('td');
     td.colSpan = tbl.tHead.rows[0].cells.length;
     td.style.textAlign = 'center';
+    var expanded = false;
     var a = document.createElement('a');
     a.href = '#';
     a.textContent = 'Show all (' + rows.length + ')';
     a.addEventListener('click', function(e) {
       e.preventDefault();
-      rows.forEach(function(r) { r.style.display = ''; });
-      a.remove();
+      if (!expanded) {
+        // show all
+        rows.forEach(function(r) { r.style.display = ''; });
+        a.textContent = 'Show less';
+        expanded = true;
+      } else {
+        // collapse back to 5 rows
+        rows.forEach(function(r, idx) {
+          r.style.display = (idx < 5 ? '' : 'none');
+        });
+        a.textContent = 'Show all (' + rows.length + ')';
+        expanded = false;
+      }
     });
     td.appendChild(a);
     tr.appendChild(td);

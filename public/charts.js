@@ -16,23 +16,34 @@ document.addEventListener('DOMContentLoaded', function() {
       options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
     });
   }
-  // Summary Page: Collapse Category Breakdown table to top 5 with "Show all"
+  // Summary Page: Collapse Category Breakdown table to first 5 rows with toggle (Show all / Show less)
   var catTbl = document.getElementById('category-breakdown-table');
   if (catTbl) {
     var rows = Array.from(catTbl.querySelectorAll('tbody tr'));
+    // Initial collapse
     rows.forEach(function(r, i) { if (i >= 5) r.style.display = 'none'; });
     var tfoot = document.createElement('tfoot');
     var tr = document.createElement('tr');
     var td = document.createElement('td');
     td.colSpan = catTbl.tHead.rows[0].cells.length;
     td.style.textAlign = 'center';
+    var expanded = false;
     var a = document.createElement('a');
     a.href = '#';
     a.textContent = 'Show all (' + rows.length + ')';
     a.addEventListener('click', function(e) {
       e.preventDefault();
-      rows.forEach(function(r) { r.style.display = ''; });
-      a.remove();
+      if (!expanded) {
+        // show all rows
+        rows.forEach(function(r) { r.style.display = ''; });
+        a.textContent = 'Show less';
+        expanded = true;
+      } else {
+        // collapse back to 5 rows
+        rows.forEach(function(r, i) { r.style.display = (i < 5 ? '' : 'none'); });
+        a.textContent = 'Show all (' + rows.length + ')';
+        expanded = false;
+      }
     });
     td.appendChild(a);
     tr.appendChild(td);
