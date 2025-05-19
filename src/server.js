@@ -71,12 +71,12 @@ app.get('/manage', (req, res) => {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Upload Transactions</title>
+  <title>Manage Data</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   ${alertHtml}
-  <h1>Upload Transactions</h1>
+  <h1>Manage Data</h1>
   <p><a href="/years">← Back to Annual Summaries</a></p>
   <form method="POST" action="/manage" enctype="multipart/form-data">
     <div>
