@@ -32,6 +32,8 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/public ./public
 COPY --from=build /app/src ./src
 COPY --from=build /app/data ./data
+# Include default categories templates
+COPY --from=build /app/categories ./categories
 
 # Expose server port
 EXPOSE 3000
