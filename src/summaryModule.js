@@ -287,16 +287,26 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   html += '</div>';
   if (monthCategoryList.length) {
     html += `
-  <form id="category-filter" data-month="${sel}" style="margin-bottom:1em;">
-    <fieldset style="border:1px solid #ccc; padding:.5em;">
-      <legend>Show categories</legend>
-      ${monthCategoryList.map(cat => `
-      <label style="margin-right:.5em;">
-        <input type="checkbox" name="category" value="${cat}" checked>
-        ${cat}
-      </label>`).join('')}
-    </fieldset>
-  </form>`;
+  <details id="filter-panel" style="margin-bottom:1em;">
+    <summary>Filter Categories</summary>
+    <form id="category-filter" data-month="${sel}">
+      <fieldset style="border:1px solid #ccc; padding:.5em;">
+        ${monthCategoryList.map(cat => {
+          const isSt = /saving|transfer/i.test(cat);
+          return `
+        <label style="margin-right:.5em;">
+          <input type="checkbox" name="category" value="${cat}" ${isSt ? '' : 'checked'}>
+          ${cat}
+        </label>`;
+        }).join('')}
+      </fieldset>
+    </form>
+    <div class="filter-actions" style="margin: .5em 0; font-size: .9em;">
+      <a href="#" id="clear-all" style="margin-right:1em;">Clear all</a>
+      <a href="#" id="select-all" style="margin-right:1em;">Select all</a>
+      <a href="#" id="hide-savings-transfers">Hide savings & transfers</a>
+    </div>
+  </details>`;
   }
 
   

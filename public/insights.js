@@ -4,6 +4,10 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!form) return;
   var tableIds = ['flagged-transactions-table','spikes-table','recurring-table'];
   var monthSel = form.getAttribute('data-month');
+  // Filter panel action links
+  var clearAllLink = document.getElementById('clear-all');
+  var selectAllLink = document.getElementById('select-all');
+  var hideSTLink = document.getElementById('hide-savings-transfers');
   // Collapse each data table to first 5 rows with a toggle link (Show all / Show less)
   tableIds.forEach(function(id) {
     var tbl = document.getElementById(id);
@@ -110,6 +114,34 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       dailyChart.update();
     }
+  }
+  // Filter panel action handlers
+  if (clearAllLink) {
+    clearAllLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      form.querySelectorAll('input[name="category"]')
+        .forEach(function(cb) { cb.checked = false; });
+      updateAll();
+    });
+  }
+  if (selectAllLink) {
+    selectAllLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      form.querySelectorAll('input[name="category"]')
+        .forEach(function(cb) { cb.checked = true; });
+      updateAll();
+    });
+  }
+  if (hideSTLink) {
+    hideSTLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      var regex = /saving|transfer/i;
+      form.querySelectorAll('input[name="category"]')
+        .forEach(function(cb) {
+          if (regex.test(cb.value)) cb.checked = false;
+        });
+      updateAll();
+    });
   }
   form.addEventListener('change', updateAll);
   updateAll();
