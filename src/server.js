@@ -35,18 +35,26 @@ if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 // Persist default categories.json if missing
 const dataCategoriesFile = path.join(dataDir, 'categories.json');
 if (!fs.existsSync(dataCategoriesFile)) {
-  fs.copyFileSync(
-    path.join(categoriesDir, 'default_categories.json'),
-    dataCategoriesFile
-  );
+  try {
+    fs.copyFileSync(
+      path.join(categoriesDir, 'default_categories.json'),
+      dataCategoriesFile
+    );
+  } catch (err) {
+    console.warn(`Warning: unable to copy default categories.json: ${err.message}`);
+  }
 }
 // Persist default category-groups.json if missing
 const dataCatGroupsFile = path.join(dataDir, 'category-groups.json');
 if (!fs.existsSync(dataCatGroupsFile)) {
-  fs.copyFileSync(
-    path.join(categoriesDir, 'default_category_groups.json'),
-    dataCatGroupsFile
-  );
+  try {
+    fs.copyFileSync(
+      path.join(categoriesDir, 'default_category_groups.json'),
+      dataCatGroupsFile
+    );
+  } catch (err) {
+    console.warn(`Warning: unable to copy default category-groups.json: ${err.message}`);
+  }
 }
 const port = process.env.PORT || 3000;
 
@@ -182,9 +190,20 @@ app.post('/manage/load-default-categories', (req, res) => {
   try {
     const srcCats = path.join(__dirname, '..', 'categories', 'default_categories.json');
     const dstCats = path.join(__dirname, '..', 'data', 'categories.json');
+    // Ensure data directory and file permissions are writable
+    fs.mkdirSync(path.dirname(dstCats), { recursive: true });
+    try { fs.chmodSync(path.dirname(dstCats), 0o777); } catch {};
+    if (fs.existsSync(dstCats)) {
+      try { fs.chmodSync(dstCats, 0o666); } catch {};
+    }
     fs.copyFileSync(srcCats, dstCats);
     const srcGroups = path.join(__dirname, '..', 'categories', 'default_category_groups.json');
     const dstGroups = path.join(__dirname, '..', 'data', 'category-groups.json');
+    fs.mkdirSync(path.dirname(dstGroups), { recursive: true });
+    try { fs.chmodSync(path.dirname(dstGroups), 0o777); } catch {};
+    if (fs.existsSync(dstGroups)) {
+      try { fs.chmodSync(dstGroups, 0o666); } catch {};
+    }
     fs.copyFileSync(srcGroups, dstGroups);
     res.redirect('/manage?msg=defaults_loaded');
   } catch (err) {
