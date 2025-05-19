@@ -290,6 +290,14 @@ function renderCategoryTransactionsHtml(year, month, category, transactions, cur
  */
 function renderAllYearsHtml(summary, currencyRawParam) {
   const years = Array.isArray(summary.yearlySummary) ? summary.yearlySummary : [];
+  // Compute spending per year (sum of monthlySpending excluding transfers/savings)
+  const yearSpendingMap = {};
+  if (Array.isArray(summary.monthlySpending)) {
+    summary.monthlySpending.forEach(ms => {
+      const [yr] = ms.month.split('-');
+      yearSpendingMap[yr] = (yearSpendingMap[yr] || 0) + ms.spending;
+    });
+  }
   let html = `<!doctype html>
 <html lang="en">
 <head>
@@ -307,6 +315,7 @@ function renderAllYearsHtml(summary, currencyRawParam) {
         <th title="Calendar year">Year</th>
         <th title="Total inflows for the year">Income</th>
         <th title="Total outflows (all expenses, transfers, savings, etc.) for the year">Expenses</th>
+        <th title="Total spending excluding transfers & savings for the year">Spending</th>
         <th title="Net cash flow: Income minus Expenses">Net Cash Flow</th>
         <th title="(Net Cash Flow / Income) * 100">Savings Rate</th>
       </tr>
@@ -318,6 +327,7 @@ function renderAllYearsHtml(summary, currencyRawParam) {
         <td><a href="/years/${y.year}">${y.year}</a></td>
         <td>${fmtAmount(y.totalIncome, currencyRawParam)}</td>
         <td>${fmtAmount(y.totalExpenses, currencyRawParam)}</td>
+        <td>${fmtAmount(yearSpendingMap[y.year] || 0, currencyRawParam)}</td>
         <td>${fmtAmount(y.netCashFlow, currencyRawParam)}</td>
         <td>${y.savingsRate.toFixed(2)}%</td>
       </tr>`;
@@ -865,6 +875,8 @@ function renderYearHtml(summary, year, currencyRawParam) {
   }
   // Yearly summary table
   if (yearly) {
+    // compute total spending for the year (sum of monthlySpending entries)
+    const annualSpending = spendingArr.reduce((sum, m) => sum + m.spending, 0);
     html += `
   <table>
     <thead>
@@ -872,6 +884,7 @@ function renderYearHtml(summary, year, currencyRawParam) {
         <th title="Calendar year">Year</th>
         <th title="Total inflows for the year">Income</th>
         <th title="Total outflows (all expenses, transfers, savings, etc.) for the year">Expenses</th>
+        <th title="Total spending excluding transfers & savings for the year">Spending</th>
         <th title="Net cash flow: Income minus Expenses">Net Cash Flow</th>
         <th title="(Net Cash Flow / Income) * 100">Savings Rate</th>
       </tr>
@@ -881,6 +894,7 @@ function renderYearHtml(summary, year, currencyRawParam) {
         <td>${yearly.year}</td>
         <td>${fmtAmount(yearly.totalIncome, currencyRawParam)}</td>
         <td>${fmtAmount(yearly.totalExpenses, currencyRawParam)}</td>
+        <td>${fmtAmount(annualSpending, currencyRawParam)}</td>
         <td>${fmtAmount(yearly.netCashFlow, currencyRawParam)}</td>
         <td>${yearly.savingsRate.toFixed(2)}%</td>
       </tr>
