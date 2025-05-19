@@ -47,44 +47,82 @@ function fmtMonth(ym) {
   const shortYr = yr.length === 4 ? yr.slice(2) : yr;
   return `${name} ${shortYr}`;
 }
-// Generic collapse script: hide extra rows in tables (except Month/Year listings)
+// Generic collapse and filter script: hide extra rows and filter by category
 const collapseScript = `<script>
 (function() {
-  // Collapse extra rows in tables (except Month/Year listings)
-  document.querySelectorAll('table').forEach(function(table) {
-    var firstTh = table.querySelector('thead th');
-    if (!firstTh) return;
-    var header = firstTh.textContent.trim();
-    if (header === 'Month' || header === 'Year') return;
-    var rows = table.querySelectorAll('tbody tr');
-    var max = 5;
-    var total = rows.length;
-    if (total <= max) return;
-    Array.prototype.forEach.call(rows, function(row, i) {
-      if (i >= max) row.style.display = 'none';
+  var tableIds = ['flagged-transactions-table','spikes-table','recurring-table'];
+  function collapseTables() {
+    document.querySelectorAll('table').forEach(function(table) {
+      var firstTh = table.querySelector('thead th');
+      if (!firstTh) return;
+      var header = firstTh.textContent.trim();
+      if (header === 'Month' || header === 'Year') return;
+      var rows = Array.from(table.querySelectorAll('tbody tr'));
+      rows.forEach(function(r,i) { r.style.display = i<5 ? '' : 'none'; });
+      var link = table.querySelector('tfoot a');
+      if (link) link.textContent = 'Show all (' + rows.length + ')';
     });
-    var tfoot = document.createElement('tfoot');
-    var tr = document.createElement('tr');
-    var td = document.createElement('td');
-    td.colSpan = table.querySelectorAll('thead th').length;
-    td.style.textAlign = 'center';
-    var link = document.createElement('a');
-    link.href = '#';
-    link.textContent = 'Show all (' + total + ')';
-    td.appendChild(link);
-    tr.appendChild(td);
-    tfoot.appendChild(tr);
-    table.appendChild(tfoot);
-    var expanded = false;
-    link.addEventListener('click', function(e) {
-      e.preventDefault();
-      Array.prototype.forEach.call(rows, function(row, i) {
-        if (i >= max) row.style.display = expanded ? 'none' : '';
+  }
+  function filterAll() {
+    var form = document.getElementById('category-filter');
+    if (!form) return;
+    var selCats = Array.from(form.querySelectorAll('input[name="category"]:checked')).map(function(cb){ return cb.value; });
+    // filter tables and update counts
+    tableIds.forEach(function(id) {
+      var t = document.getElementById(id);
+      if (!t) return;
+      var rows = Array.from(t.querySelectorAll('tbody tr'));
+      rows.forEach(function(r) { r.style.display = selCats.includes(r.dataset.category) ? '' : 'none'; });
+      var link = t.querySelector('tfoot a');
+      if (link) link.textContent = 'Show all (' + rows.filter(function(r){ return selCats.includes(r.dataset.category); }).length + ')';
+    });
+    // filter pie chart
+    var pie = window.monthInsightsPieChart;
+    var pcm = window.monthCategories || {};
+    if (pie && pcm) {
+      var nl = selCats.filter(function(c){ return pcm.hasOwnProperty(c); });
+      pie.data.labels = nl;
+      pie.data.datasets[0].data = nl.map(function(c){ return pcm[c]; });
+      pie.update();
+    }
+    // filter top merchants chart
+    var top = window.monthInsightsTopMerchantsChart;
+    var ubc = window.monthInsightsUsageByCatMap || {};
+    var formMm = form.getAttribute('data-month') || '';
+    if (top) {
+      var arr = [];
+      Object.keys(ubc).forEach(function(m) {
+        var mp = ubc[m][formMm] || {};
+        var tot = selCats.reduce(function(s,c){ return s + (mp[c] || 0); }, 0);
+        if (tot > 0) arr.push({ merchant: m, total: tot });
       });
-      link.textContent = expanded ? 'Show all (' + total + ')' : 'Show fewer';
-      expanded = !expanded;
-    });
-  });
+      arr.sort(function(a,b){ return b.total - a.total; });
+      var top5 = arr.slice(0,5);
+      top.data.labels = top5.map(function(x){ return x.merchant; });
+      top.data.datasets[0].data = top5.map(function(x){ return x.total; });
+      top.update();
+    }
+    // filter daily spending chart
+    var daily = window.monthInsightsDailyChart;
+    var rd = window.monthInsightsDailyData || [];
+    if (daily && rd.length) {
+      var labs = rd.map(function(d){ return d.date; });
+      var vals = rd.map(function(d){
+        return d.byCategory.reduce(function(s,it){ return s + (selCats.includes(it.category) ? it.amount : 0); }, 0);
+      });
+      daily.data.labels = labs;
+      daily.data.datasets[0].data = vals;
+      daily.update();
+    }
+  }
+  // initial collapse
+  collapseTables();
+  // hook filter
+  var formEl = document.getElementById('category-filter');
+  if (formEl) {
+    formEl.addEventListener('change', filterAll);
+    filterAll();
+  }
 })();
 </script>`;
 
@@ -185,6 +223,83 @@ function renderAllYearsHtml(summary, currencyRawParam) {
 
   html += `
   ${collapseScript}
+  <script>
+    (function() {
+      var form = document.getElementById('category-filter');
+      if (!form) return;
+      var tableIds = ['flagged-transactions-table','spikes-table','recurring-table'];
+      var monthSel = '${sel}';
+      function update() {
+        var selCats = Array.from(form.querySelectorAll('input[name="category"]:checked')).map(function(cb) { return cb.value; });
+        // filter tables and update counts
+        tableIds.forEach(function(id) {
+          var t = document.getElementById(id);
+          if (!t) return;
+          var rows = Array.from(t.querySelectorAll('tbody tr'));
+          rows.forEach(function(r) {
+            r.style.display = selCats.includes(r.dataset.category) ? '' : 'none';
+          });
+          var link = t.querySelector('tfoot a');
+          if (link) {
+            var count = rows.filter(function(r) { return selCats.includes(r.dataset.category); }).length;
+            link.textContent = 'Show all (' + count + ')';
+          }
+        });
+        // apply collapse limit: hide beyond first 5 of selected rows
+        tableIds.forEach(function(id) {
+          var tbl = document.getElementById(id);
+          if (!tbl) return;
+          var rowsAll = Array.from(tbl.querySelectorAll('tbody tr'));
+          var visRows = rowsAll.filter(function(r) { return selCats.includes(r.dataset.category); });
+          visRows.forEach(function(r, idx) {
+            r.style.display = (idx < 5) ? '' : 'none';
+          });
+        });
+        // filter pie chart
+        var pie = window.monthInsightsPieChart;
+        var pcm = window.monthCategories || {};
+        if (pie && pcm) {
+          var newLabels = selCats.filter(function(c) { return pcm.hasOwnProperty(c); });
+          var newData = newLabels.map(function(c) { return pcm[c]; });
+          pie.data.labels = newLabels;
+          pie.data.datasets[0].data = newData;
+          pie.update();
+        }
+        // filter top merchants chart
+        var topChart = window.monthInsightsTopMerchantsChart;
+        var ubc = window.monthInsightsUsageByCatMap || {};
+        if (topChart) {
+          var arr = [];
+          Object.keys(ubc).forEach(function(m) {
+            var monthMap = ubc[m][monthSel] || {};
+            var total = selCats.reduce(function(sum, c) { return sum + (monthMap[c] || 0); }, 0);
+            if (total > 0) arr.push({ merchant: m, total: total });
+          });
+          arr.sort(function(a, b) { return b.total - a.total; });
+          var top = arr.slice(0, 5);
+          topChart.data.labels = top.map(function(x) { return x.merchant; });
+          topChart.data.datasets[0].data = top.map(function(x) { return x.total; });
+          topChart.update();
+        }
+        // filter daily spending chart
+        var dailyChart = window.monthInsightsDailyChart;
+        var rawDaily = window.monthInsightsDailyData || [];
+        if (dailyChart && rawDaily.length) {
+          var labels = rawDaily.map(function(d) { return d.date; });
+          var values = rawDaily.map(function(d) {
+            return d.byCategory.reduce(function(sum, item) {
+              return sum + (selCats.includes(item.category) ? item.amount : 0);
+            }, 0);
+          });
+          dailyChart.data.labels = labels;
+          dailyChart.data.datasets[0].data = values;
+          dailyChart.update();
+        }
+      }
+      form.addEventListener('change', update);
+      update();
+    })();
+  </script>
 </body>
 </html>`;
   return html;
@@ -328,8 +443,8 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   }
   html += '</div>';
   if (monthCategoryList.length) {
-  html += `
-  <form id="category-filter" style="margin-bottom:1em;">
+    html += `
+  <form id="category-filter" data-month="${sel}" style="margin-bottom:1em;">
     <fieldset style="border:1px solid #ccc; padding:.5em;">
       <legend>Show categories</legend>
       ${monthCategoryList.map(cat => `
@@ -338,71 +453,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
         ${cat}
       </label>`).join('')}
     </fieldset>
-  </form>
-  <script>
-    (function(){
-      console.log('Category filter script loaded');
-      var form = document.getElementById('category-filter');
-      if (!form) return;
-      var tableIds = ['flagged-transactions-table','spikes-table','recurring-table'];
-      var monthSel = '${sel}';
-      function update() {
-        var selCats = Array.from(form.querySelectorAll('input[name="category"]:checked')).map(function(cb){ return cb.value; });
-        console.log('Filtering tables with selected categories:', selCats);
-        // filter tables
-        tableIds.forEach(function(id){
-          var t = document.getElementById(id);
-          if (!t) return;
-          Array.prototype.forEach.call(t.querySelectorAll('tbody tr'), function(r){
-            r.style.display = selCats.includes(r.dataset.category) ? '' : 'none';
-          });
-        });
-        // filter pie chart
-        var pie = window.monthInsightsPieChart;
-        var pcm = window.monthCategories || {};
-        if (pie && pcm) {
-          var newLabels = selCats.filter(function(c){ return pcm.hasOwnProperty(c); });
-          var newData = newLabels.map(function(c){ return pcm[c]; });
-          pie.data.labels = newLabels;
-          pie.data.datasets[0].data = newData;
-          pie.update();
-        }
-        // filter top merchants chart
-        var topChart = window.monthInsightsTopMerchantsChart;
-        var ubc = window.monthInsightsUsageByCatMap || {};
-        if (topChart) {
-          var arr = [];
-          Object.keys(ubc).forEach(function(m){
-            var monthMap = ubc[m][monthSel] || {};
-            var total = selCats.reduce(function(sum, c){ return sum + (monthMap[c]||0); }, 0);
-            if (total > 0) arr.push({ merchant: m, total: total });
-          });
-          arr.sort(function(a,b){ return b.total - a.total; });
-          var top = arr.slice(0,5);
-          topChart.data.labels = top.map(function(x){ return x.merchant; });
-          topChart.data.datasets[0].data = top.map(function(x){ return x.total; });
-          topChart.update();
-        }
-        // filter daily spending chart
-        var dailyChart = window.monthInsightsDailyChart;
-        var rawDaily = window.monthInsightsDailyData || [];
-        if (dailyChart && rawDaily.length) {
-          var labels = rawDaily.map(function(d){ return d.date; });
-          var values = rawDaily.map(function(d){
-            return d.byCategory.reduce(function(sum, item){
-              return sum + (selCats.includes(item.category) ? item.amount : 0);
-            }, 0);
-          });
-          dailyChart.data.labels = labels;
-          dailyChart.data.datasets[0].data = values;
-          dailyChart.update();
-        }
-      }
-      form.addEventListener('change', update);
-      update();
-    })();
-  </script>
-`;
+  </form>`;
   }
 
   
@@ -582,6 +633,65 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
 
   html += `
   ${collapseScript}
+  <script>
+    console.log('Insights filter script initialized');
+    var form = document.getElementById('category-filter');
+    if (!form) return;
+    var tableIds = ['flagged-transactions-table','spikes-table','recurring-table'];
+    var monthSel = '${sel}';
+    function updateAll() {
+      var selCats = Array.from(form.querySelectorAll('input[name="category"]:checked')).map(function(cb){ return cb.value; });
+      console.log('Filtering all items with selected categories:', selCats);
+      // Tables
+      tableIds.forEach(function(id) {
+        var tbl = document.getElementById(id);
+        if (!tbl) return;
+        var rows = Array.from(tbl.querySelectorAll('tbody tr'));
+        rows.forEach(function(r){ r.style.display = selCats.includes(r.dataset.category) ? '' : 'none'; });
+        var link = tbl.querySelector('tfoot a');
+        if (link) link.textContent = 'Show all (' + rows.filter(function(r){ return selCats.includes(r.dataset.category); }).length + ')';
+      });
+      // Pie chart
+      var pie = window.monthInsightsPieChart;
+      var pcm = window.monthCategories || {};
+      if (pie && pcm) {
+        var nl = selCats.filter(function(c){ return pcm.hasOwnProperty(c); });
+        pie.data.labels = nl;
+        pie.data.datasets[0].data = nl.map(function(c){ return pcm[c]; });
+        pie.update();
+      }
+      // Top merchants
+      var topChart = window.monthInsightsTopMerchantsChart;
+      var ubc = window.monthInsightsUsageByCatMap || {};
+      if (topChart) {
+        var arr = [];
+        Object.keys(ubc).forEach(function(m){
+          var monthMap = ubc[m][monthSel] || {};
+          var total = selCats.reduce(function(sum, c){ return sum + (monthMap[c]||0); }, 0);
+          if (total > 0) arr.push({ merchant: m, total: total });
+        });
+        arr.sort(function(a,b){ return b.total - a.total; });
+        var top = arr.slice(0,5);
+        topChart.data.labels = top.map(function(x){ return x.merchant; });
+        topChart.data.datasets[0].data = top.map(function(x){ return x.total; });
+        topChart.update();
+      }
+      // Daily spending
+      var dailyChart = window.monthInsightsDailyChart;
+      var rawDaily = window.monthInsightsDailyData || [];
+      if (dailyChart && rawDaily.length) {
+        dailyChart.data.labels = rawDaily.map(function(d){ return d.date; });
+        dailyChart.data.datasets[0].data = rawDaily.map(function(d){
+          return d.byCategory.reduce(function(sum, item){
+            return sum + (selCats.includes(item.category) ? item.amount : 0);
+          }, 0);
+        });
+        dailyChart.update();
+      }
+    }
+    form.addEventListener('change', updateAll);
+    updateAll();
+  </script>
 </body>
 </html>`;
   return html;
