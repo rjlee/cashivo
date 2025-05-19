@@ -121,6 +121,48 @@ function renderRecurringTableHtml(recs, buildLink, currencyRawParam) {
   </table>`;
   return html;
 }
+/**
+ * Render a spending category distribution section.
+ * @param {object} catMap - Map of category -> value
+ * @returns {string} HTML fragment or empty
+ */
+function renderCategoryDistributionHtml(catMap) {
+  if (
+    !catMap ||
+    typeof catMap !== 'object' ||
+    Object.keys(catMap).length === 0
+  ) {
+    return '';
+  }
+  return `
+  <h2>Spending Category Distribution</h2>
+  <canvas id="categoryDistributionChart" width="600" height="150"></canvas>
+  <script>
+    window.categoryDistributionChartRawData = ${JSON.stringify(catMap)};
+  </script>`;
+}
+/**
+ * Render a top merchants section.
+ * @param {object} usageMap - Raw usage over time data
+ * @param {object} categoryData - Usage by category data
+ * @returns {string} HTML fragment or empty
+ */
+function renderTopMerchantsHtml(usageMap, categoryData) {
+  if (
+    !usageMap ||
+    typeof usageMap !== 'object' ||
+    Object.keys(usageMap).length === 0
+  ) {
+    return '';
+  }
+  return `
+  <h2>Top Merchants</h2>
+  <canvas id="topMerchantsChart" width="600" height="150"></canvas>
+  <script>
+    window.topMerchantsChartRawData = ${JSON.stringify(usageMap)};
+    window.topMerchantsChartCategoryData = ${JSON.stringify(categoryData || {})};
+  </script>`;
+}
 
 /**
  * Render an insights page for a specific year
@@ -183,20 +225,12 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
   const yearCategoryList = Object.keys(catDist);
   html += renderFilterPanelHtml(selYear, yearCategoryList);
   // Category Distribution
-  html += `
-  <h2>Spending Category Distribution</h2>
-  <canvas id="categoryDistributionChart" width="600" height="150"></canvas>
-  <script>
-    window.categoryDistributionChartRawData = ${JSON.stringify(catDist)};
-  </script>`;
+  html += renderCategoryDistributionHtml(catDist);
   // Top Merchants
-  html += `
-  <h2>Top Merchants</h2>
-  <canvas id="topMerchantsChart" width="600" height="150"></canvas>
-  <script>
-    window.topMerchantsChartRawData = ${JSON.stringify(summary.merchantInsights.usageOverTime)};
-    window.topMerchantsChartCategoryData = ${JSON.stringify(summary.merchantInsights.usageOverTimeByCategory || {})};
-  </script>`;
+  html += renderTopMerchantsHtml(
+    summary.merchantInsights.usageOverTime,
+    summary.merchantInsights.usageOverTimeByCategory
+  );
   // (Spikes section removed)
   // Flagged Transactions
   html += `
@@ -599,20 +633,13 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   </script>`;
   }
 
+  // Category Distribution
   const cb =
     summary.categoryBreakdown &&
     summary.categoryBreakdown.perMonth &&
     summary.categoryBreakdown.perMonth[sel];
-  // Category Distribution section
-  if (cb) {
-    const monthCategories = cb.categories;
-    html += `
-  <h2>Spending Category Distribution</h2>
-  <canvas id="categoryDistributionChart" width="600" height="150"></canvas>
-  <script>
-    window.categoryDistributionChartRawData = ${JSON.stringify(monthCategories)};
-  </script>`;
-  }
+  const monthCategories = cb ? cb.categories : {};
+  html += renderCategoryDistributionHtml(monthCategories);
   // Spending Category Spikes (moved next)
   if (summary.anomalies && Array.isArray(summary.anomalies.spikes)) {
     const spikes = summary.anomalies.spikes.filter((s) => s.month === sel);
@@ -641,15 +668,11 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     }
   }
 
-  if (summary.merchantInsights && summary.merchantInsights.usageOverTime) {
-    html += `
-  <h2>Top Merchants</h2>
-  <canvas id="topMerchantsChart" width="600" height="150"></canvas>
-  <script>
-    window.topMerchantsChartRawData = ${JSON.stringify(summary.merchantInsights.usageOverTime)};
-    window.topMerchantsChartCategoryData = ${JSON.stringify(summary.merchantInsights.usageOverTimeByCategory || {})};
-  </script>`;
-  }
+  // Top Merchants
+  html += renderTopMerchantsHtml(
+    summary.merchantInsights && summary.merchantInsights.usageOverTime,
+    summary.merchantInsights && summary.merchantInsights.usageOverTimeByCategory
+  );
 
   if (summary.anomalies && Array.isArray(summary.anomalies.outliers)) {
     const flagged = summary.anomalies.outliers.filter((o) =>
