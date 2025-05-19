@@ -8,15 +8,11 @@ document.addEventListener('DOMContentLoaded', function() {
   var clearAllLink = document.getElementById('clear-all');
   var selectAllLink = document.getElementById('select-all');
   var hideSTLink = document.getElementById('hide-savings-transfers');
-  // Collapse each data table to first 5 rows with a toggle link (Show all / Show less)
+  // Collapse each data table with Show all / Show less, preserving filters
   tableIds.forEach(function(id) {
     var tbl = document.getElementById(id);
     if (!tbl) return;
     var rows = Array.from(tbl.querySelectorAll('tbody tr'));
-    // Initial collapse
-    rows.forEach(function(r, idx) {
-      if (idx >= 5) r.style.display = 'none';
-    });
     var tfoot = document.createElement('tfoot');
     var tr = document.createElement('tr');
     var td = document.createElement('td');
@@ -25,20 +21,33 @@ document.addEventListener('DOMContentLoaded', function() {
     var expanded = false;
     var a = document.createElement('a');
     a.href = '#';
+    // initial link text; will be overwritten by updateAll
     a.textContent = 'Show all (' + rows.length + ')';
     a.addEventListener('click', function(e) {
       e.preventDefault();
+      // determine selected categories
+      var selCats = Array.from(
+        form.querySelectorAll('input[name="category"]:checked')
+      ).map(function(cb) { return cb.value; });
       if (!expanded) {
-        // show all
-        rows.forEach(function(r) { r.style.display = ''; });
+        // show all filtered rows
+        rows.forEach(function(r) {
+          r.style.display = selCats.includes(r.dataset.category) ? '' : 'none';
+        });
         a.textContent = 'Show less';
         expanded = true;
       } else {
-        // collapse back to 5 rows
-        rows.forEach(function(r, idx) {
-          r.style.display = (idx < 5 ? '' : 'none');
+        // collapse back to first 5 filtered rows
+        var count = 0;
+        rows.forEach(function(r) {
+          if (selCats.includes(r.dataset.category)) {
+            r.style.display = (count < 5 ? '' : 'none');
+            count++;
+          } else {
+            r.style.display = 'none';
+          }
         });
-        a.textContent = 'Show all (' + rows.length + ')';
+        a.textContent = 'Show all (' + count + ')';
         expanded = false;
       }
     });
