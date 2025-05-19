@@ -365,7 +365,7 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   if (summary.merchantInsights && summary.merchantInsights.usageOverTime) {
     html += `
   <h2>Top Merchants</h2>
-  <canvas id="topMerchantsChart" width="600" height="300"></canvas>
+  <canvas id="topMerchantsChart" width="600" height="150"></canvas>
   <script>
     window.topMerchantsChartRawData = ${JSON.stringify(summary.merchantInsights.usageOverTime)};
     window.topMerchantsChartCategoryData = ${JSON.stringify(summary.merchantInsights.usageOverTimeByCategory || {})};
