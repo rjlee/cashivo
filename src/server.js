@@ -91,6 +91,12 @@ app.get('/manage', (req, res) => {
     <button type="submit">Load Default Categories</button>
   </form>
   <hr />
+  <h2>Export Data</h2>
+  <form method="GET" action="/manage/export" style="margin-top:1rem;">
+    <input type="hidden" name="format" value="qif">
+    <button type="submit">Download QIF Export</button>
+  </form>
+  <hr />
   <h2>Reset Data</h2>
   <form method="POST" action="/manage/reset" onsubmit="return confirm('Are you sure you want to delete all transactions and reset data?');">
     <button type="submit" style="background-color:#c00;color:#fff;padding:0.5rem 1rem;">Delete All Transactions & Reset Data</button>
@@ -98,6 +104,40 @@ app.get('/manage', (req, res) => {
 </body>
 </html>`
   );
+});
+// Export data in QIF format
+app.get('/manage/export', (req, res) => {
+  const format = req.query.format;
+  if (format !== 'qif') {
+    return res.status(400).send('Unsupported export format');
+  }
+  const txPath = path.join(dataDir, 'transactions_categorized.json');
+  if (!fs.existsSync(txPath)) {
+    return res.status(404).send('No transaction data found. Please import transactions first.');
+  }
+  let txs;
+  try {
+    txs = JSON.parse(fs.readFileSync(txPath, 'utf-8'));
+  } catch (err) {
+    return res.status(500).send('Error reading transaction data: ' + err.message);
+  }
+  // Sort transactions by date
+  txs.sort((a, b) => a.date.localeCompare(b.date));
+  // Build QIF content
+  let qif = '!Type:Bank\n';
+  txs.forEach(tx => {
+    const [year, month, day] = tx.date.split('-');
+    const dateStr = [month.padStart(2, '0'), day.padStart(2, '0'), year].join('/');
+    qif += 'D' + dateStr + '\n';
+    qif += 'T' + tx.amount.toFixed(2) + '\n';
+    qif += 'P' + tx.description + '\n';
+    if (tx.notes) qif += 'M' + tx.notes + '\n';
+    qif += 'L' + tx.category + '\n';
+    qif += '^\n';
+  });
+  res.setHeader('Content-Type', 'application/x-qif');
+  res.setHeader('Content-Disposition', 'attachment; filename="export.qif"');
+  res.send(qif);
 });
 // Handle upload POST: save files, ingest, and report status
 app.post('/manage', upload.array('files'), (req, res) => {
