@@ -325,10 +325,10 @@ function renderAllYearsHtml(summary, currencyRawParam) {
     html += `
     </tbody>
   </table>
-  <p><a href="/manage">Upload Transactions</a></p>`;
+  <p><a href="/manage">Manage Data</a></p>`;
   } else {
     html += `<p>No annual summaries available.</p>`;
-    html += `<p><a href="/manage">Upload Transactions</a></p>`;
+    html += `<p><a href="/manage">Manage Data</a></p>`;
   }
 
   html += `
