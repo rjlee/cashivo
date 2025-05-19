@@ -322,14 +322,43 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
 
   
   const cb = summary.categoryBreakdown && summary.categoryBreakdown.perMonth && summary.categoryBreakdown.perMonth[sel];
+  // Category Distribution section
   if (cb) {
     const monthCategories = cb.categories;
     html += `
-  <h2>Category Distribution</h2>
+  <h2>Spending Category Distribution</h2>
   <canvas id="categoryDistributionChart" width="600" height="300"></canvas>
   <script>
     window.categoryDistributionChartRawData = ${JSON.stringify(monthCategories)};
   </script>`;
+  }
+  // Spending Category Spikes (moved next)
+  if (summary.anomalies && Array.isArray(summary.anomalies.spikes)) {
+    const spikes = summary.anomalies.spikes.filter(s => s.month === sel);
+    html += `
+  <h2>Spending Category Spikes</h2>`;
+    if (spikes.length) {
+      html += `
+  <table id="spikes-table">
+    <thead><tr><th>Category</th><th>Month</th><th>Amount</th><th>Mean</th><th>SD</th></tr></thead>
+    <tbody>`;
+      spikes.forEach(s => {
+        html += `
+      <tr data-category="${s.category}">
+        <td>${s.category}</td>
+        <td>${fmtMonth(s.month)}</td>
+        <td>${fmtAmount(s.amount, currencyRawParam)}</td>
+        <td>${fmtAmount(s.mean, currencyRawParam)}</td>
+        <td>${fmtAmount(s.sd, currencyRawParam)}</td>
+      </tr>`;
+      });
+      html += `
+    </tbody>
+  </table>`;
+    } else {
+      html += `
+  <p>No spending spikes detected.</p>`;
+    }
   }
 
   
@@ -372,34 +401,6 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     }
   }
 
-  // Spikes for this month
-  if (summary.anomalies && Array.isArray(summary.anomalies.spikes)) {
-    const spikes = summary.anomalies.spikes.filter(s => s.month === sel);
-    html += `
-  <h2>Spikes</h2>`;
-    if (spikes.length) {
-      html += `
-  <table id="spikes-table">
-    <thead><tr><th>Category</th><th>Month</th><th>Amount</th><th>Mean</th><th>SD</th></tr></thead>
-    <tbody>`;
-      spikes.forEach(s => {
-        html += `
-      <tr data-category="${s.category}">
-        <td>${s.category}</td>
-        <td>${fmtMonth(s.month)}</td>
-        <td>${fmtAmount(s.amount, currencyRawParam)}</td>
-        <td>${fmtAmount(s.mean, currencyRawParam)}</td>
-        <td>${fmtAmount(s.sd, currencyRawParam)}</td>
-      </tr>`;
-      });
-      html += `
-    </tbody>
-  </table>`;
-    } else {
-      html += `
-  <p>No spending spikes detected.</p>`;
-    }
-  }
 
 
   // Recurring bills & subscriptions for the selected month
