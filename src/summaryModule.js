@@ -32,6 +32,45 @@ function fmtAmount(val, currencyRawParam) {
   });
   return `${symbol}${formatter.format(num)}`;
 }
+/**
+ * Render a reusable category filter panel.
+ * @param {string} selKey - value for data-month attribute (e.g. "2024" or "2024-05")
+ * @param {string[]} categories - list of category names
+ * @returns {string} HTML fragment for filter panel
+ */
+function renderFilterPanelHtml(selKey, categories) {
+  if (!Array.isArray(categories) || categories.length === 0) return '';
+  return `
+  <details id="filter-panel" style="margin-bottom:1em;">
+    <summary>Filter Categories</summary>
+    <form id="category-filter" data-month="${selKey}">
+      <fieldset style="border:1px solid #ccc; padding:.5em;">
+        ${categories
+          .map((cat) => {
+            const isSt = /saving|transfer/i.test(cat);
+            return `
+        <label style="margin-right:.5em;">
+          <input type="checkbox" name="category" value="${cat}" ${isSt ? '' : 'checked'}>
+          ${cat}
+        </label>`;
+          })
+          .join('')}
+      </fieldset>
+    </form>
+    <div class="filter-actions" style="margin:.5em 0; font-size:.9em;">
+      <a href="#" id="clear-all">Clear all</a> |
+      <a href="#" id="select-all">Select all</a> |
+      <a href="#" id="hide-savings-transfers">Hide savings & transfers</a>
+    </div>
+  </details>`;
+}
+
+// Shared footer scripts for insights pages
+const insightsScriptsHtml = `
+<script src="/charts.js"></script>
+<script src="/insights.js"></script>
+</body>
+</html>`;
 
 /**
  * Render a recurring bills table (with heading) given precomputed rows.
@@ -132,31 +171,7 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
   html += '</div>';
   // Category filter panel
   const yearCategoryList = Object.keys(catDist);
-  if (yearCategoryList.length) {
-    html += `
-  <details id="filter-panel" style="margin-bottom:1em;">
-    <summary>Filter Categories</summary>
-    <form id="category-filter" data-month="${selYear}" style="margin:0;">
-      <fieldset style="border:1px solid #ccc; padding:.5em;">
-        ${yearCategoryList
-          .map((cat) => {
-            const isSt = /saving|transfer/i.test(cat);
-            return `
-        <label style="margin-right:.5em;">
-          <input type="checkbox" name="category" value="${cat}" ${isSt ? '' : 'checked'}>
-          ${cat}
-        </label>`;
-          })
-          .join('')}
-      </fieldset>
-    </form>
-    <div class="filter-actions" style="margin:.5em 0; font-size:.9em;">
-      <a href="#" id="clear-all">Clear all</a> |
-      <a href="#" id="select-all">Select all</a> |
-      <a href="#" id="hide-savings-transfers">Hide savings & transfers</a>
-    </div>
-  </details>`;
-  }
+  html += renderFilterPanelHtml(selYear, yearCategoryList);
   // Category Distribution
   html += `
   <h2>Spending Category Distribution</h2>
@@ -208,13 +223,20 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
     : [];
   const recs = recDefs
     .map((item) => {
-      const usage = summary.merchantInsights.usageOverTime[item.description] || {};
+      const usage =
+        summary.merchantInsights.usageOverTime[item.description] || {};
       const vals = allMonths.map((m) => usage[m] || 0).filter((v) => v > 0);
       if (!vals.length) return null;
       const occurrences = vals.length;
       const total = vals.reduce((s, v) => s + v, 0);
       const avgAmount = total / occurrences;
-      return { description: item.description, category: item.category, occurrences, total, avgAmount };
+      return {
+        description: item.description,
+        category: item.category,
+        occurrences,
+        total,
+        avgAmount,
+      };
     })
     .filter((x) => x);
   html += renderRecurringTableHtml(
@@ -222,12 +244,8 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
     (r) => `/years/${year}/insights?category=${encodeURIComponent(r.category)}`,
     currencyRawParam
   );
-  // Include scripts
-  html += `
-<script src="/charts.js"></script>
-<script src="/insights.js"></script>
-</body>
-</html>`;
+  // Footer scripts
+  html += insightsScriptsHtml;
   return html;
 }
 // Month-year display helper: format "YYYY-MM" as "Mon YY", e.g., "Jan 25"
@@ -565,31 +583,8 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     html += '<span></span>';
   }
   html += '</div>';
-  if (monthCategoryList.length) {
-    html += `
-  <details id="filter-panel" style="margin-bottom:1em;">
-    <summary>Filter Categories</summary>
-    <form id="category-filter" data-month="${sel}">
-      <fieldset style="border:1px solid #ccc; padding:.5em;">
-        ${monthCategoryList
-          .map((cat) => {
-            const isSt = /saving|transfer/i.test(cat);
-            return `
-        <label style="margin-right:.5em;">
-          <input type="checkbox" name="category" value="${cat}" ${isSt ? '' : 'checked'}>
-          ${cat}
-        </label>`;
-          })
-          .join('')}
-      </fieldset>
-    </form>
-    <div class="filter-actions" style="margin: .5em 0; font-size: .9em;">
-      <a href="#" id="clear-all" style="margin-right:1em;">Clear all</a>
-      <a href="#" id="select-all" style="margin-right:1em;">Select all</a>
-      <a href="#" id="hide-savings-transfers">Hide savings & transfers</a>
-    </div>
-  </details>`;
-  }
+  // Category filter panel
+  html += renderFilterPanelHtml(sel, monthCategoryList);
 
   if (Array.isArray(summary.dailySpending)) {
     const dailyData = summary.dailySpending;
@@ -684,7 +679,8 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
 
   // Recurring bills & subscriptions for the selected month
   const recs = (summary.trends.recurringBills || []).filter(
-    (item) => (summary.merchantInsights.usageOverTime[item.description] || {})[sel] > 0
+    (item) =>
+      (summary.merchantInsights.usageOverTime[item.description] || {})[sel] > 0
   );
   html += renderRecurringTableHtml(
     recs,
@@ -692,11 +688,8 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     currencyRawParam
   );
 
-  html += `
-<script src="/charts.js"></script>
-<script src="/insights.js"></script>
-</body>
-</html>`;
+  // Footer scripts
+  html += insightsScriptsHtml;
   return html;
 }
 
