@@ -161,7 +161,7 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
     recs.forEach(r => {
       html += `
       <tr data-category="${r.category}">
-        <td>${r.description}</td>
+        <td><a href="/years/${year}/insights?category=${encodeURIComponent(r.category)}">${r.description}</a></td>
         <td>${r.occurrences}</td>
         <td>${fmtAmount(r.total, currencyRawParam)}</td>
         <td>${fmtAmount(r.avgAmount, currencyRawParam)}</td>
