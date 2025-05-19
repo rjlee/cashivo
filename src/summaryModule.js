@@ -165,6 +165,35 @@ function renderTopMerchantsHtml(usageMap, categoryData) {
 }
 
 /**
+ * Render flagged transactions section.
+ * @param {Array} outliers
+ * @param {Function} buildLink
+ * @param {string} currencyRawParam
+ * @returns {string} HTML fragment
+ */
+function renderFlaggedTransactionsHtml(outliers, buildLink, currencyRawParam) {
+  if (!Array.isArray(outliers)) return '';
+  let html = `<h2>Flagged Transactions</h2>`;
+  if (outliers.length) {
+    html += `<table id="flagged-transactions-table">
+      <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th></tr></thead>
+      <tbody>`;
+    outliers.forEach((o) => {
+      html += `<tr data-category="${o.category}">
+        <td>${o.date}</td>
+        <td>${o.description || ''}</td>
+        <td>${fmtAmount(Math.abs(o.amount), currencyRawParam)}</td>
+        <td><a href="${buildLink(o)}">${o.category || ''}</a></td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+  } else {
+    html += `<p>No flagged transactions.</p>`;
+  }
+  return html;
+}
+
+/**
  * Render an insights page for a specific year
  * (monthly spending trends, category distribution, top merchants,
  *  flagged transactions, spending spikes, recurring bills & subscriptions).
@@ -233,34 +262,18 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
   );
   // (Spikes section removed)
   // Flagged Transactions
-  html += `
-  <h2>Flagged Transactions</h2>`;
+  // Flagged Transactions
   const yearOutliers =
     summary.anomalies && Array.isArray(summary.anomalies.outliers)
       ? summary.anomalies.outliers.filter((o) =>
           o.date.startsWith(selYear + '-')
         )
       : [];
-  if (yearOutliers.length) {
-    html += `
-  <table id="flagged-transactions-table">
-    <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th></tr></thead>
-    <tbody>`;
-    yearOutliers.forEach((o) => {
-      html += `
-      <tr data-category="${o.category}">
-        <td>${o.date}</td>
-        <td>${o.description || ''}</td>
-        <td>${fmtAmount(Math.abs(o.amount), currencyRawParam)}</td>
-        <td><a href="/years/${year}/insights?category=${encodeURIComponent(o.category)}">${o.category || ''}</a></td>
-      </tr>`;
-    });
-    html += `
-    </tbody>
-  </table>`;
-  } else {
-    html += `<p>No flagged transactions.</p>`;
-  }
+  html += renderFlaggedTransactionsHtml(
+    yearOutliers,
+    (o) => `/years/${year}/insights?category=${encodeURIComponent(o.category)}`,
+    currencyRawParam
+  );
   // Recurring Bills & Subscriptions
   const recDefs = Array.isArray(summary.trends.recurringBills)
     ? summary.trends.recurringBills
@@ -674,34 +687,16 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
     summary.merchantInsights && summary.merchantInsights.usageOverTimeByCategory
   );
 
-  if (summary.anomalies && Array.isArray(summary.anomalies.outliers)) {
-    const flagged = summary.anomalies.outliers.filter((o) =>
-      o.date.startsWith(sel)
-    );
-    html += `
-  <h2>Flagged Transactions</h2>`;
-    if (flagged.length) {
-      html += `
-  <table id="flagged-transactions-table">
-    <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th></tr></thead>
-    <tbody>`;
-      flagged.forEach((o) => {
-        html += `
-      <tr data-category="${o.category}">
-        <td>${o.date}</td>
-        <td>${o.description || ''}</td>
-        <td>${fmtAmount(Math.abs(o.amount), currencyRawParam)}</td>
-        <td><a href="/years/${year}/${month}/category/${encodeURIComponent(o.category)}">${o.category || ''}</a></td>
-      </tr>`;
-      });
-      html += `
-    </tbody>
-  </table>`;
-    } else {
-      html += `
-  <p>No flagged transactions.</p>`;
-    }
-  }
+  // Flagged Transactions
+  const flagged =
+    summary.anomalies && Array.isArray(summary.anomalies.outliers)
+      ? summary.anomalies.outliers.filter((o) => o.date.startsWith(sel))
+      : [];
+  html += renderFlaggedTransactionsHtml(
+    flagged,
+    (o) => `/years/${year}/${month}/category/${encodeURIComponent(o.category)}`,
+    currencyRawParam
+  );
 
   // Recurring bills & subscriptions for the selected month
   const recs = (summary.trends.recurringBills || []).filter(
