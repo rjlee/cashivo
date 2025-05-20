@@ -192,6 +192,30 @@ function renderFlaggedTransactionsHtml(outliers, buildLink, currencyRawParam) {
   }
   return html;
 }
+/**
+ * Render a navigation bar.
+ * @param {{url:string,text:string}|null} prevLink
+ * @param {{url:string,text:string}} centerLink
+ * @param {{url:string,text:string}|null} nextLink
+ * @param {string} className
+ * @returns {string}
+ */
+function renderNavHtml(prevLink, centerLink, nextLink, className) {
+  let nav = `<div class="${className}">`;
+  if (prevLink) {
+    nav += `<a href="${prevLink.url}">${prevLink.text}</a>`;
+  } else {
+    nav += '<span></span>';
+  }
+  nav += `<a href="${centerLink.url}">${centerLink.text}</a>`;
+  if (nextLink) {
+    nav += `<a href="${nextLink.url}">${nextLink.text}</a>`;
+  } else {
+    nav += '<span></span>';
+  }
+  nav += '</div>';
+  return nav;
+}
 
 /**
  * Render an insights page for a specific year
@@ -237,19 +261,13 @@ function renderYearInsightsHtml(summary, year, currencyRawParam) {
   const prevY = idxY > 0 ? yearsList[idxY - 1] : null;
   const nextY =
     idxY >= 0 && idxY < yearsList.length - 1 ? yearsList[idxY + 1] : null;
-  html += '<div class="year-nav">';
-  if (prevY) {
-    html += `<a class="prev-year" href="/years/${prevY}/insights">← ${prevY}</a>`;
-  } else {
-    html += '<span></span>';
-  }
-  html += `<a class="year-summary" href="/years/${year}">Summary</a>`;
-  if (nextY) {
-    html += `<a class="next-year" href="/years/${nextY}/insights">${nextY} →</a>`;
-  } else {
-    html += '<span></span>';
-  }
-  html += '</div>';
+  // Year navigation for insights
+  html += renderNavHtml(
+    prevY ? { url: `/years/${prevY}/insights`, text: `← ${prevY}` } : null,
+    { url: `/years/${year}`, text: 'Summary' },
+    nextY ? { url: `/years/${nextY}/insights`, text: `${nextY} →` } : null,
+    'year-nav'
+  );
   // Category filter panel
   const yearCategoryList = Object.keys(catDist);
   html += renderFilterPanelHtml(selYear, yearCategoryList);
@@ -618,21 +636,23 @@ function renderMonthInsightsHtml(summary, year, month, currencyRawParam) {
   const prev = idx > 0 ? allMonths[idx - 1] : null;
   const next =
     idx >= 0 && idx < allMonths.length - 1 ? allMonths[idx + 1] : null;
-  html += '<div class="month-nav">';
-  if (prev) {
-    const [pY, pM] = prev.split('-');
-    html += `<a class="prev-month" href="/years/${pY}/${pM}/insights">← ${fmtMonth(prev)}</a>`;
-  } else {
-    html += '<span></span>';
-  }
-  html += `<a class="year-link" href="/years/${year}/${month}">Summary</a>`;
-  if (next) {
-    const [nY, nM] = next.split('-');
-    html += `<a class="next-month" href="/years/${nY}/${nM}/insights">${fmtMonth(next)} →</a>`;
-  } else {
-    html += '<span></span>';
-  }
-  html += '</div>';
+  // Month navigation
+  html += renderNavHtml(
+    prev
+      ? {
+          url: `/years/${prev.split('-')[0]}/${prev.split('-')[1]}/insights`,
+          text: `← ${fmtMonth(prev)}`,
+        }
+      : null,
+    { url: `/years/${year}/${month}`, text: 'Summary' },
+    next
+      ? {
+          url: `/years/${next.split('-')[0]}/${next.split('-')[1]}/insights`,
+          text: `${fmtMonth(next)} →`,
+        }
+      : null,
+    'month-nav'
+  );
   // Category filter panel
   html += renderFilterPanelHtml(sel, monthCategoryList);
 

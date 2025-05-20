@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Manage Data</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <% if (showMsg) { %>
+    <p class="alert-success">Default categories loaded successfully.</p>
+  <% } %>
+  <h1>Manage Data</h1>
+  <p><a href="/years">← Back to Annual Summaries</a></p>
+  <form method="POST" action="/manage" enctype="multipart/form-data">
+    <div>
+      <input type="file" name="files" multiple accept=".csv,.qif,.qfx" required>
+    </div>
+    <div class="mt-1">
+      <button type="submit">Upload & Process</button>
+    </div>
+  </form>
+  <form method="POST" action="/manage/load-default-categories" class="mt-1">
+    <button type="submit">Load Default Categories</button>
+  </form>
+  <hr>
+  <h2>Export Data</h2>
+  <form method="GET" action="/manage/export" class="mt-1">
+    <input type="hidden" name="format" value="qif">
+    <button type="submit">Download QIF Export</button>
+  </form>
+  <hr>
+  <h2>Reset Data</h2>
+  <form method="POST" action="/manage/reset" class="mt-1" onsubmit="return confirm('Are you sure you want to delete all transactions and reset data?');">
+    <button type="submit" class="btn-danger">Delete All Transactions & Reset Data</button>
+  </form>
+</body>
+</html>

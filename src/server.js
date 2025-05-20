@@ -14,6 +14,9 @@ const {
 } = require('./summaryModule');
 
 const app = express();
+// Mount manage router for all /manage endpoints
+const manageRouter = require('./routes/manage');
+app.use('/manage', manageRouter);
 // Basic HTTP auth if USERNAME and PASSWORD are set in env
 const { USERNAME, PASSWORD } = process.env;
 if (USERNAME && PASSWORD) {
@@ -74,53 +77,6 @@ const port = process.env.PORT || 3000;
 
 // (Static assets serving moved below to allow custom root and month routes)
 
-// Upload page (form to post CSV files)
-// Management page: upload new files and reset data
-app.get('/manage', (req, res) => {
-  // Display alert if defaults were loaded
-  const showMsg = req.query.msg === 'defaults_loaded';
-  const alertHtml = showMsg
-    ? '<p class="alert-success">Default categories loaded successfully.</p>'
-    : '';
-  res.type('html').send(
-    `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Manage Data</title>
-  <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-  ${alertHtml}
-  <h1>Manage Data</h1>
-  <p><a href="/years">← Back to Annual Summaries</a></p>
-  <form method="POST" action="/manage" enctype="multipart/form-data">
-    <div>
-      <input type="file" name="files" multiple accept=".csv,.qif,.qfx" required />
-    </div>
-    <div class="mt-1">
-      <button type="submit">Upload & Process</button>
-    </div>
-  </form>
-  <!-- Button to reset categories to defaults -->
-  <form method="POST" action="/manage/load-default-categories" class="mt-1">
-    <button type="submit">Load Default Categories</button>
-  </form>
-  <hr />
-  <h2>Export Data</h2>
-  <form method="GET" action="/manage/export" class="mt-1">
-    <input type="hidden" name="format" value="qif">
-    <button type="submit">Download QIF Export</button>
-  </form>
-  <hr />
-  <h2>Reset Data</h2>
-  <form method="POST" action="/manage/reset" class="mt-1" onsubmit="return confirm('Are you sure you want to delete all transactions and reset data?');">
-    <button type="submit" class="btn-danger">Delete All Transactions & Reset Data</button>
-  </form>
-</body>
-</html>`
-  );
-});
 // Export data in QIF format
 app.get('/manage/export', (req, res) => {
   const format = req.query.format;
@@ -317,96 +273,9 @@ app.get('/api/summary', (req, res) => {
   }
   res.sendFile(summaryPath);
 });
-
-// Annual summaries index
-app.get('/years', (req, res, next) => {
-  try {
-    const summary = getSummary();
-    // Allow currency override via query param, e.g. ?currency=USD
-    const currency = req.query.currency;
-    res.type('html').send(renderAllYearsHtml(summary, currency));
-  } catch (err) {
-    next(err);
-  }
-});
-// Yearly HTML report for a specific year
-app.get('/years/:year', (req, res, next) => {
-  try {
-    const year = req.params.year;
-    const summary = getSummary();
-    const currency = req.query.currency;
-    res.type('html').send(renderYearHtml(summary, year, currency));
-  } catch (err) {
-    next(err);
-  }
-});
-// Yearly insights report under /years/:year/insights
-app.get('/years/:year/insights', (req, res, next) => {
-  try {
-    const year = req.params.year;
-    const summary = getSummary();
-    const currency = req.query.currency;
-    res.type('html').send(renderYearInsightsHtml(summary, year, currency));
-  } catch (err) {
-    next(err);
-  }
-});
-// Monthly HTML report under /years/:year/:month
-app.get('/years/:year/:month', (req, res, next) => {
-  try {
-    const y = req.params.year;
-    const m = req.params.month.padStart(2, '0');
-    const summary = getSummary({ month: `${y}-${m}` });
-    const currency = req.query.currency;
-    res.type('html').send(renderHtml(summary, currency));
-  } catch (err) {
-    next(err);
-  }
-});
-
-// Monthly insights report under /years/:year/:month/insights
-app.get('/years/:year/:month/insights', (req, res, next) => {
-  try {
-    const y = req.params.year;
-    const m = req.params.month.padStart(2, '0');
-    const summary = getSummary({ month: `${y}-${m}` });
-    const currency = req.query.currency;
-    res.type('html').send(renderMonthInsightsHtml(summary, y, m, currency));
-  } catch (err) {
-    next(err);
-  }
-});
-// Category drill-down for a given month
-app.get('/years/:year/:month/category/:category', (req, res, next) => {
-  try {
-    const year = req.params.year;
-    const m = req.params.month.padStart(2, '0');
-    const category = decodeURIComponent(req.params.category);
-    const txPath = path.join(
-      __dirname,
-      '..',
-      'data',
-      'transactions_categorized.json'
-    );
-    if (!fs.existsSync(txPath)) {
-      return res
-        .status(404)
-        .send('Transactions data not found. Run ingestion first.');
-    }
-    const allTx = JSON.parse(fs.readFileSync(txPath, 'utf-8'));
-    const filtered = allTx.filter(
-      (tx) => tx.category === category && tx.date.startsWith(`${year}-${m}`)
-    );
-    const currency = req.query.currency;
-    res
-      .type('html')
-      .send(
-        renderCategoryTransactionsHtml(year, m, category, filtered, currency)
-      );
-  } catch (err) {
-    next(err);
-  }
-});
+// Mount insights routes (annual, monthly, category)
+const insightsRouter = require('./routes/insights');
+app.use('/years', insightsRouter);
 // Redirect root '/' to '/years'
 app.get('/', (req, res) => {
   res.redirect('/years');
