@@ -1,9 +1,29 @@
 require('dotenv').config();
 const express = require('express');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
+const csurf = require('csurf');
 const path = require('path');
 const fs = require('fs');
 
 const app = express();
+// Security headers
+app.use(helmet());
+// Gzip compression
+app.use(compression());
+// Rate limiting
+const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
+app.use(limiter);
+// CSRF protection
+app.use(cookieParser());
+app.use(csurf({ cookie: true }));
+// Expose CSRF token to views
+app.use((req, res, next) => {
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../views'));
 app.locals.fmtCurrency = (value, currencyCode) => {
@@ -73,10 +93,22 @@ app.get('/', (req, res) => {
 // Serve static assets (CSS, JS) for other routes (e.g. public/index.html)
 app.use(express.static(path.join(__dirname, '..', 'public')));
 // 404 for other routes
-app.use((req, res) => {
-  res.status(404).send('Not found');
+app.use((req, res, next) => {
+  const err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
+// global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack || err);
+  res.status(err.status || 500);
+  res.render('error', { error: err });
 });
 
-app.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}`);
-});
+// Start server if this file is run directly
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Server listening at http://localhost:${port}`);
+  });
+}
+module.exports = app;
