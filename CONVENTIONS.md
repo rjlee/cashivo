@@ -102,3 +102,18 @@ Examples:
 - Extract complex interactive behaviors into standalone `.js` files under `public/` and include them via `<script src="/your-script.js"></script>`, instead of embedding large inline `<script>` sections in HTML templates.
 
 Feel free to reference this file when adding new charts or renderers to maintain consistent patterns.
+
+## 6. Testing & CI/CD Conventions
+
+- **Test File Organization**
+  - Place all test files under `tests/`, using the `.test.js` suffix.
+  - Unit tests go in `tests/service/`; integration (HTTP) tests go in `tests/routes/`.
+- **Testing Framework**
+  - Use Jest (`describe`, `test`, `expect`) with the `jest` environment enabled in ESLint.
+  - For HTTP route tests, use Supertest (`require('supertest')`).
+- **Test Fixtures**
+  - Use `beforeAll`/`afterAll` to seed or cleanup temporary fixtures (e.g., under `data/`) so tests run on a fresh checkout.
+- **Pre-commit Hooks & Linting**
+  - Husky and lint-staged enforce `eslint --fix` and `prettier` on staged `.js` files before commit.
+- **CI Pipeline**
+  - A GitHub Actions workflow (`.github/workflows/ci.yml`) runs on pushes and pull requests, installing dependencies, linting, and running tests automatically.

@@ -47,6 +47,11 @@ Cashivo is a Node.js financial budgeting tool that:
 - `npm run summary [--currency=USD]` – Generate summary JSON & console output.
 - `npm run evaluate` – Evaluate classification accuracy.
 - `npm run serve` – Launch web server on port 3000 (Basic Auth optional).
+- `npm test` – Run unit and integration tests via Jest.
+- `npm run lint` – Check code quality with ESLint.
+- `npm run format` – Auto-format code with Prettier.
+- `npm run format:check` – Verify code formatting matches Prettier rules.
+- `npm run prepare` – Install Husky Git hooks (run once after clone).
 
 ## 5. Configuration
 
@@ -57,6 +62,19 @@ Cashivo is a Node.js financial budgeting tool that:
 
 - Chart & variable naming: see `CONVENTIONS.md`.
 - Upcoming features: see `ROADMAP.md` (PRs #5–#9).
+ 
+## 7. Testing & CI/CD
+
+- **Tests**
+  - Run `npm test` to execute all Jest tests (unit & integration).
+- **Linting & Formatting**
+  - Run `npm run lint` to check code with ESLint.
+  - Run `npm run format` to auto-format code with Prettier.
+  - Run `npm run format:check` to verify formatting without modifying files.
+- **Pre-commit Hooks**
+  - Husky is configured via `npm run prepare` and runs `lint-staged` on staged files to enforce linting and formatting before commits.
+- **CI Pipeline**
+  - GitHub Actions workflow (`.github/workflows/ci.yml`) automatically installs dependencies, lints, and runs tests on pushes and pull requests to `main`.
 
 ---
 
