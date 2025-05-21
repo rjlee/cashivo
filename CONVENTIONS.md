@@ -15,7 +15,7 @@ Pattern:
 
 Examples:
 
-### Month View Charts (`renderHtml` in `summaryModule.js`)
+### Month View Charts
 
 - **6-Month Spending Bar**
   - Canvas ID: `spendingChart`
@@ -23,24 +23,24 @@ Examples:
 - **Daily Spending Line**
   - Canvas ID: `dailySpendingChart`
   - Variables: `dailySpendingChartRawData`, `dailySpendingChartLabels`, `dailySpendingChartData`, `dailySpendingChartCtx`
-- **Category Distribution Pie**
+  - **Category Distribution Pie**
   - Canvas ID: `categoryDistributionChart`
-  - Variables: `monthCategoryMap`, `monthCategoryLabels`, `monthCategoryData`, `monthCategoryCtx`
+  - Variables: `categoryDistributionChartRawData`, `categoryDistributionChartLabels`, `categoryDistributionChartData`, `categoryDistributionChartCtx`
 - **Top Merchants Bar**
   - Canvas ID: `topMerchantsChart`
   - Variables: `topMerchantsChartRawData`, `topMerchantsChartLabels`, `topMerchantsChartData`, `topMerchantsChartCtx`
 
-### Year View Charts (`renderYearHtml` in `summaryModule.js`)
+### Year View Charts
 
 - **Yearly Spending Bar**
   - Canvas ID: `yearSpendingChart`
   - Variables: `yearSpendingChartRawData`, `yearSpendingChartLabels`, `yearSpendingChartData`, `yearSpendingChartCtx`
-- **Top Merchants Bar**
-  - Canvas ID: `topMerchantsYearChart`
-  - Variables: `topMerchantsYearChartRawData`, `topMerchantsYearChartLabels`, `topMerchantsYearChartData`, `topMerchantsYearChartCtx`
-- **Category Distribution Pie**
+  - **Top Merchants Bar**
+  - Canvas ID: `topMerchantsChart`
+  - Variables: `topMerchantsChartRawData`, `topMerchantsChartLabels`, `topMerchantsChartData`, `topMerchantsChartCtx`
+  - **Category Distribution Pie**
   - Canvas ID: `categoryDistributionChart`
-  - Variables: `yearCategoryLabels`, `yearCategoryData`, `cdCtx` (or full: `categoryDistributionChartCtx`)
+  - Variables: `categoryDistributionChartRawData`, `categoryDistributionChartLabels`, `categoryDistributionChartData`, `categoryDistributionChartCtx`
 
 ## 2. Summary Generation Conventions (`src/summary.js`)
 
@@ -74,25 +74,24 @@ Examples:
   }
   ```
 
-## 3. HTML Rendering Module (`src/summaryModule.js`)
+## 3. HTML Rendering & Client-Side Logic
 
-- Exposes functions:
-
-  - `renderHtml` → single-month view
-  - `renderYearHtml` → specific year view
-  - `renderAllYearsHtml` → index of years
-  - `renderCategoryTransactionsHtml` → drill-down page
-
-- Each renderer function:
-  1. Builds navigation links using `fmtMonth` and `fmtAmount` helpers.
-  2. Injects inline `<script>` with pre-serialized JSON (never dynamic object mutation in browser).
-  3. Uses unique chart variable prefixes to avoid clashes.
+- Views are implemented as EJS templates under the `views/` directory:
+  - `insightsAllYears.ejs`, `insightsYear.ejs`, `insightsMonth.ejs`, `insightsYearInsights.ejs`, `insightsMonthInsights.ejs`, `categoryTransactions.ejs`
+  - Shared partials in `views/partials/` (e.g., head, footer)
+- Templates assemble navigation links, `<canvas>` elements, and inline `<script>` blocks to assign pre-serialized data to `window.<canvasID>RawData` variables.
+- Chart initialization is centralized in `public/charts.js`, which:
+  1. Reads `window.<canvasID>RawData`
+  2. Computes `<canvasID>Labels`, `<canvasID>Data`
+  3. Obtains `<canvasID>Ctx` and instantiates Chart.js charts
+- Additional interactivity (filters, table toggles) is implemented in `public/insights.js`
 
 ## 4. Helper Naming
 
-- Formatter functions:
-  - `fmtAmount(value, currency)` → formats numbers with currency symbols
-  - `fmtMonth('YYYY-MM')` → returns `'Mon YY'`
+- Console report helper in `src/summary.js`:
+  - `fmtAmount(value)` → formats numbers with default or specified currency symbol
+- Template helper in `src/server.js`:
+  - `fmtCurrency(value, currencyCode)` → formats numbers as localized currency strings
 
 ## 5. General Guidelines
 

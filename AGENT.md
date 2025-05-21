@@ -15,27 +15,35 @@ Cashivo is a Node.js financial budgeting tool that:
 
 ```
 ├── import/               # Drop CSV/QIF/QFX files here for ingestion
-├── data/                 # Generated JSON outputs (transactions.json, summary.json, etc.)
+├── data/                 # Generated JSON outputs (transactions.json, transactions_categorized.json, summary.json, etc.)
 ├── categories/           # Default/pass-through category rules & groups
 ├── src/
 │   ├── ingest.js         # CLI: ingest raw transactions
 │   ├── categorize.js     # CLI: classify transactions
 │   ├── summary.js        # CLI: generate summary JSON & console report
-│   ├── summaryModule.js  # Shared: load summary & render HTML pages
-│   └── server.js         # Express web server serving HTML/JSON
+│   ├── server.js         # Express web server serving HTML/JSON
+│   ├── routes/           # Express routers for manage & insights endpoints
+│   ├── controllers/      # View rendering logic using EJS templates
+│   └── services/         # Summary data loader & QIF export
+├── public/               # Static assets (JS, CSS)
+│   ├── charts.js         # Chart.js initialization scripts
+│   ├── insights.js       # Browser interactivity scripts
+│   └── styles.css        # Stylesheet
+├── views/                # EJS templates for HTML pages
 ├── evaluate.js           # Optional CLI: evaluate classifier accuracy
 ├── CONVENTIONS.md        # Coding/variable/chart naming conventions
 ├── ROADMAP.md            # Remaining PR roadmap for future enhancements
 ├── AGENT.md              # This overview file
 ├── README.md             # User-facing documentation & usage
 ├── package.json          # Dependencies & scripts
-└── Dockerfile/docker-compose.yml (optional)
+├── Dockerfile            # Docker build file (optional)
+└── docker-compose.yml    # Docker Compose config (optional)
 ```
 
 ## 3. Data Flow
 
 1. **Ingest** (`npm run ingest`) → parses files in `import/` to `data/transactions.json`.
-2. **Categorize** (`npm run categorize [--rules|--ai|--emb]`) → assigns categories.
+2. **Categorize** (`npm run categorize [--rules|--pass|--ai|--emb]`) → assigns categories (legacy rules, pass-through, embeddings, or AI).
 3. **Summarize** (`npm run summary`) → builds `data/summary.json` and prints console report.
 4. **Serve** (`npm run serve`) → serves HTML/JSON via Express endpoints:
    - `/years`, `/years/:year`, `/years/:year/:month`, `/years/:year/:month/category/:category`, `/api/summary`
@@ -43,7 +51,7 @@ Cashivo is a Node.js financial budgeting tool that:
 ## 4. Key Commands
 
 - `npm run ingest` – Ingest raw files into JSON.
-- `npm run categorize [--rules|--ai|--emb]` – Classify transactions.
+- `npm run categorize [--rules|--pass|--ai|--emb]` – Classify transactions (keyword rules, pass-through, embeddings, or AI).
 - `npm run summary [--currency=USD]` – Generate summary JSON & console output.
 - `npm run evaluate` – Evaluate classification accuracy.
 - `npm run serve` – Launch web server on port 3000 (Basic Auth optional).
