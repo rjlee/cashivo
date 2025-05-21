@@ -14,9 +14,18 @@
   },
   "rules": {
     // project-specific rule overrides
+    "prettier/prettier": "off",
     "no-prototype-builtins": "off",
     "no-unused-vars": "off",
     "no-case-declarations": "off",
     "no-empty": "off"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["tests/**/*.js"],
+      "env": {
+        "jest": true
+      }
+    }
+  ]
 }
