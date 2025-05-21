@@ -12,6 +12,7 @@
   <h1>Manage Data</h1>
   <p><a href="/years">← Back to Annual Summaries</a></p>
   <form method="POST" action="/manage" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <div>
       <input type="file" name="files" multiple accept=".csv,.qif,.qfx" required>
     </div>
@@ -20,6 +21,7 @@
     </div>
   </form>
   <form method="POST" action="/manage/load-default-categories" class="mt-1">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <button type="submit">Load Default Categories</button>
   </form>
   <hr>
@@ -31,6 +33,7 @@
   <hr>
   <h2>Reset Data</h2>
   <form method="POST" action="/manage/reset" class="mt-1" onsubmit="return confirm('Are you sure you want to delete all transactions and reset data?');">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <button type="submit" class="btn-danger">Delete All Transactions & Reset Data</button>
   </form>
 </body>
