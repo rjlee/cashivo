@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet');
 const compression = require('compression');
-const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const csurf = require('csurf');
 const path = require('path');
@@ -15,9 +14,6 @@ app.set('trust proxy', true);
 app.use(helmet());
 // Gzip compression
 app.use(compression());
-// Rate limiting (requires trust proxy to correctly read X-Forwarded-For)
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
-app.use(limiter);
 // CSRF protection
 app.use(cookieParser());
 app.use(csurf({ cookie: true }));
