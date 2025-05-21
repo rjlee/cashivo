@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
@@ -24,7 +24,6 @@ jobs:
 
       - name: Lint code
         run: npm run lint
-
 
       - name: Run tests
         run: npm test

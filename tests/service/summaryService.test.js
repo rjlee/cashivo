@@ -2,6 +2,39 @@ const path = require('path');
 const fs = require('fs');
 const { getSummary, exportQif } = require('../../src/services/summaryService');
 
+const txPath = path.resolve(
+  __dirname,
+  '../../data/transactions_categorized.json'
+);
+let hadTxFile = false;
+beforeAll(() => {
+  if (fs.existsSync(txPath)) {
+    hadTxFile = true;
+  } else {
+    const dataDir = path.dirname(txPath);
+    fs.mkdirSync(dataDir, { recursive: true });
+    fs.writeFileSync(
+      txPath,
+      JSON.stringify([
+        {
+          date: '2023-01-02',
+          amount: 100.0,
+          description: 'Test',
+          category: 'Test',
+          notes: 'Note',
+        },
+      ])
+    );
+  }
+});
+afterAll(() => {
+  if (!hadTxFile) {
+    try {
+      fs.unlinkSync(txPath);
+    } catch {}
+  }
+});
+
 describe('summaryService', () => {
   test('getSummary returns an object with expected properties', () => {
     const summary = getSummary();
