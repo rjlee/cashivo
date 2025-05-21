@@ -1,0 +1,93 @@
+<%- include('partials/head', { title: 'Summary for ' + monthlyOverview[0].month }) %>
+<h1>Summary for <%= monthlyOverview[0].month %></h1>
+
+<div class="month-nav">
+  <% if (prevYear) { %>
+    <a class="prev-month" href="/years/<%= prevYear %>/<%= prevMonth %>">← <%= prevYear + '-' + prevMonth %></a>
+  <% } else { %>
+    <span></span>
+  <% } %>
+  <a class="year-link" href="/years/<%= year %>"><%= year %></a>
+  <% if (nextYear) { %>
+    <a class="next-month" href="/years/<%= nextYear %>/<%= nextMonth %>"><%= nextYear + '-' + nextMonth %> →</a>
+  <% } else { %>
+    <span></span>
+  <% } %>
+  </div>
+
+  <% if (spendingChartRawData && spendingChartSelMonth) { %>
+    <canvas id="spendingChart" width="600" height="150"></canvas>
+    <script>
+      window.spendingChartRawData = <%- JSON.stringify(spendingChartRawData) %>;
+      window.spendingChartSelMonth = '<%= spendingChartSelMonth %>';
+    </script>
+  <% } %>
+
+<table>
+  <thead>
+    <tr>
+      <th>Month</th>
+      <th>Income</th>
+      <th>Expenses</th>
+      <th>Spending</th>
+      <th>Net Cash Flow</th>
+      <th>Savings Rate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% monthlyOverview.forEach(function(item) { %>
+      <tr>
+        <td><a href="/years/<%= year %>/<%= item.month.split('-')[1] %>"><%= item.month %></a></td>
+        <td><%= fmtCurrency(item.totalIncome, currency) %></td>
+        <td><%= fmtCurrency(item.totalExpenses, currency) %></td>
+        <td><%= fmtCurrency((spendingChartRawData.find(s => s.month === item.month)?.spending || 0), currency) %></td>
+        <td><%= fmtCurrency(item.netCashFlow, currency) %></td>
+        <td><%= item.savingsRate.toFixed(2) %>%</td>
+      </tr>
+    <% }); %>
+  </tbody>
+</table>
+
+  <% if (categoryRows && categoryRows.length) { %>
+    <h2>Spending Category Breakdown (<%= monthlyOverview[0].month %>)</h2>
+    <table id="category-breakdown-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Amount</th>
+          <th>Δ vs Prev</th>
+          <th>Budget</th>
+          <th>Actual</th>
+          <th>Variance</th>
+          <th>% Used</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% categoryRows.forEach(function(r) { %>
+          <tr data-category="<%= r.category %>">
+            <td><a href="/years/<%= year %>/<%= month %>/category/<%= encodeURIComponent(r.category) %>"><%= r.category %></a></td>
+            <td><%= fmtCurrency(r.amount, currency) %></td>
+            <td>
+              <% if (r.change != null) { %>
+                <% if (r.change > 0) { %>
+                  <span style="color:red">▲</span> <%= Math.abs(r.change).toFixed(2) %>
+                <% } else if (r.change < 0) { %>
+                  <span style="color:green">▼</span> <%= Math.abs(r.change).toFixed(2) %>
+                <% } else { %>
+                  <%= Math.abs(r.change).toFixed(2) %>
+                <% } %>
+              <% } %>
+            </td>
+            <td><%= r.budget != null ? fmtCurrency(r.budget, currency) : '' %></td>
+            <td><%= r.actual != null ? fmtCurrency(r.actual, currency) : '' %></td>
+            <td><%= r.variance != null ? fmtCurrency(r.variance, currency) : '' %></td>
+            <td><%= r.pctUsed != null ? r.pctUsed.toFixed(2) + '%' : '' %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+
+  <p><a href="/years/<%= year %>/<%= month %>/insights">View Insights for <%= year %>-<%= month %> →</a></p>
+
+<%- include('partials/footer') %>

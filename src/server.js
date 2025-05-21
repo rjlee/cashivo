@@ -2,18 +2,21 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-// summaryModule for loading and rendering summary data
-const {
-  getSummary,
-  renderHtml,
-  renderYearHtml,
-  renderAllYearsHtml,
-  renderCategoryTransactionsHtml,
-  renderMonthInsightsHtml,
-  renderYearInsightsHtml,
-} = require('./summaryModule');
+// (Views rendering now handled by controllers via EJS templates)
+// summaryModule is no longer needed here
 
 const app = express();
+// Configure EJS view engine and views directory
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '../views'));
+// Helper for formatting amounts with currency and grouping
+app.locals.fmtCurrency = function (value, currencyCode) {
+  const code = currencyCode || process.env.DEFAULT_CURRENCY || 'USD';
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency: code,
+  }).format(value);
+};
 // Mount manage router for all /manage endpoints
 const manageRouter = require('./routes/manage');
 app.use('/manage', manageRouter);

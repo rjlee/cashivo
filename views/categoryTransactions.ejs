@@ -1,0 +1,24 @@
+<%- include('partials/head', { title: 'Transactions: ' + category + ' (' + year + '-' + month + ')' }) %>
+<h1>Transactions for <%= category %> in <%= year %>-<%= month %></h1>
+<p><a href="/years/<%= year %>/<%= month %>">← Back to month summary</a></p>
+<table>
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Description</th>
+      <th>Amount</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% transactions.forEach(function(tx) { %>
+      <tr>
+        <td><%= tx.date || '' %></td>
+        <td><%= tx.description || '' %></td>
+        <td><%= fmtCurrency(tx.amount, currency) %></td>
+        <td><%= tx.notes || '' %></td>
+      </tr>
+    <% }); %>
+  </tbody>
+</table>
+<%- include('partials/footer') %>

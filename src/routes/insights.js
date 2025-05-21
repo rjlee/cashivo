@@ -13,6 +13,9 @@ router.get('/:year/:month', insightsCtrl.showMonth);
 // Monthly insights
 router.get('/:year/:month/insights', insightsCtrl.showMonthInsights);
 // Category drill-down(s)
-router.get('/:year/:month/category/:category', insightsCtrl.showCategoryTransactions);
+router.get(
+  '/:year/:month/category/:category',
+  insightsCtrl.showCategoryTransactions
+);
 
 module.exports = router;

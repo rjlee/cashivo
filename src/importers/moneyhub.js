@@ -12,8 +12,12 @@ module.exports = {
   defaultClassifier: 'pass',
   detect: (headers) => {
     // Case-insensitive detection of Moneyhub CSV format
-    const ups = headers.map(h => (h || '').toString().toUpperCase());
-    return ups.includes('DATE') && ups.includes('DESCRIPTION') && ups.includes('AMOUNT');
+    const ups = headers.map((h) => (h || '').toString().toUpperCase());
+    return (
+      ups.includes('DATE') &&
+      ups.includes('DESCRIPTION') &&
+      ups.includes('AMOUNT')
+    );
   },
   async parse(filePath) {
     return new Promise((resolve, reject) => {

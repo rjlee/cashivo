@@ -32,7 +32,8 @@ function uploadFiles(req, res) {
   const importersDir = path.resolve(__dirname, '..', 'importers');
   let importers = [];
   if (fs.existsSync(importersDir)) {
-    importers = fs.readdirSync(importersDir)
+    importers = fs
+      .readdirSync(importersDir)
       .filter((f) => f.endsWith('.js'))
       .map((f) => require(path.join(importersDir, f)));
   }
@@ -44,7 +45,8 @@ function uploadFiles(req, res) {
     } catch {}
     const headers = headerLine.split(',').map((h) => h.trim());
     const importer = importers.find((i) => i.detect && i.detect(headers));
-    if (importer && importer.defaultClassifier) usedClassifiers.add(importer.defaultClassifier);
+    if (importer && importer.defaultClassifier)
+      usedClassifiers.add(importer.defaultClassifier);
   });
   let classifyFlag = '';
   if (usedClassifiers.size === 1) {
@@ -55,12 +57,17 @@ function uploadFiles(req, res) {
     else if (cls === 'ai') classifyFlag = '--ai';
   }
   const ingestCmd = 'npm run ingest';
-  const categorizeCmd = classifyFlag ? `npm run categorize -- ${classifyFlag}` : 'npm run categorize';
+  const categorizeCmd = classifyFlag
+    ? `npm run categorize -- ${classifyFlag}`
+    : 'npm run categorize';
   const summaryCmd = 'npm run summary';
   const fullCmd = `${ingestCmd} && ${categorizeCmd} && ${summaryCmd}`;
   // Run ingestion from project-root
-  exec(fullCmd, { cwd: path.resolve(__dirname, '..', '..') }, (err, stdout, stderr) => {
-    let html = `<!doctype html>
+  exec(
+    fullCmd,
+    { cwd: path.resolve(__dirname, '..', '..') },
+    (err, stdout, stderr) => {
+      let html = `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -71,32 +78,52 @@ function uploadFiles(req, res) {
   <h1>Upload Results</h1>
   <p><a href="/manage">← New Upload</a> | <a href="/years">Annual Summaries</a></p>
   <ul>`;
-    files.forEach((f) => {
-      html += `<li>${f.originalname} → ${f.filename}</li>`;
-    });
-    html += '</ul>';
-    if (err) {
-      html += `<h2 style="color:red">Error processing files</h2><pre>${stderr}</pre>`;
-    } else {
-      html += `<h2 style="color:green">Processing complete</h2><pre>${stdout}</pre>`;
+      files.forEach((f) => {
+        html += `<li>${f.originalname} → ${f.filename}</li>`;
+      });
+      html += '</ul>';
+      if (err) {
+        html += `<h2 style="color:red">Error processing files</h2><pre>${stderr}</pre>`;
+      } else {
+        html += `<h2 style="color:green">Processing complete</h2><pre>${stdout}</pre>`;
+      }
+      html += '</body></html>';
+      res.type('html').send(html);
     }
-    html += '</body></html>';
-    res.type('html').send(html);
-  });
+  );
 }
 function resetData(req, res) {
   // Reset project-root/data
   const dataDir = path.resolve(__dirname, '..', '..', 'data');
-  if (fs.existsSync(dataDir)) fs.rmSync(dataDir, { recursive: true, force: true });
+  if (fs.existsSync(dataDir))
+    fs.rmSync(dataDir, { recursive: true, force: true });
   fs.mkdirSync(dataDir, { recursive: true });
   // After clearing data, re-render manage page
   res.render('manage.ejs', { showMsg: false });
 }
 function loadDefaultCategories(req, res) {
   // Default categories are at project-root/categories
-  const srcCats = path.resolve(__dirname, '..', '..', 'categories', 'default_categories.json');
-  const dstCats = path.resolve(__dirname, '..', '..', 'data', 'categories.json');
+  const srcCats = path.resolve(
+    __dirname,
+    '..',
+    '..',
+    'categories',
+    'default_categories.json'
+  );
+  const dstCats = path.resolve(
+    __dirname,
+    '..',
+    '..',
+    'data',
+    'categories.json'
+  );
   fs.copyFileSync(srcCats, dstCats);
   res.redirect('/manage?msg=defaults_loaded');
 }
-module.exports = { showManage, exportData, uploadFiles, resetData, loadDefaultCategories };
+module.exports = {
+  showManage,
+  exportData,
+  uploadFiles,
+  resetData,
+  loadDefaultCategories,
+};

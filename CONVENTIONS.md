@@ -7,6 +7,7 @@ This document outlines the coding conventions, especially JavaScript variable na
 Every embedded Chart.js instance uses a clear, chart-specific naming pattern to avoid identifier collisions in inline `<script>` tags.
 
 Pattern:
+
 - `<canvasID>RawData`: the original JSON array or object feeding the chart.
 - `<canvasID>Labels`: array of labels for the chart’s X-axis (or pie slices).
 - `<canvasID>Data`: array of numeric values for the chart’s dataset.
@@ -15,6 +16,7 @@ Pattern:
 Examples:
 
 ### Month View Charts (`renderHtml` in `summaryModule.js`)
+
 - **6-Month Spending Bar**
   - Canvas ID: `spendingChart`
   - Variables: `spendingChartRawData`, `spendingChartLabels`, `spendingChartData`, `spendingChartCtx`
@@ -29,6 +31,7 @@ Examples:
   - Variables: `topMerchantsChartRawData`, `topMerchantsChartLabels`, `topMerchantsChartData`, `topMerchantsChartCtx`
 
 ### Year View Charts (`renderYearHtml` in `summaryModule.js`)
+
 - **Yearly Spending Bar**
   - Canvas ID: `yearSpendingChart`
   - Variables: `yearSpendingChartRawData`, `yearSpendingChartLabels`, `yearSpendingChartData`, `yearSpendingChartCtx`
@@ -44,35 +47,37 @@ Examples:
 - Functions are named `generateXyz` and return plain JS objects/arrays for each report section:
   1. `generateMonthlyOverview`
   2. `generateMonthlySpending`
- 3. `generateCategoryBreakdown`
- 4. `generateTrends`
- 5. `generateLifestyleSummary`
- 6. `generateMerchantInsights`
- 7. `generateBudgetAdherence`
- 8. `generateSavingsGoals`
- 9. `generateAnomalies`
+
+3.  `generateCategoryBreakdown`
+4.  `generateTrends`
+5.  `generateLifestyleSummary`
+6.  `generateMerchantInsights`
+7.  `generateBudgetAdherence`
+8.  `generateSavingsGoals`
+9.  `generateAnomalies`
 10. `generateYearlySummary`
 
 - The main `summary.js` builds a top-level `summary` object with these keys in order:
   ```js
   {
     monthlyOverview,
-    monthlySpending,
-    categoryBreakdown,
-    trends,
-    lifestyle,
-    merchantInsights,
-    budgetAdherence,
-    savingsGoals,
-    anomalies,
-    yearlySummary,
-    dailySpending  // when enabled
+      monthlySpending,
+      categoryBreakdown,
+      trends,
+      lifestyle,
+      merchantInsights,
+      budgetAdherence,
+      savingsGoals,
+      anomalies,
+      yearlySummary,
+      dailySpending; // when enabled
   }
   ```
 
 ## 3. HTML Rendering Module (`src/summaryModule.js`)
 
 - Exposes functions:
+
   - `renderHtml` → single-month view
   - `renderYearHtml` → specific year view
   - `renderAllYearsHtml` → index of years

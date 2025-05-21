@@ -7,7 +7,13 @@ const path = require('path');
  */
 function getSummary({ month } = {}) {
   // summary JSON lives at project-root/data/summary.json
-  const summaryPath = path.resolve(__dirname, '..', '..', 'data', 'summary.json');
+  const summaryPath = path.resolve(
+    __dirname,
+    '..',
+    '..',
+    'data',
+    'summary.json'
+  );
   let summary;
   if (fs.existsSync(summaryPath)) {
     const raw = fs.readFileSync(summaryPath, 'utf-8');
@@ -19,9 +25,17 @@ function getSummary({ month } = {}) {
       monthlySpending: [],
       dailySpending: [],
       categoryBreakdown: { perMonth: {} },
-      trends: { monthlyTrends: [], monthlyRecurringBills: {}, recurringBills: [] },
+      trends: {
+        monthlyTrends: [],
+        monthlyRecurringBills: {},
+        recurringBills: [],
+      },
       lifestyle: [],
-      merchantInsights: { topMerchants: [], transactionCounts: {}, usageOverTime: {} },
+      merchantInsights: {
+        topMerchants: [],
+        transactionCounts: {},
+        usageOverTime: {},
+      },
       budgetAdherence: {},
       savingsGoals: {},
       anomalies: { outliers: [], spikes: [], duplicates: [] },
@@ -29,20 +43,29 @@ function getSummary({ month } = {}) {
   }
   if (month) {
     if (Array.isArray(summary.monthlyOverview)) {
-      summary.monthlyOverview = summary.monthlyOverview.filter(i => i.month === month);
+      summary.monthlyOverview = summary.monthlyOverview.filter(
+        (i) => i.month === month
+      );
     }
     if (Array.isArray(summary.dailySpending)) {
-      summary.dailySpending = summary.dailySpending.filter(d => d.date.startsWith(month));
+      summary.dailySpending = summary.dailySpending.filter((d) =>
+        d.date.startsWith(month)
+      );
     }
     if (summary.categoryBreakdown && summary.categoryBreakdown.perMonth) {
-      summary.categoryBreakdown.perMonth = { [month]: summary.categoryBreakdown.perMonth[month] };
+      summary.categoryBreakdown.perMonth = {
+        [month]: summary.categoryBreakdown.perMonth[month],
+      };
     }
     if (summary.trends) {
       if (Array.isArray(summary.trends.monthlyTrends)) {
-        summary.trends.monthlyTrends = summary.trends.monthlyTrends.filter(t => t.month === month);
+        summary.trends.monthlyTrends = summary.trends.monthlyTrends.filter(
+          (t) => t.month === month
+        );
       }
       if (summary.trends.monthlyRecurringBills) {
-        summary.trends.recurringBills = summary.trends.monthlyRecurringBills[month] || [];
+        summary.trends.recurringBills =
+          summary.trends.monthlyRecurringBills[month] || [];
       }
     }
   }
@@ -54,14 +77,20 @@ function getSummary({ month } = {}) {
  */
 function exportQif() {
   // transactions file at project-root/data/transactions_categorized.json
-  const txPath = path.resolve(__dirname, '..', '..', 'data', 'transactions_categorized.json');
+  const txPath = path.resolve(
+    __dirname,
+    '..',
+    '..',
+    'data',
+    'transactions_categorized.json'
+  );
   if (!fs.existsSync(txPath)) throw new Error('No transaction data');
   const txs = JSON.parse(fs.readFileSync(txPath, 'utf-8'));
   txs.sort((a, b) => a.date.localeCompare(b.date));
   const lines = ['!Type:Bank'];
-  txs.forEach(tx => {
+  txs.forEach((tx) => {
     const [y, m, d] = tx.date.split('-');
-    lines.push('D' + [m.padStart(2,'0'), d.padStart(2,'0'), y].join('/'));
+    lines.push('D' + [m.padStart(2, '0'), d.padStart(2, '0'), y].join('/'));
     lines.push('T' + tx.amount.toFixed(2));
     lines.push('P' + tx.description);
     if (tx.notes) lines.push('M' + tx.notes);

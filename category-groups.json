@@ -27,9 +27,5 @@
     "Charitable giving",
     "Other expenses"
   ],
-  "Internal": [
-    "Transfers",
-    "Savings",
-    "Income"
-  ]
+  "Internal": ["Transfers", "Savings", "Income"]
 }

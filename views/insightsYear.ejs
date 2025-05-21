@@ -1,0 +1,84 @@
+<%- include('partials/head', { title: 'Annual Summary for ' + year }) %>
+<h1>Annual Summary for <%= year %></h1>
+<div class="year-nav">
+  <% if (prevYear) { %>
+    <a class="prev-year" href="/years/<%= prevYear %>">← <%= prevYear %></a>
+  <% } else { %>
+    <span></span>
+  <% } %>
+  <a class="years-index" href="/years">Years</a>
+  <% if (nextYear) { %>
+    <a class="next-year" href="/years/<%= nextYear %>"><%= nextYear %> →</a>
+  <% } else { %>
+    <span></span>
+  <% } %>
+</div>
+<% if (spendingArr && spendingArr.length) { %>
+  <canvas id="yearSpendingChart" width="600" height="150"></canvas>
+  <script>
+    window.yearSpendingChartRawData = <%- JSON.stringify(spendingArr) %>;
+  </script>
+<% } %>
+<% if (yearly) { %>
+  <table>
+    <thead>
+      <tr>
+        <th>Year</th>
+        <th>Income</th>
+        <th>Expenses</th>
+        <th>Spending</th>
+        <th>Net Cash Flow</th>
+        <th>Savings Rate</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><%= yearly.year %></td>
+        <td><%= fmtCurrency(yearly.totalIncome, currency) %></td>
+        <td><%= fmtCurrency(yearly.totalExpenses, currency) %></td>
+        <td><%= fmtCurrency(annualSpending, currency) %></td>
+        <td><%= fmtCurrency(yearly.netCashFlow, currency) %></td>
+        <td><%= yearly.savingsRate.toFixed(2) %>%</td>
+      </tr>
+    </tbody>
+  </table>
+<% } else { %>
+  <p>No data for year <%= year %></p>
+<% } %>
+<% if (months && months.length) { %>
+  <h2>Monthly Breakdown</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Month</th>
+        <th>Income</th>
+        <th>Expenses</th>
+        <th>Spending</th>
+        <th>Net Cash Flow</th>
+        <th>Savings Rate</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% months.forEach(function(item) { 
+           var sp = (spendingArr.find(function(s) { return s.month === item.month; }) || {});
+           var spVal = sp.spending || 0;
+           var parts = item.month.split('-');
+           var im = parts[1];
+      %>
+      <tr>
+        <td><a href="/years/<%= year %>/<%= im %>"><%= item.month %></a></td>
+        <td><%= fmtCurrency(item.totalIncome, currency) %></td>
+        <td><%= fmtCurrency(item.totalExpenses, currency) %></td>
+        <td><%= fmtCurrency(spVal, currency) %></td>
+        <td><%= fmtCurrency(item.netCashFlow, currency) %></td>
+        <td><%= item.savingsRate.toFixed(2) %>%</td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } else { %>
+  <p>No monthly data for year <%= year %></p>
+<% } %>
+<script src="/charts.js"></script>
+<p><a href="/years/<%= year %>/insights">View Insights for <%= year %> →</a></p>
+<%- include('partials/footer') %>
