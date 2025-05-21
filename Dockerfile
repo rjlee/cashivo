@@ -34,6 +34,7 @@ COPY --from=build /app/src ./src
 COPY --from=build /app/data ./data
 # Include default categories templates
 COPY --from=build /app/categories ./categories
+COPY --from=build /app/views ./views
 
 # Expose server port
 EXPOSE 3000
