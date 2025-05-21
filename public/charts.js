@@ -177,20 +177,21 @@ document.addEventListener('DOMContentLoaded', function () {
   ) {
     const usageMap = window.topMerchantsChartRawData;
     const form = document.getElementById('category-filter');
-    const sel = form ? form.getAttribute('data-month') : null;
+    const selMonth = form ? form.getAttribute('data-month') : null;
+    const selYear = form ? form.getAttribute('data-year') : null;
     let arr = [];
-    if (sel && /^\d{4}-\d{2}$/.test(sel)) {
+    if (selMonth && /^\d{4}-\d{2}$/.test(selMonth)) {
       // monthly insights
       arr = Object.entries(usageMap).map(([m, data]) => ({
         merchant: m,
-        total: data[sel] || 0,
+        total: data[selMonth] || 0,
       }));
-    } else if (sel && /^\d{4}$/.test(sel)) {
+    } else if (selYear && /^\d{4}$/.test(selYear)) {
       // yearly insights: sum all months in the year
       arr = Object.entries(usageMap).map(([m, data]) => ({
         merchant: m,
         total: Object.entries(data).reduce(
-          (sum, [mo, v]) => (mo.startsWith(sel + '-') ? sum + v : sum),
+          (sum, [mo, v]) => (mo.startsWith(selYear + '-') ? sum + v : sum),
           0
         ),
       }));

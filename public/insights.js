@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
     'recurring-table',
   ];
   var monthSel = form.getAttribute('data-month');
+  var yearSel = form.getAttribute('data-year');
   // Filter panel action links
   var clearAllLink = document.getElementById('clear-all');
   var selectAllLink = document.getElementById('select-all');
@@ -111,20 +112,22 @@ document.addEventListener('DOMContentLoaded', function () {
     if (topChart) {
       var arr = [];
       Object.keys(ubc).forEach(function (m) {
-        // Aggregate category usage for selected period (month or year)
-        var monthMap = {};
-        Object.keys(ubc[m]).forEach(function (mo) {
-          if (mo === monthSel || mo.startsWith(monthSel + '-')) {
-            Object.entries(ubc[m][mo]).forEach(function (_ref) {
-              var cat = _ref[0],
-                val = _ref[1];
-              monthMap[cat] = (monthMap[cat] || 0) + val;
-            });
-          }
-        });
-        var total = selCats.reduce(function (sum, c) {
-          return sum + (monthMap[c] || 0);
-        }, 0);
+        var total = 0;
+        if (monthSel) {
+          var catMap = ubc[m][monthSel] || {};
+          selCats.forEach(function (c) {
+            total += catMap[c] || 0;
+          });
+        } else if (yearSel) {
+          Object.keys(ubc[m]).forEach(function (mo) {
+            if (mo.startsWith(yearSel + '-')) {
+              var catMapY = ubc[m][mo] || {};
+              selCats.forEach(function (c) {
+                total += catMapY[c] || 0;
+              });
+            }
+          });
+        }
         if (total > 0) arr.push({ merchant: m, total: total });
       });
       arr.sort(function (a, b) {
