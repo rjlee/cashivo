@@ -15,7 +15,8 @@ app.use(
         "script-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net/npm/chart.js"]
       }
     },
-    crossOriginOpenerPolicy: false
+    crossOriginOpenerPolicy: false,
+    originAgentCluster: false
   })
 );
 // Gzip compression
