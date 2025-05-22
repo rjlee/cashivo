@@ -8,10 +8,15 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-// trust first proxy (for correct client IP from X-Forwarded-For headers)
-app.set('trust proxy', true);
-// Security headers
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        "script-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net/npm/chart.js"]
+      }
+    }
+  })
+);
 // Gzip compression
 app.use(compression());
 // CSRF protection
@@ -88,8 +93,10 @@ app.use('/years', insightsRouter);
 app.get('/', (req, res) => {
   res.redirect('/years');
 });
-// Serve static assets (CSS, JS) for other routes (e.g. public/index.html)
+// Serve static assets (CSS, JS, etc.) from public directory
 app.use(express.static(path.join(__dirname, '..', 'public')));
+// Handle favicon requests to avoid 404 errors
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 // 404 for other routes
 app.use((req, res, next) => {
   const err = new Error('Not Found');
