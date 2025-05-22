@@ -97,16 +97,19 @@ app.get('/', (req, res) => {
 app.use(express.static(path.join(__dirname, '..', 'public')));
 // Handle favicon requests to avoid 404 errors
 app.get('/favicon.ico', (req, res) => res.status(204).end());
-// 404 for other routes
-app.use((req, res, next) => {
-  const err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+// 404 handler for unmatched routes
+app.use((req, res) => {
+  console.warn(`404 Not Found: ${req.method} ${req.originalUrl}`);
+  res.status(404);
+  res.render('error', { error: { status: 404, message: 'Not Found' } });
 });
-// global error handler
+// global error handler (logs only server errors)
 app.use((err, req, res, next) => {
-  console.error(err.stack || err);
-  res.status(err.status || 500);
+  const status = err.status || 500;
+  if (status >= 500) {
+    console.error(err.stack || err);
+  }
+  res.status(status);
   res.render('error', { error: err });
 });
 
