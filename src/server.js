@@ -15,6 +15,7 @@ app.use(
         "script-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net/npm/chart.js"]
       }
     },
+    strictTransportSecurity: false,
     crossOriginOpenerPolicy: false,
     originAgentCluster: false
   })
