@@ -35,9 +35,8 @@ COPY --from=build /app/data ./data
 # Include default categories templates and views
 COPY --from=build /app/categories ./categories
 COPY --from=build /app/views ./views
-# Include import and provider definitions for upload and classification
-COPY --from=build /app/import ./import
-COPY --from=build /app/providers ./providers
+# Create import and providers directories for file uploads and classification hooks
+RUN mkdir -p import providers
 
 # Expose server port
 EXPOSE 3000
