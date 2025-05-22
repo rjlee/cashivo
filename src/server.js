@@ -1,22 +1,30 @@
 require('dotenv').config();
 const express = require('express');
+const helmet = require('helmet');
 const compression = require('compression');
 const cookieParser = require('cookie-parser');
-const csurf = require('csurf');
 const path = require('path');
 const fs = require('fs');
 
 const app = express();
+// Security headers via Helmet: CSP + disable COOP/OAC for HTTP/dev
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        "script-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net/npm/chart.js"]
+      }
+    },
+    crossOriginOpenerPolicy: false,
+    originAgentCluster: false
+  })
+);
 // Gzip compression
 app.use(compression());
-// CSRF protection
+// Cookie parsing (for CSRF tokens)
 app.use(cookieParser());
-app.use(csurf({ cookie: true }));
-// Expose CSRF token to views
-app.use((req, res, next) => {
-  res.locals.csrfToken = req.csrfToken();
-  next();
-});
+// Parse URL-encoded bodies (for form submissions)
+app.use(express.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../views'));
 app.locals.fmtCurrency = (value, currencyCode) => {

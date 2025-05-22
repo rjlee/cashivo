@@ -5,18 +5,38 @@ const multer = require('multer');
 // Save uploads into the project-root/import directory
 const upload = multer({ dest: path.resolve(__dirname, '../../import') });
 const manageCtrl = require('../controllers/manageController');
+const csrf = require('csurf');
+const csrfProtection = csrf({ cookie: true });
 
 // Management endpoints
-router.get('/', manageCtrl.showManage);
+router.get(
+  '/',
+  csrfProtection,
+  (req, res, next) => {
+    res.locals.csrfToken = req.csrfToken();
+    next();
+  },
+  manageCtrl.showManage
+);
 router.get('/export', manageCtrl.exportData);
-// Process uploaded files
-router.post('/', upload.array('files'), manageCtrl.uploadFiles);
-// Reset all data
-router.post('/reset', manageCtrl.resetData);
+// Process uploaded files (multipart) with CSRF protection
+router.post(
+  '/',
+  upload.array('files'),
+  csrfProtection,
+  manageCtrl.uploadFiles
+);
 // Reload default categories
-router.post('/load-default-categories', manageCtrl.loadDefaultCategories);
-router.post('/', upload.array('files'), manageCtrl.uploadFiles);
-router.post('/reset', manageCtrl.resetData);
-router.post('/load-default-categories', manageCtrl.loadDefaultCategories);
+router.post(
+  '/load-default-categories',
+  csrfProtection,
+  manageCtrl.loadDefaultCategories
+);
+// Reset all data
+router.post(
+  '/reset',
+  csrfProtection,
+  manageCtrl.resetData
+);
 
 module.exports = router;
