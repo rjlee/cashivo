@@ -8,17 +8,17 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        "script-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net/npm/chart.js"]
-      }
-    },
-    crossOriginOpenerPolicy: false,
-    originAgentCluster: false
-  })
-);
+//app.use(
+//  helmet({
+//    contentSecurityPolicy: {
+//      directives: {
+//        "script-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net/npm/chart.js"]
+//      }
+//    },
+//    crossOriginOpenerPolicy: false,
+//    originAgentCluster: false
+//  })
+//);
 // Gzip compression
 app.use(compression());
 // CSRF protection
