@@ -11,12 +11,14 @@ module.exports = {
   // Use pass-through classification by default for Moneyhub imports
   defaultClassifier: 'pass',
   detect: (headers) => {
-    // Case-insensitive detection of Moneyhub CSV format
+    // Case-insensitive detection of Moneyhub CSV format (requires 'CATEGORY GROUP')
+    if (!Array.isArray(headers)) return false;
     const ups = headers.map((h) => (h || '').toString().toUpperCase());
     return (
       ups.includes('DATE') &&
       ups.includes('DESCRIPTION') &&
-      ups.includes('AMOUNT')
+      ups.includes('AMOUNT') &&
+      ups.includes('CATEGORY GROUP')
     );
   },
   async parse(filePath) {
