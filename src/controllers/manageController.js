@@ -98,8 +98,8 @@ function resetData(req, res) {
   if (fs.existsSync(dataDir))
     fs.rmSync(dataDir, { recursive: true, force: true });
   fs.mkdirSync(dataDir, { recursive: true });
-  // After clearing data, re-render manage page
-  res.render('manage.ejs', { showMsg: false });
+  // After clearing data, redirect to GET /manage to generate a fresh CSRF token
+  res.redirect('/manage');
 }
 function loadDefaultCategories(req, res) {
   // Default categories are at project-root/categories
