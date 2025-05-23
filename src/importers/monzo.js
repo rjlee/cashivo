@@ -8,8 +8,8 @@ const csv = require('csv-parser');
  */
 module.exports = {
   name: 'monzo',
-  // Use pass-through classification: Monzo provides its own categories
-  defaultClassifier: 'pass',
+  // Use AI-based classification by default for Monzo imports
+  defaultClassifier: 'ai',
   detect: (headers) => {
     if (!Array.isArray(headers)) return false;
     const hs = headers.map((h) => (h || '').toLowerCase());

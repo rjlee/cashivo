@@ -14,6 +14,7 @@
     "start": "npm run ingest && npm run categorize && npm run summary",
     "serve": "node src/server.js",
     "test": "jest --runInBand",
+    "generate:categories": "node scripts/generate_categories.js",
     "prepare": "husky install || true"
   },
   "dependencies": {
