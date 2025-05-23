@@ -95,9 +95,16 @@ function uploadFiles(req, res) {
 function resetData(req, res) {
   // Reset project-root/data
   const dataDir = path.resolve(__dirname, '..', '..', 'data');
-  if (fs.existsSync(dataDir))
-    fs.rmSync(dataDir, { recursive: true, force: true });
-  fs.mkdirSync(dataDir, { recursive: true });
+  if (fs.existsSync(dataDir)) {
+    // Empty the data directory without removing the mount point
+    fs.readdirSync(dataDir).forEach((name) => {
+      const fp = path.join(dataDir, name);
+      fs.rmSync(fp, { recursive: true, force: true });
+    });
+  } else {
+    // Create data directory if missing
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
   // After clearing data, redirect to GET /manage to generate a fresh CSRF token
   res.redirect('/manage');
 }
