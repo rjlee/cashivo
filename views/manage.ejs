@@ -11,7 +11,7 @@
   <% } %>
   <h1>Manage Data</h1>
   <p><a href="/years">← Back to Annual Summaries</a></p>
-  <form method="POST" action="/manage" enctype="multipart/form-data">
+  <form id="uploadForm" method="POST" action="/manage" enctype="multipart/form-data">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <div>
       <input type="file" name="files" multiple accept=".csv,.qif,.qfx" required>

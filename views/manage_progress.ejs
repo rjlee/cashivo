@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Processing Progress</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1>Running Task</h1>
+  <p><a href="/manage">← New Upload</a> | <a href="/years">Annual Summaries</a></p>
+  <div id="progressContainer" style="margin-top:1em;">
+    <label>Progress:</label>
+    <progress id="progressBar" value="0" max="100" style="width:100%;"></progress>
+    <pre id="progressLog" style="height:300px; overflow:auto; background:#f0f0f0; padding:0.5em;"></pre>
+  </div>
+  <script>
+    const jobId = '<%= jobId %>';
+    const progressBar = document.getElementById('progressBar');
+    const progressLog = document.getElementById('progressLog');
+    const es = new EventSource(`/manage/progress-stream/${jobId}`);
+    es.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.message) {
+        progressLog.textContent += data.message;
+        progressLog.scrollTop = progressLog.scrollHeight;
+        // Increment progress bar on each message
+        if (progressBar.value < progressBar.max) {
+          progressBar.value = progressBar.value + 1;
+        }
+      }
+      if (data.done) {
+        // Complete the progress bar
+        progressBar.value = progressBar.max;
+        es.close();
+      }
+    };
+  </script>
+</body>
+</html>

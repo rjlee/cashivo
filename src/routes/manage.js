@@ -38,5 +38,9 @@ router.post(
   csrfProtection,
   manageCtrl.resetData
 );
+// Progress page
+router.get('/progress/:jobId', manageCtrl.showProgressPage);
+// SSE stream endpoint for job progress
+router.get('/progress-stream/:jobId', manageCtrl.streamProgress);
 
 module.exports = router;
