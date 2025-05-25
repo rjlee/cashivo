@@ -15,6 +15,7 @@
     "serve": "node src/server.js",
     "test": "jest --runInBand",
     "generate:categories": "node scripts/generate_categories.js",
+    "train:classifier": "node scripts/train_classifier.js",
     "prepare": "husky install || true"
   },
   "dependencies": {

@@ -9,6 +9,38 @@ function loadJSON(filePath) {
     return null;
   }
 }
+
+/**
+ * ML-based classification: uses a trained TensorFlow.js model and Universal Sentence Encoder
+ */
+async function categorizeWithML(transactions) {
+  const tf = require('@tensorflow/tfjs-node');
+  const use = require('@tensorflow-models/universal-sentence-encoder');
+  const modelDir = path.resolve(__dirname, '..', 'data', 'tx-classifier');
+  // Load classes
+  const classesPath = path.join(modelDir, 'classes.json');
+  if (!fs.existsSync(classesPath)) {
+    throw new Error('ML classifier classes.json not found at ' + classesPath);
+  }
+  const categoriesList = JSON.parse(fs.readFileSync(classesPath, 'utf8'));
+  // Load model
+  const model = await tf.loadLayersModel('file://' + path.join(modelDir, 'model.json'));
+  // Load encoder
+  const encoder = await use.load();
+  // Prepare embeddings
+  const texts = transactions.map((tx) => tx.description || '');
+  const embeddings = await encoder.embed(texts);
+  // Predict
+  const logits = model.predict(embeddings);
+  const scores = await logits.array();
+  // Map predictions
+  return transactions.map((tx, i) => {
+    const row = scores[i];
+    const maxIdx = row.indexOf(Math.max(...row));
+    const category = categoriesList[maxIdx] || 'other';
+    return { ...tx, category };
+  });
+}
 // Load category definitions: user-provided or default
 const userCategoriesPath = path.resolve(
   __dirname,
@@ -27,12 +59,15 @@ const rulesFlag =
 // Pass-through flag: use originalCategory as category
 const passFlag =
   process.env.USE_PASS === 'true' || process.argv.includes('--pass');
-// AI-based classification flag
+// AI-based classification flag (--ai or USE_AI=true)
 const aiFlag = process.env.USE_AI === 'true' || process.argv.includes('--ai');
-// Determine which classifier to use (precedence: rules > pass | AI > default pass)
+// ML-based classification flag (--ml or USE_ML=true)
+const mlFlag = process.env.USE_ML === 'true' || process.argv.includes('--ml');
+// Determine which classifier to use (precedence: rules > pass-through > ML > AI > fallback pass-through)
 const useRules = rulesFlag;
 const usePassThrough = !useRules && passFlag;
-const useAI = !useRules && !usePassThrough && aiFlag;
+const useML = !useRules && !usePassThrough && mlFlag;
+const useAI = !useRules && !usePassThrough && !useML && aiFlag;
 // AI config: API key, concurrency, and model settings
 const apiKey = process.env.OPENAI_API_KEY;
 const aiConcurrency = parseInt(process.env.AI_CONCURRENCY || '10', 10);
@@ -154,6 +189,9 @@ async function run() {
       'Pass-through classification: using originalCategory for each transaction'
     );
     categorized = categorizePassThrough(transactions);
+  } else if (useML) {
+    console.log('Classifying transactions using trained ML model...');
+    categorized = await categorizeWithML(transactions);
   } else if (useAI) {
     console.log('Categorizing transactions using AI chat completions...');
     categorized = await categorizeWithAI(transactions);
@@ -179,6 +217,7 @@ if (require.main === module) {
 // Export functions for evaluation
 module.exports = {
   categorizeTransactions,
-  categorizeWithAI,
   categorizePassThrough,
+  categorizeWithAI,
+  categorizeWithML,
 };
