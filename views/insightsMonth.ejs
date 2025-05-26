@@ -88,6 +88,10 @@
     </table>
   <% } %>
 
-  <p><a href="/years/<%= year %>/<%= month %>/insights">View Insights for <%= year %>-<%= month %> →</a></p>
+  <p style="margin-top:1em;">
+    <a href="/years/<%= year %>/<%= month %>/transactions">View Transactions</a>
+    |
+    <a href="/years/<%= year %>/<%= month %>/insights">View Insights for <%= year %>-<%= month %> →</a>
+  </p>
 
 <%- include('partials/footer') %>
