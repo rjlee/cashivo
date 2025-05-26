@@ -38,6 +38,7 @@ module.exports = {
             ''
           ).toString();
           transactions.push({
+            origId: data.id,
             date,
             amount,
             description,
