@@ -14,6 +14,7 @@
   <% } %>
 </div>
 <% if (spendingArr && spendingArr.length) { %>
+  <h3>Annual Spending</h3>
   <canvas id="yearSpendingChart" width="600" height="150"></canvas>
   <script>
     window.yearSpendingChartRawData = <%- JSON.stringify(spendingArr) %>;
