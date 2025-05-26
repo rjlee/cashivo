@@ -16,8 +16,8 @@
     <% transactions.forEach(function(tx) { %>
       <tr>
         <td><%= tx.date %></td>
-        <td><%- tx.description %></td>
-        <td><%= fmtCurrency(tx.amount) %></td>
+        <td><%= tx.description %></td>
+        <td><%= fmtCurrency(tx.amount, currency) %></td>
         <td><%= tx.originalCategory || '' %></td>
         <td>
           <%- include('partials/categoryEditor', { tx: tx, allCategories: allCategories }) %>
