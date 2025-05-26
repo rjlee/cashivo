@@ -8,7 +8,7 @@ This Node.js application helps with financial budgeting by:
 
 ## Setup
 
-1. Navigate to the `cashivo` directory
+1. Navigate to the `cashivo` directory (project root)
 2. Install dependencies:
    ```bash
    npm install
@@ -21,7 +21,7 @@ This Node.js application helps with financial budgeting by:
 
 ## Usage
 
-Run the full pipeline (default currency is GBP). Place your CSV files into the `import/` directory at the project root:
+Run the full pipeline (default currency is GBP). Place your CSV files into the `import/` directory in the `cashivo` project root:
 
 ```bash
 npm run start

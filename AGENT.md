@@ -16,12 +16,13 @@ Cashivo is a Node.js financial budgeting tool that:
 ```
 ├── import/               # Drop CSV/QIF/QFX files here for ingestion
 ├── data/                 # Generated JSON outputs (transactions.json, transactions_categorized.json, summary.json, etc.)
-├── categories/           # Default/pass-through category rules & groups
+├── defaults/             # Default JSON seeds for categories, classifiers, and importers
 ├── src/
 │   ├── ingest.js         # CLI: ingest raw transactions
 │   ├── categorize.js     # CLI: classify transactions
 │   ├── summary.js        # CLI: generate summary JSON & console report
 │   ├── server.js         # Express web server serving HTML/JSON
+│   ├── importers/        # CSV/QIF/QFX import modules
 │   ├── routes/           # Express routers for manage & insights endpoints
 │   ├── controllers/      # View rendering logic using EJS templates
 │   └── services/         # Summary data loader & QIF export

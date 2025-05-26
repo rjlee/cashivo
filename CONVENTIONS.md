@@ -44,33 +44,33 @@ Examples:
 
 ## 2. Summary Generation Conventions (`src/summary.js`)
 
-- Functions are named `generateXyz` and return plain JS objects/arrays for each report section:
-  1. `generateMonthlyOverview`
-  2. `generateMonthlySpending`
-
-3.  `generateCategoryBreakdown`
-4.  `generateTrends`
-5.  `generateLifestyleSummary`
-6.  `generateMerchantInsights`
-7.  `generateBudgetAdherence`
-8.  `generateSavingsGoals`
-9.  `generateAnomalies`
-10. `generateYearlySummary`
+Functions are named `generateXyz` and return plain JS objects/arrays for each report section, in file order:
+  1. generateMonthlyOverview
+  2. generateCategoryBreakdown
+  3. generateTrends
+  4. generateLifestyleSummary
+  5. generateMerchantInsights
+  6. generateBudgetAdherence
+  7. generateSavingsGoals
+  8. generateAnomalies
+  9. generateYearlySummary
+ 10. generateMonthlySpending
+ 11. generateDailySpending
 
 - The main `summary.js` builds a top-level `summary` object with these keys in order:
   ```js
   {
     monthlyOverview,
-      monthlySpending,
-      categoryBreakdown,
-      trends,
-      lifestyle,
-      merchantInsights,
-      budgetAdherence,
-      savingsGoals,
-      anomalies,
-      yearlySummary,
-      dailySpending; // when enabled
+    categoryBreakdown,
+    trends,
+    lifestyle,
+    merchantInsights,
+    budgetAdherence,
+    savingsGoals,
+    anomalies,
+    yearlySummary,
+    monthlySpending,
+    dailySpending // when enabled
   }
   ```
 
@@ -88,8 +88,6 @@ Examples:
 
 ## 4. Helper Naming
 
-- Console report helper in `src/summary.js`:
-  - `fmtAmount(value)` → formats numbers with default or specified currency symbol
 - Template helper in `src/server.js`:
   - `fmtCurrency(value, currencyCode)` → formats numbers as localized currency strings
 
