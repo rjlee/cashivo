@@ -20,16 +20,7 @@
         <td><%= fmtCurrency(tx.amount) %></td>
         <td><%= tx.originalCategory || '' %></td>
         <td>
-          <div style="display:flex; align-items:center; gap:0.5em;">
-            <select data-idx="<%= tx._idx %>">
-            <% allCategories.forEach(function(cat) { %>
-              <option value="<%= cat %>" <%= cat === tx.category ? 'selected' : '' %>>
-                <%= cat %>
-              </option>
-            <% }); %>
-            </select>
-            <span class="update-status" data-idx="<%= tx._idx %>"></span>
-          </div>
+          <%- include('partials/categoryEditor', { tx: tx, allCategories: allCategories }) %>
         </td>
       </tr>
     <% }); %>
@@ -53,26 +44,4 @@
   </nav>
 <% } %>
 <%- include('partials/footer') %>
-<script>
-  document.querySelectorAll('select[data-idx]').forEach((sel) => {
-    sel.addEventListener('change', async () => {
-      const idx = sel.getAttribute('data-idx');
-      const category = sel.value;
-      const status = document.querySelector(`.update-status[data-idx=\"${idx}\"]`);
-      sel.disabled = true;
-      status.textContent = '⌛';
-      try {
-        const resp = await fetch(`/manage/transaction/${idx}/category`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ category }),
-        });
-        status.textContent = resp.ok ? '✓' : '✗';
-      } catch {
-        status.textContent = '✗';
-      }
-      sel.disabled = false;
-      setTimeout(() => { status.textContent = ''; }, 2000);
-    });
-  });
-</script>
+  <%- include('partials/categoryEditorScript') %>

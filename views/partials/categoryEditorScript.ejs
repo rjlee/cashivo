@@ -1,0 +1,23 @@
+<script>
+  document.querySelectorAll('.category-edit').forEach((container) => {
+    const sel = container.querySelector('.category-select');
+    const status = container.querySelector('.update-status');
+    sel.addEventListener('change', async () => {
+      const idx = container.getAttribute('data-idx');
+      status.textContent = '⌛';
+      sel.disabled = true;
+      try {
+        const resp = await fetch(`/manage/transaction/${idx}/category`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ category: sel.value }),
+        });
+        status.textContent = resp.ok ? '✓' : '✗';
+      } catch {
+        status.textContent = '✗';
+      }
+      sel.disabled = false;
+      setTimeout(() => { status.textContent = ''; }, 2000);
+    });
+  });
+</script>

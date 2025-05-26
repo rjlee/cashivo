@@ -1,0 +1,8 @@
+<div class="category-edit" data-idx="<%= tx._idx %>" style="display:flex; align-items:center; gap:0.5em;">
+  <select class="category-select">
+    <% allCategories.forEach(function(cat) { %>
+      <option value="<%= cat %>" <%= cat === tx.category ? 'selected' : '' %>><%= cat %></option>
+    <% }); %>
+  </select>
+  <span class="update-status"></span>
+</div>
