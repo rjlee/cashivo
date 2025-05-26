@@ -9,9 +9,15 @@ const path = require('path');
  * @returns {Array} categorized transactions
  */
 async function classifyWithML(transactions, modelDir) {
-  // Import heavy ML libraries lazily
-  const tf = require('@tensorflow/tfjs-node');
-  const use = require('@tensorflow-models/universal-sentence-encoder');
+  // Attempt to load ML libraries; skip ML if unavailable
+  let tf, use;
+  try {
+    tf = require('@tensorflow/tfjs-node');
+    use = require('@tensorflow-models/universal-sentence-encoder');
+  } catch (e) {
+    console.warn('ML classifier not available on this platform:', e.message);
+    return [];
+  }
   const classesPath = path.join(modelDir, 'classes.json');
   if (!fs.existsSync(classesPath)) {
     throw new Error('ML classifier classes.json not found at ' + classesPath);
