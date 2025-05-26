@@ -27,7 +27,7 @@
     "@tensorflow/tfjs-node": "^4.9.0",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.6",
-    "csurf": "^1.2.2",
+    "csurf": "^1.11.0",
     "csv-parser": "^3.0.0",
     "dotenv": "^16.5.0",
     "ejs": "^3.1.10",
@@ -38,15 +38,20 @@
     "p-limit": "^3.1.0"
   },
   "devDependencies": {
+    "ejs-lint": "^2.0.1",
     "eslint": "^8.50.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
-    "ejs-lint": "^1.2.0",
     "husky": "^8.0.0",
     "jest": "^29.6.0",
-    "lint-staged": "^13.0.0",
+    "lint-staged": "^16.0.0",
     "prettier": "^3.0.0",
     "supertest": "^6.3.3"
+  },
+  "overrides": {
+    "csurf": {
+      "cookie": "^0.7.2"
+    }
   },
   "husky": {
     "hooks": {
