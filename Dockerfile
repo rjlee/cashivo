@@ -34,7 +34,9 @@ COPY --from=build /app/src ./src
 COPY --from=build /app/data ./data
     # Copy default JSON seeds directory
     COPY --from=build /app/defaults ./defaults
-COPY --from=build /app/views ./views
+    COPY --from=build /app/views ./views
+    # Copy utility scripts (e.g., training, category generation)
+    COPY --from=build /app/scripts ./scripts
 # Create import and providers directories for file uploads and classification hooks
 RUN mkdir -p import providers
 
