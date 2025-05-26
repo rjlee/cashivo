@@ -48,6 +48,8 @@ function showMonthTransactions(req, res, next) {
       ? summary.categoriesList
       : [];
   } catch {}
+  // Determine currency for formatting
+  const currency = req.query.currency;
   res.render('monthTransactions', {
     year,
     month,
@@ -56,6 +58,7 @@ function showMonthTransactions(req, res, next) {
     totalPages,
     currentPage,
     allCategories,
+    currency,
   });
 }
 
