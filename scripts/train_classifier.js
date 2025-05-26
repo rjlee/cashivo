@@ -1,10 +1,17 @@
 #!/usr/bin/env node
 const fs = require('fs');
 const path = require('path');
-const tf = require('@tensorflow/tfjs-node');
-const use = require('@tensorflow-models/universal-sentence-encoder');
+// TensorFlow and Universal Sentence Encoder are loaded lazily inside train()
 
 async function train() {
+  let tf, use;
+  try {
+    tf = require('@tensorflow/tfjs-node');
+    use = require('@tensorflow-models/universal-sentence-encoder');
+  } catch (e) {
+    console.error('ML training is not supported on this platform or tfjs failed to load:', e.message);
+    process.exit(0);
+  }
   const dataDir = path.resolve(__dirname, '../data');
   const inputFile = path.join(dataDir, 'transactions_categorized.json');
   const modelDir = path.join(dataDir, 'tx-classifier');
