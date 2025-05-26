@@ -32,8 +32,8 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/public ./public
 COPY --from=build /app/src ./src
 COPY --from=build /app/data ./data
-# Include default categories templates and views
-COPY --from=build /app/categories ./categories
+    # Copy default JSON seeds directory
+    COPY --from=build /app/defaults ./defaults
 COPY --from=build /app/views ./views
 # Create import and providers directories for file uploads and classification hooks
 RUN mkdir -p import providers
