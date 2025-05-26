@@ -63,18 +63,18 @@
         </tr>
       </thead>
       <tbody>
-        <% categoryRows.forEach(function(r) { %>
-          <tr data-category="<%= r.category %>">
+    <% categoryRows.forEach(function(r) { %>
+        <tr data-category="<%= r.category %>">
             <td><a href="/years/<%= year %>/<%= month %>/category/<%= encodeURIComponent(r.category) %>"><%= r.category %></a></td>
             <td><%= fmtCurrency(r.amount, currency) %></td>
             <td>
               <% if (r.change != null) { %>
                 <% if (r.change > 0) { %>
-                  <span style="color:red">▲</span> <%= Math.abs(r.change).toFixed(2) %>
+                  <span style="color:red">▲</span> <%= fmtCurrency(Math.abs(r.change), currency) %>
                 <% } else if (r.change < 0) { %>
-                  <span style="color:green">▼</span> <%= Math.abs(r.change).toFixed(2) %>
+                  <span style="color:green">▼</span> <%= fmtCurrency(Math.abs(r.change), currency) %>
                 <% } else { %>
-                  <%= Math.abs(r.change).toFixed(2) %>
+                  <%= fmtCurrency(Math.abs(r.change), currency) %>
                 <% } %>
               <% } %>
             </td>
@@ -82,8 +82,8 @@
             <td><%= r.actual != null ? fmtCurrency(r.actual, currency) : '' %></td>
             <td><%= r.variance != null ? fmtCurrency(r.variance, currency) : '' %></td>
             <td><%= r.pctUsed != null ? r.pctUsed.toFixed(2) + '%' : '' %></td>
-          </tr>
-        <% }); %>
+        </tr>
+    <% }); %>
       </tbody>
     </table>
   <% } %>
