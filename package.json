@@ -1,6 +1,9 @@
 {
   "name": "cashivo",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "description": "Financial budgeting application: ingest, categorize, and summarize transactions.",
   "main": "src/index.js",
   "scripts": {

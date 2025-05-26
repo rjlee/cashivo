@@ -2,7 +2,7 @@
 # Dockerfile for Cashivo
 # Builds the application, pre-generates summary data, and serves via Express
 ###
-FROM node:18-alpine AS build
+FROM node:20-alpine AS build
 
 # Create app directory
 WORKDIR /app
@@ -21,7 +21,7 @@ COPY . .
 
 ###
 # Final image: serve the app
-FROM node:18-alpine AS runtime
+FROM node:20-alpine AS runtime
 
 # App directory
 WORKDIR /app
