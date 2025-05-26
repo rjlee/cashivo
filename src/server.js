@@ -37,6 +37,18 @@ app.locals.fmtCurrency = (value, currencyCode) => {
     currency: code,
   }).format(value);
 };
+// Helper to format year-month strings (YYYY-MM) as 'Mon YY', e.g. 'Jan 25'
+app.locals.fmtMonthYear = (ym) => {
+  if (!ym || typeof ym !== 'string') return '';
+  const parts = ym.split('-');
+  if (parts.length !== 2) return ym;
+  const [year, month] = parts;
+  const idx = parseInt(month, 10) - 1;
+  const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sept','Oct','Nov','Dec'];
+  const mName = names[idx] || '';
+  const yShort = year.slice(-2);
+  return `${mName} ${yShort}`;
+};
 // Basic HTTP auth if USERNAME and PASSWORD are set in env
 const { USERNAME, PASSWORD } = process.env;
 if (USERNAME && PASSWORD) {

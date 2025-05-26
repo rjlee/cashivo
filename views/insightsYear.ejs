@@ -66,7 +66,7 @@
            var im = parts[1];
       %>
       <tr>
-        <td><a href="/years/<%= year %>/<%= im %>"><%= item.month %></a></td>
+        <td><a href="/years/<%= year %>/<%= im %>"><%= fmtMonthYear(item.month) %></a></td>
         <td><%= fmtCurrency(item.totalIncome, currency) %></td>
         <td><%= fmtCurrency(item.totalExpenses, currency) %></td>
         <td><%= fmtCurrency(spVal, currency) %></td>

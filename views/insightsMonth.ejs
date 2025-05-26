@@ -1,15 +1,15 @@
-<%- include('partials/head', { title: 'Summary for ' + monthlyOverview[0].month }) %>
-<h1>Summary for <%= monthlyOverview[0].month %></h1>
+<%- include('partials/head', { title: 'Summary for ' + fmtMonthYear(monthlyOverview[0].month) }) %>
+<h1>Summary for <%= fmtMonthYear(monthlyOverview[0].month) %></h1>
 
 <div class="month-nav">
   <% if (prevYear) { %>
-    <a class="prev-month" href="/years/<%= prevYear %>/<%= prevMonth %>">← <%= prevYear + '-' + prevMonth %></a>
+    <a class="prev-month" href="/years/<%= prevYear %>/<%= prevMonth %>">← <%= fmtMonthYear(prevYear + '-' + prevMonth) %></a>
   <% } else { %>
     <span></span>
   <% } %>
   <a class="year-link" href="/years/<%= year %>"><%= year %></a>
   <% if (nextYear) { %>
-    <a class="next-month" href="/years/<%= nextYear %>/<%= nextMonth %>"><%= nextYear + '-' + nextMonth %> →</a>
+    <a class="next-month" href="/years/<%= nextYear %>/<%= nextMonth %>"><%= fmtMonthYear(nextYear + '-' + nextMonth) %> →</a>
   <% } else { %>
     <span></span>
   <% } %>
@@ -37,7 +37,7 @@
   <tbody>
     <% monthlyOverview.forEach(function(item) { %>
       <tr>
-        <td><a href="/years/<%= year %>/<%= item.month.split('-')[1] %>"><%= item.month %></a></td>
+        <td><a href="/years/<%= year %>/<%= item.month.split('-')[1] %>"><%= fmtMonthYear(item.month) %></a></td>
         <td><%= fmtCurrency(item.totalIncome, currency) %></td>
         <td><%= fmtCurrency(item.totalExpenses, currency) %></td>
         <td><%= fmtCurrency((spendingChartRawData.find(s => s.month === item.month)?.spending || 0), currency) %></td>
@@ -49,7 +49,7 @@
 </table>
 
   <% if (categoryRows && categoryRows.length) { %>
-    <h2>Spending Category Breakdown (<%= monthlyOverview[0].month %>)</h2>
+    <h2>Spending Category Breakdown (<%= fmtMonthYear(monthlyOverview[0].month) %>)</h2>
     <table id="category-breakdown-table">
       <thead>
         <tr>
@@ -88,10 +88,10 @@
     </table>
   <% } %>
 
-  <p style="margin-top:1em;">
+    <p style="margin-top:1em;">
     <a href="/years/<%= year %>/<%= month %>/transactions">View Transactions</a>
     |
-    <a href="/years/<%= year %>/<%= month %>/insights">View Insights for <%= year %>-<%= month %> →</a>
+    <a href="/years/<%= year %>/<%= month %>/insights">View Insights for <%= fmtMonthYear(year + '-' + month) %> →</a>
   </p>
 
 <%- include('partials/footer') %>

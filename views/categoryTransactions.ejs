@@ -1,5 +1,5 @@
-<%- include('partials/head', { title: 'Transactions: ' + category + ' (' + year + '-' + month + ')' }) %>
-<h1>Transactions for <%= category %> in <%= year %>-<%= month %></h1>
+<%- include('partials/head', { title: 'Transactions: ' + category + ' (' + fmtMonthYear(year + '-' + month) + ')' }) %>
+<h1>Transactions for <%= category %> in <%= fmtMonthYear(year + '-' + month) %></h1>
 <p><a href="/years/<%= year %>/<%= month %>">← Back to month summary</a></p>
 <table>
   <thead>
