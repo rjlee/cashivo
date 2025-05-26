@@ -10,7 +10,10 @@ router.get('/:year', insightsCtrl.showYear);
 router.get('/:year/insights', insightsCtrl.showYearInsights);
 // Monthly transactions listing (paginated)
 const transactionsCtrl = require('../controllers/transactionsController');
-router.get('/:year/:month/transactions', transactionsCtrl.showMonthTransactions);
+router.get(
+  '/:year/:month/transactions',
+  transactionsCtrl.showMonthTransactions
+);
 // Monthly summary
 router.get('/:year/:month', insightsCtrl.showMonth);
 // Monthly insights

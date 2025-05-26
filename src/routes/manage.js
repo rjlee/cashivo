@@ -20,12 +20,7 @@ router.get(
 );
 router.get('/export', manageCtrl.exportData);
 // Process uploaded files (multipart) with CSRF protection
-router.post(
-  '/',
-  upload.array('files'),
-  csrfProtection,
-  manageCtrl.uploadFiles
-);
+router.post('/', upload.array('files'), csrfProtection, manageCtrl.uploadFiles);
 // Reload default settings (categories, category groups, importer mappings)
 router.post(
   '/load-default-settings',
@@ -39,25 +34,14 @@ router.post(
   manageCtrl.deleteTransactions
 );
 // Reset all data
-router.post(
-  '/reset',
-  csrfProtection,
-  manageCtrl.resetData
-);
+router.post('/reset', csrfProtection, manageCtrl.resetData);
 // Update a single transaction's category
-router.post(
-  '/transaction/:idx/category',
-  manageCtrl.updateTransactionCategory
-);
+router.post('/transaction/:idx/category', manageCtrl.updateTransactionCategory);
 // Progress page
 router.get('/progress/:jobId', manageCtrl.showProgressPage);
 // SSE stream endpoint for job progress
 router.get('/progress-stream/:jobId', manageCtrl.streamProgress);
 // Train classifier endpoint
-router.post(
-  '/train-classifier',
-  csrfProtection,
-  manageCtrl.trainClassifier
-);
+router.post('/train-classifier', csrfProtection, manageCtrl.trainClassifier);
 
 module.exports = router;

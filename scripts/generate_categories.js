@@ -32,4 +32,6 @@ Object.entries(map).forEach(([cat, set]) => {
 
 // Write categories.json
 fs.writeFileSync(outputFile, JSON.stringify(categories, null, 2) + '\n');
-console.log(`Generated categories.json with ${Object.keys(categories).length} categories at ${outputFile}`);
+console.log(
+  `Generated categories.json with ${Object.keys(categories).length} categories at ${outputFile}`
+);

@@ -12,9 +12,17 @@ function showMonthTransactions(req, res, next) {
   const pageSize = 50;
   const page = parseInt(req.query.page, 10) || 1;
   // Data directory is at project root (not under src)
-  const dataFile = path.resolve(__dirname, '..', '..', 'data', 'transactions_categorized.json');
+  const dataFile = path.resolve(
+    __dirname,
+    '..',
+    '..',
+    'data',
+    'transactions_categorized.json'
+  );
   if (!fs.existsSync(dataFile)) {
-    return res.status(404).render('error', { error: { status: 404, message: 'Transaction data not found' } });
+    return res.status(404).render('error', {
+      error: { status: 404, message: 'Transaction data not found' },
+    });
   }
   let all;
   try {
@@ -33,8 +41,12 @@ function showMonthTransactions(req, res, next) {
   // Load category list from summary.json (populated by summary script)
   let allCategories = [];
   try {
-    const summary = require(path.resolve(__dirname, '..', '..', 'data', 'summary.json'));
-    allCategories = Array.isArray(summary.categoriesList) ? summary.categoriesList : [];
+    const summary = require(
+      path.resolve(__dirname, '..', '..', 'data', 'summary.json')
+    );
+    allCategories = Array.isArray(summary.categoriesList)
+      ? summary.categoriesList
+      : [];
   } catch {}
   res.render('monthTransactions', {
     year,

@@ -12,27 +12,38 @@ const dataDir = path.resolve(__dirname, '..', 'data');
 // Determine importer from CLI and load its categories config
 const importerArg = process.argv.find((arg) => arg.startsWith('--importer='));
 if (!importerArg) {
-  console.error('Error: --importer flag is required (e.g. --importer=moneyhub)');
+  console.error(
+    'Error: --importer flag is required (e.g. --importer=moneyhub)'
+  );
   process.exit(1);
 }
 const importerName = importerArg.split('=')[1];
-const categoriesPath = path.resolve(__dirname, '..', 'data', `${importerName}_categories.json`);
+const categoriesPath = path.resolve(
+  __dirname,
+  '..',
+  'data',
+  `${importerName}_categories.json`
+);
 const categories = loadJSON(categoriesPath);
 if (!categories) {
-  console.error(`Categories file not found for importer "${importerName}": ${categoriesPath}`);
+  console.error(
+    `Categories file not found for importer "${importerName}": ${categoriesPath}`
+  );
   process.exit(1);
 }
 // Multi-pass classification per importer precedence
 const importerConfig = loadJSON(path.join(dataDir, 'importerClassifiers.json'));
 const importerFile = importerName + '.js';
-let precedence = importerConfig && importerConfig.importers && importerConfig.importers[importerFile];
-if (!Array.isArray(precedence)) precedence = importerConfig && importerConfig.default;
+let precedence =
+  importerConfig &&
+  importerConfig.importers &&
+  importerConfig.importers[importerFile];
+if (!Array.isArray(precedence))
+  precedence = importerConfig && importerConfig.default;
 if (!Array.isArray(precedence)) {
   console.error(`Invalid precedence config for importer "${importerFile}"`);
   process.exit(1);
 }
-
-
 
 async function run() {
   const inputFile = path.resolve(__dirname, '..', 'data', 'transactions.json');
@@ -59,9 +70,11 @@ async function run() {
     let mapped = [];
     if (cls === 'rules') {
       console.log('Applying RULES classifier');
-      const rulesMap = loadJSON(path.resolve(dataDir, `${importerName}_categories.json`));
-      mapped = classifyWithRules(remaining, rulesMap).filter((tx) =>
-        rulesMap && rulesMap.hasOwnProperty(tx.category)
+      const rulesMap = loadJSON(
+        path.resolve(dataDir, `${importerName}_categories.json`)
+      );
+      mapped = classifyWithRules(remaining, rulesMap).filter(
+        (tx) => rulesMap && rulesMap.hasOwnProperty(tx.category)
       );
     } else if (cls === 'ml') {
       console.log('Applying ML classifier');
@@ -90,7 +103,11 @@ async function run() {
       acc[tx.category] = (acc[tx.category] || 0) + 1;
       return acc;
     }, {});
-    stats.push({ classifier: 'pass-through', processed: mapped.length, counts });
+    stats.push({
+      classifier: 'pass-through',
+      processed: mapped.length,
+      counts,
+    });
     categorized.push(...mapped);
   }
   // Write output (strip internal index)
@@ -100,7 +117,9 @@ async function run() {
   console.log(`\n=== Classification Summary for ${importerName} ===`);
   console.log(`Total transactions: ${totalTransactions}`);
   stats.forEach((s) => {
-    console.log(`\n-- ${s.classifier.toUpperCase()} (${s.processed} transactions) --`);
+    console.log(
+      `\n-- ${s.classifier.toUpperCase()} (${s.processed} transactions) --`
+    );
     console.table(s.counts);
   });
   console.log(`\nOutput written to ${outputFile}`);

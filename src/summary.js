@@ -611,7 +611,9 @@ const summary = {
   dailySpending: generateDailySpending(txsToProcess),
 };
 // Include full category list for UI editing
-summary.categoriesList = Array.from(new Set(txsToProcess.map((tx) => tx.category)));
+summary.categoriesList = Array.from(
+  new Set(txsToProcess.map((tx) => tx.category))
+);
 
 // persist JSON summary
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });

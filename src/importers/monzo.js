@@ -32,7 +32,11 @@ module.exports = {
             : `${isoDateBase}T00:00:00Z`;
           const amount = parseFloat(data.amount) || 0;
           // Prefer the detailed description, fallback to merchant
-          const description = (data.description || data.merchant || '').toString();
+          const description = (
+            data.description ||
+            data.merchant ||
+            ''
+          ).toString();
           transactions.push({
             date,
             amount,

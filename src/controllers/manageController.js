@@ -72,10 +72,18 @@ function loadDefaultSettings(req, res) {
 // Delete transactions and summary files
 function deleteTransactions(req, res) {
   const dataDir = path.resolve(__dirname, '..', '..', 'data');
-  ['transactions.json', 'transactions_categorized.json', 'summary.json'].forEach((file) => {
+  [
+    'transactions.json',
+    'transactions_categorized.json',
+    'summary.json',
+  ].forEach((file) => {
     const fp = path.join(dataDir, file);
     if (fs.existsSync(fp)) {
-      try { fs.unlinkSync(fp); } catch (e) { console.warn(`Could not delete ${file}: ${e.message}`); }
+      try {
+        fs.unlinkSync(fp);
+      } catch (e) {
+        console.warn(`Could not delete ${file}: ${e.message}`);
+      }
     }
   });
   res.redirect('/manage?msg=transactions_deleted');
@@ -84,7 +92,13 @@ function deleteTransactions(req, res) {
 function updateTransactionCategory(req, res) {
   const idx = parseInt(req.params.idx, 10);
   const { category } = req.body;
-  const dataFile = path.resolve(__dirname, '..', '..', 'data', 'transactions_categorized.json');
+  const dataFile = path.resolve(
+    __dirname,
+    '..',
+    '..',
+    'data',
+    'transactions_categorized.json'
+  );
   if (!fs.existsSync(dataFile)) {
     return res.status(404).json({ error: 'Transactions file not found' });
   }
@@ -105,8 +119,13 @@ function updateTransactionCategory(req, res) {
   }
   // Regenerate summary.json in background
   const summaryCmd = 'npm run summary';
-  const summaryProc = spawn(summaryCmd, { cwd: path.resolve(__dirname, '..', '..'), shell: true });
-  summaryProc.on('error', (e) => console.warn('Summary regeneration failed:', e.message));
+  const summaryProc = spawn(summaryCmd, {
+    cwd: path.resolve(__dirname, '..', '..'),
+    shell: true,
+  });
+  summaryProc.on('error', (e) =>
+    console.warn('Summary regeneration failed:', e.message)
+  );
   res.json({ ok: true });
 }
 // Kick off classifier training as a background job and redirect to progress
@@ -117,10 +136,16 @@ function trainClassifier(req, res) {
   const fullCmd = 'npm run train:classifier';
   const child = spawn(fullCmd, { cwd, shell: true });
   child.stdout.on('data', (chunk) => {
-    progressBus.emit('progress', { jobId, data: { message: chunk.toString(), type: 'stdout' } });
+    progressBus.emit('progress', {
+      jobId,
+      data: { message: chunk.toString(), type: 'stdout' },
+    });
   });
   child.stderr.on('data', (chunk) => {
-    progressBus.emit('progress', { jobId, data: { message: chunk.toString(), type: 'stderr' } });
+    progressBus.emit('progress', {
+      jobId,
+      data: { message: chunk.toString(), type: 'stderr' },
+    });
   });
   child.on('close', (code) => {
     progressBus.emit('progress', { jobId, data: { done: true, code } });
@@ -134,7 +159,9 @@ function uploadFilesSse(req, res) {
   if (!files.length) return res.status(400).send('No files uploaded.');
   const importersDir = path.resolve(__dirname, '..', 'importers');
   // Load importer modules with their filenames
-  const importerConfig = require(path.resolve(__dirname, '..', '..', 'data', 'importerClassifiers.json'));
+  const importerConfig = require(
+    path.resolve(__dirname, '..', '..', 'data', 'importerClassifiers.json')
+  );
   const importerEntries = [];
   if (fs.existsSync(importersDir)) {
     fs.readdirSync(importersDir)
@@ -148,9 +175,13 @@ function uploadFilesSse(req, res) {
   const usedImporters = new Set();
   files.forEach((f) => {
     let headerLine = '';
-    try { headerLine = fs.readFileSync(f.path, 'utf8').split(/\r?\n/)[0] || ''; } catch {}
+    try {
+      headerLine = fs.readFileSync(f.path, 'utf8').split(/\r?\n/)[0] || '';
+    } catch {}
     const headers = headerLine.split(',').map((h) => h.trim());
-    const found = importerEntries.find((imp) => imp.mod.detect && imp.mod.detect(headers));
+    const found = importerEntries.find(
+      (imp) => imp.mod.detect && imp.mod.detect(headers)
+    );
     if (found) usedImporters.add(found.name);
   });
   // Determine importer name (without extension) and build categorize command
@@ -164,10 +195,16 @@ function uploadFilesSse(req, res) {
   res.redirect(`/manage/progress/${jobId}`);
   const child = spawn(fullCmd, { cwd, shell: true });
   child.stdout.on('data', (chunk) => {
-    progressBus.emit('progress', { jobId, data: { message: chunk.toString(), type: 'stdout' } });
+    progressBus.emit('progress', {
+      jobId,
+      data: { message: chunk.toString(), type: 'stdout' },
+    });
   });
   child.stderr.on('data', (chunk) => {
-    progressBus.emit('progress', { jobId, data: { message: chunk.toString(), type: 'stderr' } });
+    progressBus.emit('progress', {
+      jobId,
+      data: { message: chunk.toString(), type: 'stderr' },
+    });
   });
   child.on('close', (code) => {
     progressBus.emit('progress', { jobId, data: { done: true, code } });

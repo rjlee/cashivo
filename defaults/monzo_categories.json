@@ -1,49 +1,17 @@
 {
-  "Transfers": [
-    "transfers"
-  ],
-  "Entertainment": [
-    "entertainment"
-  ],
-  "Personal care": [
-    "personal_care"
-  ],
-  "General merchandise": [
-    "general",
-    "shopping"
-  ],
-  "Salary": [
-    "income"
-  ],
-  "Fuel": [
-    "transport"
-  ],
-  "Utilities": [
-    "bills"
-  ],
-  "Groceries": [
-    "groceries"
-  ],
-  "Gifts to friends & family": [
-    "family",
-    "gifts"
-  ],
-  "Eating out": [
-    "eating_out"
-  ],
-  "Cash withdrawals": [
-    "cash"
-  ],
-  "Savings": [
-    "savings"
-  ],
-  "Holiday": [
-    "holidays"
-  ],
-  "Other expenses": [
-    "expenses"
-  ],
-  "Car running costs": [
-    "transport"
-  ]
+  "Transfers": ["transfers"],
+  "Entertainment": ["entertainment"],
+  "Personal care": ["personal_care"],
+  "General merchandise": ["general", "shopping"],
+  "Salary": ["income"],
+  "Fuel": ["transport"],
+  "Utilities": ["bills"],
+  "Groceries": ["groceries"],
+  "Gifts to friends & family": ["family", "gifts"],
+  "Eating out": ["eating_out"],
+  "Cash withdrawals": ["cash"],
+  "Savings": ["savings"],
+  "Holiday": ["holidays"],
+  "Other expenses": ["expenses"],
+  "Car running costs": ["transport"]
 }

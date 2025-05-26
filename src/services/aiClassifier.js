@@ -29,7 +29,10 @@ async function classifyWithAI(transactions, categories) {
         const resp = await openai.chat.completions.create({
           model: aiModel,
           messages: [
-            { role: 'system', content: 'Select exactly one category from the allowed list.' },
+            {
+              role: 'system',
+              content: 'Select exactly one category from the allowed list.',
+            },
             { role: 'user', content: prompt },
           ],
           temperature: 0,

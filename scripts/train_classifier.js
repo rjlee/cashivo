@@ -19,12 +19,8 @@ async function train() {
     process.exit(1);
   }
   // Extract unique categories
-  const categories = Array.from(
-    new Set(transactions.map((tx) => tx.category))
-  );
-  const labelIndex = Object.fromEntries(
-    categories.map((c, i) => [c, i])
-  );
+  const categories = Array.from(new Set(transactions.map((tx) => tx.category)));
+  const labelIndex = Object.fromEntries(categories.map((c, i) => [c, i]));
 
   console.log('Loading Universal Sentence Encoder model...');
   const encoder = await use.load();
@@ -37,7 +33,11 @@ async function train() {
 
   const model = tf.sequential();
   model.add(
-    tf.layers.dense({ inputShape: [embeddingDim], units: 128, activation: 'relu' })
+    tf.layers.dense({
+      inputShape: [embeddingDim],
+      units: 128,
+      activation: 'relu',
+    })
   );
   model.add(tf.layers.dropout({ rate: 0.2 }));
   model.add(
@@ -69,11 +69,17 @@ async function train() {
       const batchTexts = embedBatchIndices.map((idx) => texts[idx]);
       const embedBatch = await encoder.embed(batchTexts);
       for (let j = 0; j < embedBatchIndices.length; j += TRAIN_BATCH_SIZE) {
-        const trainBatchIndices = embedBatchIndices.slice(j, j + TRAIN_BATCH_SIZE);
+        const trainBatchIndices = embedBatchIndices.slice(
+          j,
+          j + TRAIN_BATCH_SIZE
+        );
         const batchSize = trainBatchIndices.length;
         const xBatch = embedBatch.slice([j, 0], [batchSize, embeddingDim]);
         const yBatchArr = trainBatchIndices.map((idx) => ysArr[idx]);
-        const yBatch = tf.oneHot(tf.tensor1d(yBatchArr, 'int32'), categories.length);
+        const yBatch = tf.oneHot(
+          tf.tensor1d(yBatchArr, 'int32'),
+          categories.length
+        );
         await model.trainOnBatch(xBatch, yBatch);
         xBatch.dispose();
         yBatch.dispose();

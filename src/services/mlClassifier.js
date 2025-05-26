@@ -15,7 +15,9 @@ async function classifyWithML(transactions, modelDir) {
     throw new Error('ML classifier classes.json not found at ' + classesPath);
   }
   const categoriesList = JSON.parse(fs.readFileSync(classesPath, 'utf8'));
-  const model = await tf.loadLayersModel('file://' + path.join(modelDir, 'model.json'));
+  const model = await tf.loadLayersModel(
+    'file://' + path.join(modelDir, 'model.json')
+  );
   const encoder = await use.load();
   const BATCH_SIZE = parseInt(process.env.EMBED_BATCH_SIZE || '512', 10);
   const results = [];
