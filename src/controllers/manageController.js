@@ -124,22 +124,10 @@ function uploadFilesSse(req, res) {
     const found = importerEntries.find((imp) => imp.mod.detect && imp.mod.detect(headers));
     if (found) usedImporters.add(found.name);
   });
-  // Determine importer name (without extension)
+  // Determine importer name (without extension) and build categorize command
   const importerName = [...usedImporters][0].replace(/\.js$/, '');
-  // Pick classifier from config
-  const defaultCls = importerConfig.default;
-  let selected = defaultCls;
-  if (usedImporters.size === 1) {
-    const imp = [...usedImporters][0];
-    selected = importerConfig.importers[imp] || defaultCls;
-  }
-  // Build categorize args: classifier flag + importer flag
-  const flagMap = { pass: '--pass', rules: '--rules', ml: '--ml', ai: '--ai' };
-  const clsFlag = flagMap[selected] || '';
-  const importerFlag = `--importer=${importerName}`;
-  const categorizeArgs = [clsFlag, importerFlag].filter(Boolean).join(' ');
-  const categorizeCmd = `npm run categorize -- ${categorizeArgs}`;
   const ingestCmd = 'npm run ingest';
+  const categorizeCmd = `npm run categorize -- --importer=${importerName}`;
   const summaryCmd = 'npm run summary';
   const fullCmd = `${ingestCmd} && ${categorizeCmd} && ${summaryCmd}`;
   const cwd = path.resolve(__dirname, '..', '..');
