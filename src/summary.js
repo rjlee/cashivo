@@ -48,7 +48,7 @@ const budgets = loadJSON(path.resolve(__dirname, '..', 'budgets.json')) || {};
 const goalsConfig = loadJSON(path.resolve(__dirname, '..', 'goals.json')) || {};
 // Load category groups: user-provided or default
 const defaultCategoryGroups = require(
-  path.resolve(__dirname, '..', 'categories', 'default_category_groups.json')
+  path.resolve(__dirname, '..', 'defaults', 'default_category_groups.json')
 );
 const categoryGroups =
   loadJSON(path.resolve(dataDir, 'category-groups.json')) ||

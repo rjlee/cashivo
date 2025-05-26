@@ -26,11 +26,17 @@ router.post(
   csrfProtection,
   manageCtrl.uploadFiles
 );
-// Reload default categories
+// Reload default settings (categories, category groups, importer mappings)
 router.post(
-  '/load-default-categories',
+  '/load-default-settings',
   csrfProtection,
-  manageCtrl.loadDefaultCategories
+  manageCtrl.loadDefaultSettings
+);
+// Delete only transactions and summary data
+router.post(
+  '/delete-transactions',
+  csrfProtection,
+  manageCtrl.deleteTransactions
 );
 // Reset all data
 router.post(
@@ -42,5 +48,11 @@ router.post(
 router.get('/progress/:jobId', manageCtrl.showProgressPage);
 // SSE stream endpoint for job progress
 router.get('/progress-stream/:jobId', manageCtrl.streamProgress);
+// Train classifier endpoint
+router.post(
+  '/train-classifier',
+  csrfProtection,
+  manageCtrl.trainClassifier
+);
 
 module.exports = router;

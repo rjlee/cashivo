@@ -17,18 +17,24 @@ async function classifyWithML(transactions, modelDir) {
   const categoriesList = JSON.parse(fs.readFileSync(classesPath, 'utf8'));
   const model = await tf.loadLayersModel('file://' + path.join(modelDir, 'model.json'));
   const encoder = await use.load();
-  const texts = transactions.map((tx) => tx.description || '');
-  const embeddings = await encoder.embed(texts);
-  const logits = model.predict(embeddings);
-  const scores = await logits.array();
-  embeddings.dispose();
-  if (Array.isArray(logits.dispose)) logits.dispose();
-  return transactions.map((tx, i) => {
-    const row = scores[i];
-    const maxIdx = row.indexOf(Math.max(...row));
-    const category = categoriesList[maxIdx] || 'other';
-    return { ...tx, category };
-  });
+  const BATCH_SIZE = parseInt(process.env.EMBED_BATCH_SIZE || '512', 10);
+  const results = [];
+  for (let i = 0; i < transactions.length; i += BATCH_SIZE) {
+    const batchTx = transactions.slice(i, i + BATCH_SIZE);
+    const texts = batchTx.map((tx) => tx.description || '');
+    const embTensor = await encoder.embed(texts);
+    const logits = model.predict(embTensor);
+    const scores = await logits.array();
+    if (logits.dispose) logits.dispose();
+    embTensor.dispose();
+    for (let j = 0; j < scores.length; ++j) {
+      const row = scores[j];
+      const maxIdx = row.indexOf(Math.max(...row));
+      const category = categoriesList[maxIdx] || 'other';
+      results.push({ ...batchTx[j], category });
+    }
+  }
+  return results;
 }
 
 module.exports = { classifyWithML };

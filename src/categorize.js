@@ -9,15 +9,19 @@ const { classifyWithAI } = require('./services/aiClassifier');
 // Data directory path
 const dataDir = path.resolve(__dirname, '..', 'data');
 
-// Load category definitions: user-provided or default
-const userCategoriesPath = path.resolve(
-  __dirname,
-  '..',
-  'data',
-  'categories.json'
-);
-const defaultCategories = require('../categories/default_categories.json');
-const categories = loadJSON(userCategoriesPath) || defaultCategories;
+// Determine importer from CLI and load its categories config
+const importerArg = process.argv.find((arg) => arg.startsWith('--importer='));
+if (!importerArg) {
+  console.error('Error: --importer flag is required (e.g. --importer=moneyhub)');
+  process.exit(1);
+}
+const importerName = importerArg.split('=')[1];
+const categoriesPath = path.resolve(__dirname, '..', 'data', `${importerName}_categories.json`);
+const categories = loadJSON(categoriesPath);
+if (!categories) {
+  console.error(`Categories file not found for importer "${importerName}": ${categoriesPath}`);
+  process.exit(1);
+}
 // Classification mode flags
 // Legacy keyword rules flag
 const rulesFlag =

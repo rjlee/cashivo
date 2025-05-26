@@ -55,21 +55,24 @@ if (USERNAME && PASSWORD) {
 }
 // Ensure data directory and seed default cat/files
 const dataDir = path.resolve(__dirname, '..', 'data');
-const categoriesDir = path.resolve(__dirname, '..', 'categories');
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-[
-  { src: 'default_categories.json', dst: 'categories.json' },
-  { src: 'default_category_groups.json', dst: 'category-groups.json' },
-].forEach(({ src, dst }) => {
-  const dstPath = path.join(dataDir, dst);
-  if (!fs.existsSync(dstPath)) {
-    try {
-      fs.copyFileSync(path.join(categoriesDir, src), dstPath);
-    } catch (e) {
-      console.warn(`Warning: could not seed ${dst}: ${e.message}`);
-    }
+const defaultsDir = path.resolve(__dirname, '..', 'defaults');
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+  // Seed all default JSON files from defaults/ into data/, stripping "default_" prefix
+  if (fs.existsSync(defaultsDir)) {
+    fs.readdirSync(defaultsDir)
+      .filter((file) => file.endsWith('.json'))
+      .forEach((src) => {
+        const dst = src.replace(/^default_/, '');
+        const dstPath = path.join(dataDir, dst);
+        if (!fs.existsSync(dstPath)) {
+          try {
+            fs.copyFileSync(path.join(defaultsDir, src), dstPath);
+          } catch (e) {
+            console.warn(`Warning: could not seed ${dst}: ${e.message}`);
+          }
+        }
+      });
   }
-});
 const port = process.env.PORT || 3000;
 
 // Endpoint to serve summary JSON

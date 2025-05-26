@@ -1,0 +1,7 @@
+{
+  "default": "rules",
+  "importers": {
+    "moneyhub.js": "pass",
+    "monzo.js": "ai"
+  }
+}
