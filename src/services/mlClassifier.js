@@ -1,5 +1,4 @@
-const tf = require('@tensorflow/tfjs-node');
-const use = require('@tensorflow-models/universal-sentence-encoder');
+// Lazy-load TensorFlow and the Universal Sentence Encoder only when needed
 const fs = require('fs');
 const path = require('path');
 
@@ -10,6 +9,9 @@ const path = require('path');
  * @returns {Array} categorized transactions
  */
 async function classifyWithML(transactions, modelDir) {
+  // Import heavy ML libraries lazily
+  const tf = require('@tensorflow/tfjs-node');
+  const use = require('@tensorflow-models/universal-sentence-encoder');
   const classesPath = path.join(modelDir, 'classes.json');
   if (!fs.existsSync(classesPath)) {
     throw new Error('ML classifier classes.json not found at ' + classesPath);
