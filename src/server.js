@@ -25,7 +25,9 @@ app.use(compression());
 // Cookie parsing (for CSRF tokens)
 app.use(cookieParser());
 // Parse URL-encoded bodies (for form submissions)
+// Parse URL-encoded bodies and JSON bodies
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../views'));
 app.locals.fmtCurrency = (value, currencyCode) => {

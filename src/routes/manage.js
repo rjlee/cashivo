@@ -44,6 +44,11 @@ router.post(
   csrfProtection,
   manageCtrl.resetData
 );
+// Update a single transaction's category
+router.post(
+  '/transaction/:idx/category',
+  manageCtrl.updateTransactionCategory
+);
 // Progress page
 router.get('/progress/:jobId', manageCtrl.showProgressPage);
 // SSE stream endpoint for job progress

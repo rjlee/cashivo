@@ -289,17 +289,24 @@ function showCategoryTransactions(req, res, next) {
       'data',
       'transactions_categorized.json'
     );
-    const allTx = JSON.parse(fs.readFileSync(txPath, 'utf-8'));
+    let allTx = JSON.parse(fs.readFileSync(txPath, 'utf-8'));
+    allTx = allTx.map((tx, idx) => ({ ...tx, _idx: idx }));
     const transactions = allTx.filter(
       (tx) => tx.category === category && tx.date.startsWith(`${year}-${month}`)
     );
     const currency = req.query.currency;
+    // Load category list from summary
+    const summary = summaryService.getSummary();
+    const allCategories = Array.isArray(summary.categoriesList)
+      ? summary.categoriesList
+      : [];
     res.render('categoryTransactions', {
       year,
       month,
       category,
       transactions,
       currency,
+      allCategories,
     });
   } catch (err) {
     next(err);

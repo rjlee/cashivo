@@ -19,6 +19,8 @@ function showMonthTransactions(req, res, next) {
   let all;
   try {
     all = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+    // Annotate original index for update operations
+    all = all.map((tx, i) => ({ ...tx, _idx: i }));
   } catch (err) {
     return next(err);
   }
@@ -28,6 +30,12 @@ function showMonthTransactions(req, res, next) {
   const currentPage = Math.min(Math.max(page, 1), totalPages);
   const startIdx = (currentPage - 1) * pageSize;
   const pageItems = filtered.slice(startIdx, startIdx + pageSize);
+  // Load category list from summary.json (populated by summary script)
+  let allCategories = [];
+  try {
+    const summary = require(path.resolve(__dirname, '..', '..', 'data', 'summary.json'));
+    allCategories = Array.isArray(summary.categoriesList) ? summary.categoriesList : [];
+  } catch {}
   res.render('monthTransactions', {
     year,
     month,
@@ -35,6 +43,7 @@ function showMonthTransactions(req, res, next) {
     totalCount,
     totalPages,
     currentPage,
+    allCategories,
   });
 }
 

@@ -80,6 +80,35 @@ function deleteTransactions(req, res) {
   });
   res.redirect('/manage?msg=transactions_deleted');
 }
+// Update a single transaction's category
+function updateTransactionCategory(req, res) {
+  const idx = parseInt(req.params.idx, 10);
+  const { category } = req.body;
+  const dataFile = path.resolve(__dirname, '..', '..', 'data', 'transactions_categorized.json');
+  if (!fs.existsSync(dataFile)) {
+    return res.status(404).json({ error: 'Transactions file not found' });
+  }
+  let txs;
+  try {
+    txs = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+  } catch (e) {
+    return res.status(500).json({ error: 'Could not read transactions' });
+  }
+  if (idx < 0 || idx >= txs.length) {
+    return res.status(404).json({ error: 'Transaction index out of range' });
+  }
+  txs[idx].category = category;
+  try {
+    fs.writeFileSync(dataFile, JSON.stringify(txs, null, 2));
+  } catch (e) {
+    return res.status(500).json({ error: 'Could not write transactions' });
+  }
+  // Regenerate summary.json in background
+  const summaryCmd = 'npm run summary';
+  const summaryProc = spawn(summaryCmd, { cwd: path.resolve(__dirname, '..', '..'), shell: true });
+  summaryProc.on('error', (e) => console.warn('Summary regeneration failed:', e.message));
+  res.json({ ok: true });
+}
 // Kick off classifier training as a background job and redirect to progress
 function trainClassifier(req, res) {
   const jobId = crypto.randomUUID();
@@ -180,6 +209,7 @@ module.exports = {
   loadDefaultSettings,
   deleteTransactions,
   trainClassifier,
+  updateTransactionCategory,
   showProgressPage,
   streamProgress,
 };
