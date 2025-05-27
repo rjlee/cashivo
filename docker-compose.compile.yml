@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.compile
+    image: cashivo:latest
+    # Read environment variables from .env file
+    env_file:
+      - .env
+    # Always restart container on failure or system restart
+    restart: always
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Optional: override default currency (e.g. USD, EUR)
+      DEFAULT_CURRENCY: GBP
+    # Persist generated data to host directory
+    volumes:
+      - ./data:/app/data

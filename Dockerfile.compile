@@ -1,0 +1,80 @@
+###
+# Dockerfile for Cashivo
+# Builds the application, pre-generates summary data, and serves via Express
+###
+FROM node:20-slim AS build
+
+# Create app directory
+WORKDIR /app
+
+# Install dependencies (production only)
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+# Ensure data directory exists (empty if not present in build context)
+RUN mkdir -p data
+# Copy application source
+COPY . .
+
+# Pre-generate data: ingest, categorize, summary
+# RUN npm run start
+
+###
+# Final image: serve the app
+FROM node:20-slim AS runtime
+
+# App directory
+WORKDIR /app
+
+# Copy only needed artifacts from build stage
+COPY --from=build /app/package.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/public ./public
+COPY --from=build /app/src ./src
+COPY --from=build /app/data ./data
+    # Copy default JSON seeds directory
+    COPY --from=build /app/defaults ./defaults
+    COPY --from=build /app/views ./views
+    # Copy utility scripts (e.g., training, category generation)
+    COPY --from=build /app/scripts ./scripts
+# Create import and providers directories for file uploads and classification hooks
+RUN mkdir -p import providers
+
+
+
+# Install system dependencies: git, build tools, Python, curl, JDK 17 (for Bazel), etc.
+RUN apt-get update && apt-get install -y \
+    git build-essential python3 curl \
+    && apt-get install -y openjdk-17-jdk \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Bazelisk (Bazel launcher) to easily manage Bazel versions
+RUN npm install -g @bazel/bazelisk
+
+# Clone the TensorFlow repository with a shallow clone (only the latest commit)
+RUN git clone --depth 1 https://github.com/tensorflow/tensorflow.git /tensorflow
+
+# Set compiler flags to disable AVX and use a baseline CPU target (core2)
+ENV CC_OPT_FLAGS="-mno-avx -mno-avx2 -march=core2"
+
+# Only build the TensorFlow C library (libtensorflow) without unnecessary components
+# Build the minimal TensorFlow library (without GPU, without training components)
+RUN cd /tensorflow && bazelisk build --jobs=2 --copt=-mno-avx --copt=-mno-avx2 --copt=-march=core2 \
+    //tensorflow/tools/lib_package:libtensorflow
+
+# Copy and extract libtensorflow (CPU-only, no-AVX) into the tfjs-node's deps folder
+RUN mkdir -p /app/node_modules/@tensorflow/tfjs-node/deps/lib && \
+    cp /tensorflow/bazel-bin/tensorflow/tools/lib_package/libtensorflow.tar.gz /app && \
+    cd /app && tar -xzf libtensorflow.tar.gz && \
+    cp libtensorflow/lib/libtensorflow* node_modules/@tensorflow/tfjs-node/deps/lib/
+
+# Install @tensorflow/tfjs-node (CPU-only) from npm and rebuild the bindings from source
+RUN npm install @tensorflow/tfjs-node --build-from-source && \
+    npm rebuild @tensorflow/tfjs-node --build-from-source
+
+
+# Expose server port
+EXPOSE 3000
+
+# Start Express server
+CMD ["npm", "run", "serve"]
