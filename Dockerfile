@@ -11,8 +11,6 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-# Ensure data directory exists (empty if not present in build context)
-RUN mkdir -p data
 # Copy application source
 COPY . .
 
@@ -32,13 +30,13 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/public ./public
 COPY --from=build /app/src ./src
 COPY --from=build /app/data ./data
-    # Copy default JSON seeds directory
-    COPY --from=build /app/defaults ./defaults
-    COPY --from=build /app/views ./views
-    # Copy utility scripts (e.g., training, category generation)
-    COPY --from=build /app/scripts ./scripts
+# Copy default JSON seeds directory
+COPY --from=build /app/defaults ./defaults
+COPY --from=build /app/views ./views
+# Copy utility scripts (e.g., training, category generation)
+ COPY --from=build /app/scripts ./scripts
 # Create import and providers directories for file uploads and classification hooks
-RUN mkdir -p import providers
+RUN mkdir -p import data
 
 # Expose server port
 EXPOSE 3000
