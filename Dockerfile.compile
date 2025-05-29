@@ -54,12 +54,12 @@ RUN npm install -g @bazel/bazelisk
 # Clone the TensorFlow repository with a shallow clone (only the latest commit)
 RUN git clone --depth 1 https://github.com/tensorflow/tensorflow.git /tensorflow
 
-# Set compiler flags to disable AVX and use a baseline CPU target (core2)
-ENV CC_OPT_FLAGS="-mno-avx -mno-avx2 -march=core2"
+# Set compiler flags to disable AVX, AVX2, AVX512, VNNI, and any newer instruction sets
+ENV CC_OPT_FLAGS="-mno-avx -mno-avx2 -mno-avx512 -mno-vnni -march=core2"
 
 # Only build the TensorFlow C library (libtensorflow) without unnecessary components
 # Build the minimal TensorFlow library (without GPU, without training components)
-RUN cd /tensorflow && bazelisk build --jobs=2 --copt=-mno-avx --copt=-mno-avx2 --copt=-march=core2 \
+RUN cd /tensorflow && bazelisk build --copt=-mno-avx --copt=-mno-avx2 --copt=-march=core2 \
     //tensorflow/tools/lib_package:libtensorflow
 
 # Copy and extract libtensorflow (CPU-only, no-AVX) into the tfjs-node's deps folder
