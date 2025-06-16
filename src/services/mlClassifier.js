@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 // Brute-force Embed+KNN classification without external kd-tree
 const { pipeline } = require('@xenova/transformers');
-const hnsw = require('hnswlib-node');
+const { HierarchicalNSW } = require('hnswlib-node');
 
 /**
  * Embed+KNN classification using a WASM-backed transformer embedder
@@ -26,27 +26,28 @@ async function classifyWithML(transactions, modelDir) {
     buf.byteOffset,
     buf.length / Float32Array.BYTES_PER_ELEMENT
   );
-  // Convert raw Float32Array into array of normalized Float32Array vectors
+  // Convert raw Float32Array into array of normalized JS arrays (L2 = 1)
   const trainEmb = [];
   for (let i = 0; i < raw.length; i += dim) {
-    const vec = raw.subarray(i, i + dim);
+    // Extract subarray and convert to plain JS array
+    const arr = Array.from(raw.subarray(i, i + dim));
+    // Normalize to unit length
     let sumSq = 0;
-    for (let j = 0; j < dim; j++) sumSq += vec[j] * vec[j];
+    for (let j = 0; j < dim; j++) sumSq += arr[j] * arr[j];
     const invNorm = 1 / (Math.sqrt(sumSq) + 1e-8);
-    for (let j = 0; j < dim; j++) vec[j] *= invNorm;
-    trainEmb.push(vec);
+    for (let j = 0; j < dim; j++) arr[j] *= invNorm;
+    trainEmb.push(arr);
   }
 
   // Build an exact HNSW index for cosine (inner-product) search
-  const index = new hnsw.Index('cosine', dim);
+  // Build an exact HNSW index for inner-product (cosine) search
+  const index = new HierarchicalNSW('cosine', dim);
   index.initIndex(trainEmb.length);
-  // Flatten embeddings into one Float32Array
-  const flat = new Float32Array(trainEmb.length * dim);
+  // Insert every normalized train vector
   for (let i = 0; i < trainEmb.length; i++) {
-    flat.set(trainEmb[i], i * dim);
+    index.addPoint(trainEmb[i], i);
   }
-  const ids = Array.from({ length: trainEmb.length }, (_, i) => i);
-  index.addItems(flat, ids);
+  // ef should be set >= trainEmb.length for exact search
   index.setEf(trainEmb.length);
 
   const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
