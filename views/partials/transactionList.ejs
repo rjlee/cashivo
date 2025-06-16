@@ -29,13 +29,30 @@
     <% if (currentPage > 1) { %>
       <a href="<%= basePath %>?page=<%= currentPage - 1 %>">&laquo; Previous</a>
     <% } %>
-    <% for (let p = 1; p <= totalPages; p++) { %>
-      <% if (p === currentPage) { %>
+    <% 
+      // Build a concise list of page links with ellipses
+      let pageLinks = [];
+      if (totalPages <= 10) {
+        pageLinks = Array.from({ length: totalPages }, (_, i) => i + 1);
+      } else {
+        pageLinks = [1, 2];
+        if (currentPage > 4) pageLinks.push('...');
+        const start = Math.max(3, currentPage - 2);
+        const end = Math.min(totalPages - 2, currentPage + 2);
+        for (let p = start; p <= end; p++) pageLinks.push(p);
+        if (currentPage < totalPages - 3) pageLinks.push('...');
+        pageLinks.push(totalPages - 1, totalPages);
+      }
+    %>
+    <% pageLinks.forEach(p => { %>
+      <% if (p === '...') { %>
+        <span class="ellipsis">&hellip;</span>
+      <% } else if (p === currentPage) { %>
         <span class="current-page"><%= p %></span>
       <% } else { %>
         <a href="<%= basePath %>?page=<%= p %>"><%= p %></a>
       <% } %>
-    <% } %>
+    <% }); %>
     <% if (currentPage < totalPages) { %>
       <a href="<%= basePath %>?page=<%= currentPage + 1 %>">Next &raquo;</a>
     <% } %>
