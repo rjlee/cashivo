@@ -4,6 +4,9 @@
 ###
 FROM node:20-slim AS build
 
+# Install Python and build-essential packages (build-essential provides tools like make and gcc, often needed by node-gyp)
+RUN apt-get update && apt-get install -y python3 make g++ gcc build-essential && rm -rf /var/lib/apt/lists/*
+
 # Create app directory
 WORKDIR /app
 
