@@ -17,15 +17,23 @@ async function classifyWithML(transactions, modelDir) {
   if (!fs.existsSync(metaPath) || !fs.existsSync(embPath)) {
     throw new Error(`Embed+KNN model files not found in ${modelDir}`);
   }
-  const { k, labels: trainLabels, dim } =
+  const { k, labels: trainLabels } =
     JSON.parse(fs.readFileSync(metaPath, 'utf8'));
-  // Read raw Float32 array for embeddings
+  // Read raw Float32 array for embeddings and infer dimension
   const buf = fs.readFileSync(embPath);
   const raw = new Float32Array(
     buf.buffer,
     buf.byteOffset,
     buf.length / Float32Array.BYTES_PER_ELEMENT
   );
+  const trainCount = trainLabels.length;
+  if (trainCount === 0) throw new Error('No training labels found in meta.json');
+  if (raw.length % trainCount !== 0) {
+    throw new Error(
+      `Invalid embeddings array length ${raw.length} for ${trainCount} vectors`
+    );
+  }
+  const dim = raw.length / trainCount;
   // Convert raw Float32Array into array of normalized JS arrays (L2 = 1)
   const trainEmb = [];
   for (let i = 0; i < raw.length; i += dim) {

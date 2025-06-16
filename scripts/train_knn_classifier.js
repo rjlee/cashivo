@@ -51,11 +51,10 @@ const { pipeline } = require('@xenova/transformers');
 
   // Write Embed+KNN model to disk: meta.json + embeddings.bin (binary Float32)
   const k = 5;
-  const dim = embeddings[0]?.length || 0;
-  // meta.json holds k, labels, and dimension
+  // meta.json holds only k and labels
   fs.writeFileSync(
     path.join(outDir, 'meta.json'),
-    JSON.stringify({ k, labels, dim }, null, 2)
+    JSON.stringify({ k, labels }, null, 2)
   );
   // embeddings.bin holds all embeddings as flat Float32LE
   const buf = Buffer.allocUnsafe(embeddings.length * dim * 4);
