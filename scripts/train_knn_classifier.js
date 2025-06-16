@@ -22,7 +22,12 @@ const { pipeline } = require('@xenova/transformers');
   const labels = data.map((tx) => tx.category);
 
   console.log('Loading embedder (WASM BERT model)...');
-  const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  // Pool to mean-pooled sentence embeddings instead of token-level features
+  const embedder = await pipeline(
+    'feature-extraction',
+    'Xenova/all-MiniLM-L6-v2',
+    { pooling: 'mean' }
+  );
 
   // Embed in batches to avoid OOM on large datasets
   const BATCH_SIZE = parseInt(process.env.EMBED_BATCH_SIZE || '512', 10);

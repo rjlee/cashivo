@@ -50,7 +50,12 @@ async function classifyWithML(transactions, modelDir) {
   // ef should be set >= trainEmb.length for exact search
   index.setEf(trainEmb.length);
 
-  const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  // Pool to mean-pooled sentence embeddings rather than token-level features
+  const embedder = await pipeline(
+    'feature-extraction',
+    'Xenova/all-MiniLM-L6-v2',
+    { pooling: 'mean' }
+  );
   const texts = transactions.map((tx) => tx.description || '');
   const BATCH_SIZE = parseInt(process.env.EMBED_BATCH_SIZE || '512', 10);
   const results = [];
