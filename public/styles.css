@@ -136,3 +136,26 @@ th[title] {
   color: green;
   margin-bottom: 1rem;
 }
+
+/* Main navigation bar */
+.main-nav {
+  background-color: #fff;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 20px;
+}
+.main-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 1rem;
+}
+.main-nav a {
+  text-decoration: none;
+  color: #4a90e2;
+  font-weight: 500;
+}
+.main-nav a.active {
+  border-bottom: 2px solid #4a90e2;
+  padding-bottom: 4px;
+}

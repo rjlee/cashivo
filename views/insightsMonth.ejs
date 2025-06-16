@@ -1,4 +1,5 @@
-<%- include('partials/head', { title: 'Summary for ' + fmtMonthYear(monthlyOverview[0].month) }) %>
+<% title = 'Summary for ' + fmtMonthYear(monthlyOverview[0].month); %>
+<%- include('partials/head') %>
 <h1>Summary for <%= fmtMonthYear(monthlyOverview[0].month) %></h1>
 
 <div class="month-nav">

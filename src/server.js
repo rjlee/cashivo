@@ -21,6 +21,17 @@ const app = express();
 //  })
 //);
 // Gzip compression
+// Determine active page for navbar highlighting
+app.use((req, res, next) => {
+  const p = req.path;
+  if (p === '/') res.locals.activePage = 'home';
+  else if (p.startsWith('/transactions'))
+    res.locals.activePage = 'transactions';
+  else if (p.startsWith('/years')) res.locals.activePage = 'insights';
+  else if (p.startsWith('/manage')) res.locals.activePage = 'manage';
+  else res.locals.activePage = '';
+  next();
+});
 app.use(compression());
 // Cookie parsing (for CSRF tokens)
 app.use(cookieParser());

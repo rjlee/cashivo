@@ -8,8 +8,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const ctx = document.getElementById('dashboardChart').getContext('2d');
     new Chart(ctx, {
       type: 'bar',
-      data: { labels, datasets: [{ label: 'Spending', data, backgroundColor: 'rgba(75,192,192,0.5)' }] },
-      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
+      data: {
+        labels,
+        datasets: [
+          { label: 'Spending', data, backgroundColor: 'rgba(75,192,192,0.5)' },
+        ],
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } },
+      },
     });
   }
   // Monthly Summary: Spending Chart

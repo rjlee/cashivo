@@ -1,11 +1,5 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Manage Data</title>
-  <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
+<% title = 'Manage Data'; %>
+<%- include('partials/head') %>
   <% if (showDefaultsMsg) { %>
     <p class="alert-success">Default settings loaded successfully.</p>
   <% } %>
@@ -13,7 +7,6 @@
     <p class="alert-success">Transactions deleted successfully.</p>
   <% } %>
   <h1>Manage Data</h1>
-  <p><a href="/years">← Back to Annual Summaries</a></p>
   <form id="uploadForm" method="POST" action="/manage" enctype="multipart/form-data">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <div>
@@ -56,5 +49,5 @@
       <button type="submit" class="btn-danger">Delete All Transactions & Reset Data</button>
     </form>
   </div>
-</body>
+<%- include('partials/footer') %>
 </html>
