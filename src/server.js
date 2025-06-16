@@ -123,10 +123,9 @@ const transactionsCtrl = require('./controllers/transactionsController');
 app.get('/transactions', transactionsCtrl.showAllTransactions);
 // Bulk actions on global transactions
 app.post('/transactions/bulk', transactionsCtrl.bulkActions);
-// Redirect root '/' to '/years'
-app.get('/', (req, res) => {
-  res.redirect('/years');
-});
+// Dashboard for current year summary
+const dashboardCtrl = require('./controllers/dashboardController');
+app.get('/', dashboardCtrl.showDashboard);
 // Serve static assets (CSS, JS, etc.) from public directory
 app.use(express.static(path.join(__dirname, '..', 'public')));
 // Handle favicon requests to avoid 404 errors

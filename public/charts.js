@@ -1,5 +1,17 @@
 // Centralized chart initialization for Budget App
 document.addEventListener('DOMContentLoaded', function () {
+  // Dashboard: Monthly Spending Chart for current year
+  if (window.dashboardSpending && document.getElementById('dashboardChart')) {
+    const raw = window.dashboardSpending;
+    const labels = raw.map((e) => e.month);
+    const data = raw.map((e) => e.spending);
+    const ctx = document.getElementById('dashboardChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets: [{ label: 'Spending', data, backgroundColor: 'rgba(75,192,192,0.5)' }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
+    });
+  }
   // Monthly Summary: Spending Chart
   if (window.spendingChartRawData && document.getElementById('spendingChart')) {
     const raw = window.spendingChartRawData;

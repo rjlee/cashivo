@@ -1,0 +1,45 @@
+<%- include('partials/head', { title: 'Dashboard' }) %>
+<h1>Dashboard — <%= year %></h1>
+
+<% if (yearly) { %>
+  <h2>Annual Summary</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Year</th>
+        <th>Income</th>
+        <th>Expenses</th>
+        <th>Spending</th>
+        <th>Net Cash Flow</th>
+        <th>Savings Rate</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><%= yearly.year %></td>
+        <td><%= fmtCurrency(yearly.totalIncome, currency) %></td>
+        <td><%= fmtCurrency(yearly.totalExpenses, currency) %></td>
+        <td>
+          <%- fmtCurrency(
+            spendingArr.reduce((sum, s) => sum + s.spending, 0),
+            currency
+          ) %>
+        </td>
+        <td><%= fmtCurrency(yearly.netCashFlow, currency) %></td>
+        <td><%= yearly.savingsRate.toFixed(2) %>%</td>
+      </tr>
+    </tbody>
+  </table>
+<% } else { %>
+  <p>No data available for <%= year %></p>
+<% } %>
+
+<% if (spendingArr.length) { %>
+  <h2>Monthly Spending</h2>
+  <canvas id="dashboardChart" width="600" height="200"></canvas>
+  <script>
+    window.dashboardSpending = <%- JSON.stringify(spendingArr) %>;
+  </script>
+<% } %>
+
+<%- include('partials/footer') %>
