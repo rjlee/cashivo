@@ -92,7 +92,14 @@
 <h2>Flagged Transactions</h2>
 <% if (flagged && flagged.length) { %>
   <table id="flagged-transactions-table">
-    <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th></tr></thead>
+    <thead>
+      <tr>
+        <th title="Transaction date">Date</th>
+        <th title="Transaction description or merchant">Description</th>
+        <th title="Transaction amount">Amount</th>
+        <th title="Assigned transaction category">Category</th>
+      </tr>
+    </thead>
     <tbody>
       <% flagged.forEach(function(o) { %>
         <tr data-category="<%= o.category %>">
@@ -111,7 +118,15 @@
 <h2>Recurring Bills & Subscriptions</h2>
 <% if (recs && recs.length) { %>
   <table id="recurring-table">
-    <thead><tr><th>Merchant</th><th>Category</th><th>Occurrences</th><th>Total</th><th>Avg</th></tr></thead>
+    <thead>
+      <tr>
+        <th title="Merchant or subscription name">Merchant</th>
+        <th title="Transaction category">Category</th>
+        <th title="Number of times this transaction occurred">Occurrences</th>
+        <th title="Total amount spent">Total</th>
+        <th title="Average amount per occurrence">Avg</th>
+      </tr>
+    </thead>
     <tbody>
       <% recs.forEach(function(r) { %>
         <tr data-category="<%= r.category %>">

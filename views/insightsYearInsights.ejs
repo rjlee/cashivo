@@ -55,7 +55,12 @@
 <% if (outliers && outliers.length) { %>
   <table id="flagged-transactions-table">
     <thead>
-      <tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th></tr>
+      <tr>
+        <th title="Transaction date">Date</th>
+        <th title="Transaction description or merchant">Description</th>
+        <th title="Transaction amount">Amount</th>
+        <th title="Assigned transaction category">Category</th>
+      </tr>
     </thead>
     <tbody>
       <% outliers.forEach(function(o) { %>
@@ -77,10 +82,10 @@
   <table id="recurring-table">
     <thead>
       <tr>
-        <th>Merchant</th>
-        <th>Occurrences</th>
-        <th>Total Spend</th>
-        <th>Avg per Occurrence</th>
+        <th title="Name of the recurring merchant or subscription">Merchant</th>
+        <th title="Number of occurrences this period">Occurrences</th>
+        <th title="Total amount spent for this merchant">Total Spend</th>
+        <th title="Average spend per occurrence">Avg per Occurrence</th>
       </tr>
     </thead>
     <tbody>

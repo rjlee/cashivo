@@ -32,17 +32,17 @@
     </script>
   <% } %>
 
-<table>
-  <thead>
-    <tr>
-      <th>Month</th>
-      <th>Income</th>
-      <th>Expenses</th>
-      <th>Spending</th>
-      <th>Net Cash Flow</th>
-      <th>Savings Rate</th>
-    </tr>
-  </thead>
+  <table>
+    <thead>
+      <tr>
+        <th title="Month in YYYY-MM format">Month</th>
+        <th title="Total positive cash inflows for the month">Income</th>
+        <th title="Total negative cash outflows for the month">Expenses</th>
+        <th title="Total spending for the month">Spending</th>
+        <th title="Income minus expenses for the month">Net Cash Flow</th>
+        <th title="Net cash flow as a percentage of income">Savings Rate</th>
+      </tr>
+    </thead>
   <tbody>
     <% monthlyOverview.forEach(function(item) { %>
       <tr>
@@ -62,13 +62,13 @@
     <table id="category-breakdown-table">
       <thead>
         <tr>
-          <th>Category</th>
-          <th>Amount</th>
-          <th>Δ vs Prev</th>
-          <th>Budget</th>
-          <th>Actual</th>
-          <th>Variance</th>
-          <th>% Used</th>
+          <th title="Transaction category name">Category</th>
+          <th title="Total amount spent in this category">Amount</th>
+          <th title="Change compared to previous period">Δ vs Prev</th>
+          <th title="Budgeted amount for this category">Budget</th>
+          <th title="Actual amount spent against budget">Actual</th>
+          <th title="Budget variance (Budget - Actual)">Variance</th>
+          <th title="Percent of budget used">% Used</th>
         </tr>
       </thead>
       <tbody>
