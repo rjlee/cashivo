@@ -31,6 +31,7 @@ Cashivo is a Node.js financial budgeting tool that:
 │   ├── insights.js       # Browser interactivity scripts
 │   └── styles.css        # Stylesheet
 ├── views/                # EJS templates for HTML pages
+│   └── partials/         # Shared EJS partials (e.g. annualSummaryTable)
 ├── evaluate.js           # Optional CLI: evaluate classifier accuracy
 ├── CONVENTIONS.md        # Coding/variable/chart naming conventions
 ├── ROADMAP.md            # Remaining PR roadmap for future enhancements

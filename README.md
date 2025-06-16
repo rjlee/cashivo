@@ -100,6 +100,10 @@ Available endpoints (protected by Basic Auth if USERNAME & PASSWORD are set):
 - GET `/years/:year` → Yearly summary page (HTML)
 - GET `/years/:year/:month` → Monthly summary page (HTML)
 - GET `/years/:year/:month/category/:category` → Category drill-down page (HTML)
+- GET `/years/:year/:month/transactions` → Monthly transactions page (HTML)
+- POST `/years/:year/:month/transactions/bulk` → Bulk actions on monthly transactions
+- GET `/transactions` → Global transactions page (HTML)
+- POST `/transactions/bulk` → Bulk actions on selected transactions
 
 Results are stored in the `data` directory:
 
