@@ -171,8 +171,11 @@ async function ingest() {
     if (!monthToDays[ym]) monthToDays[ym] = new Set();
     monthToDays[ym].add(day);
   });
-  // Determine threshold for inclusion (fraction of days present, default 80%)
-  const coverageThreshold = parseFloat(process.env.MONTH_COVERAGE) || 0.8;
+  // Determine threshold for inclusion (fraction of days present; default 80% unless overridden by env)
+  const coverageThreshold =
+    process.env.MONTH_COVERAGE != null
+      ? parseFloat(process.env.MONTH_COVERAGE)
+      : 0.8;
   const completeMonths = [];
   const incompleteMonths = [];
   Object.entries(monthToDays).forEach(([ym, daysSet]) => {
