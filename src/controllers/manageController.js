@@ -207,6 +207,10 @@ function uploadFilesSse(req, res) {
     );
     if (found) usedImporters.add(found.name);
   });
+  // Fail early if no importer matched the uploaded files
+  if (usedImporters.size === 0) {
+    return res.status(400).send('Unsupported file format: could not detect importer');
+  }
   // Determine importer name (without extension) and build categorize command
   const importerName = [...usedImporters][0].replace(/\.js$/, '');
   const ingestCmd = 'npm run ingest';
