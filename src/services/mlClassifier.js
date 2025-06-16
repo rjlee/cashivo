@@ -10,13 +10,25 @@ const { pipeline } = require('@xenova/transformers');
  * @returns {Array} categorized transactions
  */
 async function classifyWithML(transactions, modelDir) {
-  // Load the JSON KNN model (k, embeddings, labels)
-  const knnPath = path.join(modelDir, 'knn.json');
-  if (!fs.existsSync(knnPath)) {
-    throw new Error(`Embed+KNN model not found at ${knnPath}`);
+  // Load the binary KNN model (meta.json + embeddings.bin)
+  const metaPath = path.join(modelDir, 'meta.json');
+  const embPath  = path.join(modelDir, 'embeddings.bin');
+  if (!fs.existsSync(metaPath) || !fs.existsSync(embPath)) {
+    throw new Error(`Embed+KNN model files not found in ${modelDir}`);
   }
-  const { k, embeddings: trainEmb, labels: trainLabels } =
-    JSON.parse(fs.readFileSync(knnPath, 'utf8'));
+  const { k, labels: trainLabels, dim } =
+    JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+  // Read raw Float32 array for embeddings
+  const buf = fs.readFileSync(embPath);
+  const raw = new Float32Array(
+    buf.buffer,
+    buf.byteOffset,
+    buf.length / Float32Array.BYTES_PER_ELEMENT
+  );
+  const trainEmb = [];
+  for (let i = 0; i < raw.length; i += dim) {
+    trainEmb.push(raw.subarray(i, i + dim));
+  }
   // Pre-normalize train embeddings (L2-norm = 1) so cosine reduces to dot product
   for (let i = 0; i < trainEmb.length; i++) {
     const vec = trainEmb[i];

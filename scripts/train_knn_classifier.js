@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Simple Embed+KNN trainer with optional PCA dimensionality reduction
+// Simple Embed+KNN trainer: store embeddings and labels for a brute-force KNN classifier
 const fs = require('fs');
 const path = require('path');
 const { pipeline } = require('@xenova/transformers');
@@ -44,11 +44,21 @@ const { pipeline } = require('@xenova/transformers');
   const outDir = path.resolve(__dirname, '../data/tx-classifier-knn');
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
-  // Write Embed+KNN model to disk as JSON
-  const model = { k: 5, embeddings, labels };
+  // Write Embed+KNN model to disk: meta.json + embeddings.bin (binary Float32)
+  const k = 5;
+  const dim = embeddings[0]?.length || 0;
+  // meta.json holds k, labels, and dimension
   fs.writeFileSync(
-    path.join(outDir, 'knn.json'),
-    JSON.stringify(model)
+    path.join(outDir, 'meta.json'),
+    JSON.stringify({ k, labels, dim }, null, 2)
   );
+  // embeddings.bin holds all embeddings as flat Float32LE
+  const buf = Buffer.allocUnsafe(embeddings.length * dim * 4);
+  for (let i = 0; i < embeddings.length; i++) {
+    for (let j = 0; j < dim; j++) {
+      buf.writeFloatLE(embeddings[i][j], 4 * (i * dim + j));
+    }
+  }
+  fs.writeFileSync(path.join(outDir, 'embeddings.bin'), buf);
   console.log('✅ Embed+KNN model saved to', outDir);
 })();
