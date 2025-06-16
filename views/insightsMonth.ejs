@@ -1,4 +1,4 @@
-<% title = 'Summary for ' + fmtMonthYear(monthlyOverview[0].month); %>
+<% title = fmtMonthYear(monthlyOverview[0].month) + ' Summary'; %>
 <%- include('partials/head') %>
 <div class="month-nav">
   <% if (prevYear) { %>
@@ -21,7 +21,7 @@
     ) %> →</span>
   <% } %>
 </div>
-<h1>Summary for <%= fmtMonthYear(monthlyOverview[0].month) %></h1>
+<h1><%= fmtMonthYear(monthlyOverview[0].month) %> Summary</h1>
 
   <% if (spendingChartRawData && spendingChartSelMonth) { %>
     <h3>Spending</h3>

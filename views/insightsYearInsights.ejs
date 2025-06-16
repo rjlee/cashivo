@@ -1,4 +1,4 @@
-<% title = 'Insights for ' + year; %>
+<% title = year + ' Insights'; %>
 <%- include('partials/head') %>
 <div class="year-nav">
   <% if (prevYear) { %>
@@ -13,7 +13,7 @@
     <span class="disabled"><%= Number(year) + 1 %> →</span>
   <% } %>
 </div>
-<h1>Insights for <%= year %></h1>
+<h1><%= year %> Insights</h1>
 
 <details id="filter-panel" style="margin-bottom:1em;">
   <summary>Filter Categories</summary>

@@ -1,6 +1,6 @@
-<% title = 'Transactions: ' + category + ' (' + fmtMonthYear(year + '-' + month) + ')'; %>
+<% title = fmtMonthYear(year + '-' + month) + ' ' + category + ' Transactions'; %>
 <%- include('partials/head') %>
-<h1>Transactions for <%= category %> in <%= fmtMonthYear(year + '-' + month) %></h1>
+<h1><%= fmtMonthYear(year + '-' + month) %> <%= category %> Transactions</h1>
 <p><a href="/years/<%= year %>/<%= month %>">← Back to month summary</a></p>
 <%- include('partials/filterForm', {
   basePath: `/years/${year}/${month}/category/${category}`,

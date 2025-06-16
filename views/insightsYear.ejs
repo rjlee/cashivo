@@ -1,4 +1,4 @@
-<% title = 'Annual Summary for ' + year; %>
+<% title = year + ' Summary'; %>
 <%- include('partials/head') %>
 <div class="year-nav">
   <% if (prevYear) { %>
@@ -13,7 +13,7 @@
     <span class="disabled"><%= Number(year) + 1 %> →</span>
   <% } %>
 </div>
-<h1>Annual Summary for <%= year %></h1>
+<h1><%= year %> Summary</h1>
 
   <% if (spendingArr && spendingArr.length) { %>
   <h3>Spending</h3>

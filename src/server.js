@@ -50,7 +50,7 @@ app.locals.fmtCurrency = (value, currencyCode) => {
     currency: code,
   }).format(value);
 };
-// Helper to format year-month strings (YYYY-MM) as 'Mon YY', e.g. 'Jan 25'
+// Helper to format year-month strings (YYYY-MM) as 'Mon YYYY', e.g. 'Jan 2025'
 app.locals.fmtMonthYear = (ym) => {
   if (!ym || typeof ym !== 'string') return '';
   const parts = ym.split('-');
@@ -72,8 +72,8 @@ app.locals.fmtMonthYear = (ym) => {
     'Dec',
   ];
   const mName = names[idx] || '';
-  const yShort = year.slice(-2);
-  return `${mName} ${yShort}`;
+  // Use full calendar year
+  return `${mName} ${year}`;
 };
 // Basic HTTP auth if USERNAME and PASSWORD are set in env
 const { USERNAME, PASSWORD } = process.env;
