@@ -179,6 +179,12 @@ th[title] {
   justify-content: space-between;
   align-items: center;
 }
+
+/* Spacing for transaction filters & bulk actions */
+.filter-form,
+.bulk-actions-form {
+  margin-bottom: calc(var(--spacing) * 0.5);
+}
 .year-nav .disabled {
   color: var(--color-disabled);
   cursor: default;
