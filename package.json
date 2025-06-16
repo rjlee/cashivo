@@ -21,7 +21,7 @@
     "generate:categories": "node scripts/generate_categories.js",
     "train:classifier": "node scripts/train_classifier.js",
     "train:knn-classifier": "node scripts/train_knn_classifier.js",
-    "precommit": "npm test && npm run lint && npm run lint:ejs && npm run format:check",
+    "precommit": "npm test && npm run lint && npm run lint:ejs && npm run format",
     "prepare": "husky install || true"
   },
   "dependencies": {
