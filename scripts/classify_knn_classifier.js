@@ -30,7 +30,15 @@ const { classifyWithML } = require('../src/services/mlClassifier');
   try {
     newTransactions = await classifyWithML(transactions, modelDir);
   } catch (err) {
-    console.error('Classification error:', err.message);
+    if (/array length/.test(err.message)) {
+      console.error(
+        'Dimension mismatch detected. ' +
+          'Your meta.json embedding dimension does not match the actual vectors.\n' +
+          'Please re-run scripts/train_knn_classifier.js to regenerate the model files.'
+      );
+    } else {
+      console.error('Classification error:', err.message);
+    }
     process.exit(1);
   }
   try {
