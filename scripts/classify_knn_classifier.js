@@ -11,10 +11,11 @@ const { classifyWithML } = require('../src/services/mlClassifier');
     console.error('Input transactions file not found:', inputFile);
     process.exit(1);
   }
-  // Expect legacy KNN JSON model
-  const knnPath = path.join(modelDir, 'knn.json');
-  if (!fs.existsSync(knnPath)) {
-    console.error('Embed+KNN model not found at', knnPath);
+  // Expect binary KNN model files: meta.json + embeddings.bin
+  const metaPath = path.join(modelDir, 'meta.json');
+  const embPath  = path.join(modelDir, 'embeddings.bin');
+  if (!fs.existsSync(metaPath) || !fs.existsSync(embPath)) {
+    console.error('Embed+KNN model files not found in', modelDir);
     process.exit(1);
   }
   let transactions;
