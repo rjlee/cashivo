@@ -27,7 +27,7 @@ Cashivo is a Node.js financial budgeting tool that:
 │   ├── controllers/      # View rendering logic using EJS templates
 │   └── services/         # Summary data loader & QIF export
 ├── public/               # Static assets (JS, CSS)
-│   ├── charts.js         # Chart.js initialization scripts
+│   ├── charts.js         # Chart.js initialization scripts; uses window.chartCurrency set by server via <script>
 │   ├── insights.js       # Browser interactivity scripts
 │   └── styles.css        # Stylesheet
 ├── views/                # EJS templates for HTML pages
@@ -54,7 +54,7 @@ Cashivo is a Node.js financial budgeting tool that:
 
 - `npm run ingest` – Ingest raw files into JSON.
 - `npm run categorize [--rules|--pass|--ai|--emb]` – Classify transactions (keyword rules, pass-through, embeddings, or AI).
-- `npm run summary [--currency=USD]` – Generate summary JSON & console output.
+- `npm run summary [--currency=XXX]` – Generate summary JSON & console output. The currency flag overrides DEFAULT_CURRENCY env var (fallback GBP if unset).
 - `npm run evaluate` – Evaluate classification accuracy.
 - `npm run serve` – Launch web server on port 3000 (Basic Auth optional).
 - `npm test` – Run unit and integration tests via Jest.
@@ -66,7 +66,12 @@ Cashivo is a Node.js financial budgeting tool that:
 ## 5. Configuration
 
 - Copy `.env.example` to `.env` and set:
-  - `DEFAULT_CURRENCY`, `OPENAI_API_KEY`, `USERNAME`, `PASSWORD`, `START_MONTH`, `END_MONTH`.
+- - `DEFAULT_CURRENCY` – Currency code used by CLI summary, server, and client charts (fallback GBP if unset).
+- - `OPENAI_API_KEY`
+- - `USERNAME`
+- - `PASSWORD`
+- - `START_MONTH`
+- - `END_MONTH`
 
 ## 6. Conventions & Roadmap
 

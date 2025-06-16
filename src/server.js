@@ -41,8 +41,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../views'));
+const { getCurrency } = require('./utils/currency');
+
 app.locals.fmtCurrency = (value, currencyCode) => {
-  const code = currencyCode || process.env.DEFAULT_CURRENCY || 'USD';
+  const code = getCurrency(currencyCode);
   return new Intl.NumberFormat(undefined, {
     style: 'currency',
     currency: code,

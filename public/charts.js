@@ -21,8 +21,41 @@ document.addEventListener('DOMContentLoaded', function () {
         ],
       },
       options: {
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                const val = context.parsed.y;
+                return (
+                  context.dataset.label +
+                  ': ' +
+                  new Intl.NumberFormat(undefined, {
+                    style: 'currency',
+                    currency: window.chartCurrency,
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  }).format(val)
+                );
+              },
+            },
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function (val) {
+                return new Intl.NumberFormat(undefined, {
+                  style: 'currency',
+                  currency: window.chartCurrency,
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                }).format(val);
+              },
+            },
+          },
+        },
       },
     });
   }

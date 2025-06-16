@@ -195,6 +195,13 @@ th[title] {
 .bulk-actions-form {
   margin-bottom: calc(var(--spacing) * 0.5);
 }
+
+/* Compact button style for filter and bulk-action panels */
+.filter-form button,
+.bulk-actions-form button {
+  font-size: 0.75rem;
+  padding: calc(var(--spacing) * 0.33) calc(var(--spacing) * 0.66);
+}
 .year-nav .disabled {
   color: var(--color-disabled);
   cursor: default;

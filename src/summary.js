@@ -560,16 +560,16 @@ function renderConsole(summary) {
   );
   console.log('Upload & processing complete');
 }
+const { getCurrency } = require('./utils/currency');
+
 // Main
-// Parse CLI options: --currency (default GBP)
+// Parse CLI options: --currency flag overrides DEFAULT_CURRENCY env var (fallback GBP if unset)
 function parseOptions() {
-  let currencyRaw = process.env.DEFAULT_CURRENCY || 'GBP';
-  for (const arg of process.argv.slice(2)) {
-    if (arg.startsWith('--currency=')) {
-      currencyRaw = arg.split('=')[1];
-    }
-  }
-  return { currencyRaw };
+  const flag = process.argv
+    .slice(2)
+    .find((arg) => arg.startsWith('--currency='));
+  const overrideCurrency = flag && flag.split('=')[1];
+  return { currencyRaw: getCurrency(overrideCurrency) };
 }
 const { currencyRaw } = parseOptions();
 // Map currency codes to symbols

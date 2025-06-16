@@ -1,4 +1,5 @@
 const summaryService = require('../services/summaryService');
+const { getCurrency } = require('../utils/currency');
 
 /**
  * Dashboard showing summary info for current year
@@ -13,7 +14,7 @@ function showDashboard(req, res, next) {
   const spendingArr = (summary.monthlySpending || []).filter((s) =>
     s.month.startsWith(year + '-')
   );
-  const currency = req.query.currency;
+  const currency = getCurrency(req.query.currency);
   res.render('dashboard', {
     year,
     yearly,

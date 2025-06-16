@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const summaryService = require('../services/summaryService');
+const { getCurrency } = require('../utils/currency');
 // summaryModule rendering functions replaced by EJS views
 
 // GET /years
@@ -13,7 +14,7 @@ function showAllYears(req, res, next) {
         .slice()
         .sort((a, b) => Number(b.year) - Number(a.year));
     }
-    const currency = req.query.currency;
+    const currency = getCurrency(req.query.currency);
     // Build year-spending map from monthlySpending
     const yearSpendingMap = {};
     (summary.monthlySpending || []).forEach(function (ms) {
@@ -31,7 +32,7 @@ function showYear(req, res, next) {
   try {
     const year = req.params.year;
     const summary = summaryService.getSummary();
-    const currency = req.query.currency;
+    const currency = getCurrency(req.query.currency);
     // Prepare list of years for navigation
     const yearsList = (summary.yearlySummary || []).map((y) => y.year).sort();
     const idx = yearsList.indexOf(year);
@@ -73,7 +74,7 @@ function showYearInsights(req, res, next) {
   try {
     const year = req.params.year;
     const summary = summaryService.getSummary();
-    const currency = req.query.currency;
+    const currency = getCurrency(req.query.currency);
     // Navigation: previous and next years
     const yearsList = (summary.yearlySummary || []).map((y) => y.year).sort();
     const idxY = yearsList.indexOf(year);
@@ -149,7 +150,7 @@ function showMonth(req, res, next) {
     const year = req.params.year;
     const month = req.params.month.padStart(2, '0');
     const summary = summaryService.getSummary({ month: `${year}-${month}` });
-    const currency = req.query.currency;
+    const currency = getCurrency(req.query.currency);
     // Determine prev/next months for navigation
     const allMonths = (summary.monthlySpending || [])
       .map((s) => s.month)
@@ -217,7 +218,7 @@ function showMonthInsights(req, res, next) {
     const month = req.params.month.padStart(2, '0');
     const sel = `${year}-${month}`;
     const summary = summaryService.getSummary({ month: sel });
-    const currency = req.query.currency;
+    const currency = getCurrency(req.query.currency);
     // Categories for filter panel
     const cbMonth = summary.categoryBreakdown?.perMonth?.[sel] || {};
     const monthCategoryList = cbMonth.categories

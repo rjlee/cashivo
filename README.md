@@ -122,9 +122,9 @@ You can containerize and run the app with Docker:
 2. Run the container (set USERNAME/PASSWORD for auth, DEFAULT_CURRENCY to override):
    ```bash
    docker run -p 3000:3000 \
-     -e USERNAME=you -e PASSWORD=secret \
-     -e DEFAULT_CURRENCY=USD \
-     cashivo
+    -e USERNAME=you -e PASSWORD=secret \
+    -e DEFAULT_CURRENCY=GBP \
+    cashivo
    ```
 3. Or start with Docker Compose:
    ```bash

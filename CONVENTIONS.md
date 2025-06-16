@@ -102,6 +102,7 @@ Functions are named `generateXyz` and return plain JS objects/arrays for each re
 - Always namespace variables by the chart or component they belong to.
 - Pre-serialize data on the server; minimize client-side logic in `<script>` blocks.
 - Extract complex interactive behaviors into standalone `.js` files under `public/` and include them via `<script src="/your-script.js"></script>`, instead of embedding large inline `<script>` sections in HTML templates.
+- Use the `DEFAULT_CURRENCY` environment variable as the single source of truth for currency formatting (CLI summary, server, and charts); it falls back to GBP if not set.
 
 Feel free to reference this file when adding new charts or renderers to maintain consistent patterns.
 
