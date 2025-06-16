@@ -1,6 +1,22 @@
 <%- include('partials/head', { title: 'Transactions: ' + category + ' (' + fmtMonthYear(year + '-' + month) + ')' }) %>
 <h1>Transactions for <%= category %> in <%= fmtMonthYear(year + '-' + month) %></h1>
 <p><a href="/years/<%= year %>/<%= month %>">← Back to month summary</a></p>
+<%- include('partials/filterForm', {
+  basePath: `/years/${year}/${month}/category/${category}`,
+  yearsList,
+  categoriesList: allCategories,
+  year,
+  month,
+  category,
+  dateFrom,
+  dateTo,
+  amountMin,
+  amountMax
+}) %>
+<%- include('partials/bulkActionsForm', {
+  basePath: `/years/${year}/${month}/category/${category}`,
+  allCategories
+}) %>
 <table>
   <thead>
     <tr>

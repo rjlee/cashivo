@@ -1,4 +1,7 @@
-<table>
+<table class="tx-table">
+  <thead>
+    <tr>
+      <th><input type="checkbox" id="select-all" title="Select all" /></th>
   <thead>
     <tr>
       <th>Date</th>
@@ -11,6 +14,7 @@
   <tbody>
     <% transactions.forEach(function(tx) { %>
       <tr>
+        <td><input type="checkbox" class="tx-select" value="<%= tx._idx %>" /></td>
         <td><%= tx.date %></td>
         <td><%= tx.description %></td>
         <td><%= fmtCurrency(tx.amount, currency) %></td>
@@ -39,3 +43,11 @@
     <% } %>
   </nav>
 <% } %>
+
+<script>
+  // 'Select all' checkbox toggles all transaction checkboxes
+  document.getElementById('select-all')?.addEventListener('change', function (e) {
+    const checked = e.target.checked;
+    document.querySelectorAll('input.tx-select').forEach(cb => { cb.checked = checked; });
+  });
+</script>

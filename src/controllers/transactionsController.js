@@ -148,10 +148,62 @@ function showAllTransactions(req, res, next) {
     dateTo,
     amountMin,
     amountMax,
+    // Filtering context
+    yearsList,
+    year,
+    month,
+    category,
+    dateFrom,
+    dateTo,
+    amountMin,
+    amountMax,
   });
+}
+
+/**
+ * Handle bulk delete or category‐update actions for selected transactions.
+ */
+function bulkActions(req, res, next) {
+  const dataFile = path.resolve(
+    __dirname,
+    '..',
+    '..',
+    'data',
+    'transactions_categorized.json'
+  );
+  let txList;
+  try {
+    txList = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+  } catch (err) {
+    return next(err);
+  }
+  const { action, category } = req.body;
+  const sel = Array.isArray(req.body.selected)
+    ? req.body.selected
+    : req.body.selected
+    ? [req.body.selected]
+    : [];
+  if (action === 'delete') {
+    txList = txList.filter((tx, i) => !sel.includes(String(i)));
+  } else if (action === 'setCategory') {
+    txList = txList.map((tx, i) =>
+      sel.includes(String(i)) ? { ...tx, category } : tx
+    );
+  }
+  try {
+    fs.writeFileSync(dataFile, JSON.stringify(txList, null, 2));
+  } catch (err) {
+    return next(err);
+  }
+  // Redirect back to origin page safely
+  const backURL = req.get('Referrer') || '/';
+  res.location(backURL);
+  res.redirect(backURL);
 }
 
 module.exports = {
   showMonthTransactions,
+  showAllTransactions,
+  bulkActions,
   showAllTransactions,
 };

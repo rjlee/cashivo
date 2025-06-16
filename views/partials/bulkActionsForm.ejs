@@ -1,0 +1,40 @@
+<form method="post" action="<%= basePath %>/bulk" class="bulk-actions-form">
+  <fieldset>
+    <legend>Bulk Actions</legend>
+    <button type="submit" name="action" value="delete" class="btn btn-danger">
+      Delete Selected
+    </button>
+    <label>
+      Set Category:
+      <select name="category">
+        <option value="">-- choose category --</option>
+        <% allCategories.forEach((c) => { %>
+          <option value="<%= c %>"><%= c %></option>
+        <% }); %>
+      </select>
+    </label>
+    <button type="submit" name="action" value="setCategory" class="btn btn-primary">
+      Apply Category
+    </button>
+  </fieldset>
+</form>
+<script>
+  // Bulk actions: collect selected tx indices into hidden inputs
+  document.querySelector('.bulk-actions-form').addEventListener('submit', function (evt) {
+    const form = evt.currentTarget;
+    // Remove prior hidden inputs
+    form.querySelectorAll('input[name="selected"]').forEach((el) => el.remove());
+    // Gather checked checkboxes
+    const checked = document.querySelectorAll('input.tx-select:checked');
+    if (!checked.length) {
+      evt.preventDefault();
+      alert('Please select at least one transaction for bulk action.');
+      return;
+    }
+    checked.forEach((chk) => {
+      const input = document.createElement('input');
+      input.type = 'hidden'; input.name = 'selected'; input.value = chk.value;
+      form.appendChild(input);
+    });
+  });
+</script>

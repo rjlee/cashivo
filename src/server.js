@@ -108,6 +108,8 @@ app.use('/years', insightsRouter);
 // Global transactions listing (paginated, most recent first)
 const transactionsCtrl = require('./controllers/transactionsController');
 app.get('/transactions', transactionsCtrl.showAllTransactions);
+// Bulk actions on global transactions
+app.post('/transactions/bulk', transactionsCtrl.bulkActions);
 // Redirect root '/' to '/years'
 app.get('/', (req, res) => {
   res.redirect('/years');

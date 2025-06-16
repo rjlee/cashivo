@@ -291,9 +291,22 @@ function showCategoryTransactions(req, res, next) {
     );
     let allTx = JSON.parse(fs.readFileSync(txPath, 'utf-8'));
     allTx = allTx.map((tx, idx) => ({ ...tx, _idx: idx }));
-    const transactions = allTx.filter(
+    // Apply filters
+    const { dateFrom, dateTo, amountMin, amountMax } = req.query;
+    // Build years list for filter dropdown
+    const yearsList = Array.from(
+      new Set(allTx.map((tx) => tx.date.slice(0, 4)))
+    ).sort((a, b) => b.localeCompare(a));
+    let transactions = allTx.filter(
       (tx) => tx.category === category && tx.date.startsWith(`${year}-${month}`)
     );
+    transactions = transactions.filter((tx) => {
+      if (dateFrom && tx.date < dateFrom) return false;
+      if (dateTo && tx.date > dateTo) return false;
+      if (amountMin && parseFloat(tx.amount) < parseFloat(amountMin)) return false;
+      if (amountMax && parseFloat(tx.amount) > parseFloat(amountMax)) return false;
+      return true;
+    });
     const currency = req.query.currency;
     // Load category list from summary
     const summary = summaryService.getSummary();
@@ -307,6 +320,11 @@ function showCategoryTransactions(req, res, next) {
       transactions,
       currency,
       allCategories,
+      yearsList,
+      dateFrom,
+      dateTo,
+      amountMin,
+      amountMax,
     });
   } catch (err) {
     next(err);

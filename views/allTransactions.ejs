@@ -13,6 +13,10 @@
   amountMin,
   amountMax
 }) %>
+<%- include('partials/bulkActionsForm', {
+  basePath: '/transactions',
+  allCategories
+}) %>
 <%- include('partials/transactionList', {
   transactions,
   totalCount,
