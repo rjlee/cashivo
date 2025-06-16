@@ -164,6 +164,8 @@ Environment variables and flags:
 - `--currency=XXX` to override default currency (GBP)
 - `USERNAME` and `PASSWORD` environment variables enable HTTP Basic Auth (protects all HTML & API endpoints when both are set)
 - `AI_CONCURRENCY=N` to change parallel request count for AI/embeddings (default 10)
+- `NODE_OPTIONS=--max-old-space-size=4096` to increase the Node.js heap size for large Embed+KNN training/classification tasks
+- `EMBED_BATCH_SIZE=N` to change the batch size for embedding & KNN training/inference (default 512)
 - `OPENAI_MODEL` to customize chat model (default gpt-3.5-turbo)
 - `OPENAI_EMBEDDING_MODEL` to customize embedding model (default text-embedding-ada-002)
 

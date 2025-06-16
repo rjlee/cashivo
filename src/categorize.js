@@ -78,7 +78,8 @@ async function run() {
       );
     } else if (cls === 'ml') {
       console.log('Applying ML classifier');
-      const modelDir = path.join(dataDir, 'tx-classifier');
+      // Use Embed+KNN model directory for ML-based classification
+      const modelDir = path.join(dataDir, 'tx-classifier-knn');
       mapped = await classifyWithML(remaining, modelDir);
     } else if (cls === 'ai') {
       console.log('Applying AI classifier');

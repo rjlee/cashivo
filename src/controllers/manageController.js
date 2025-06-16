@@ -133,7 +133,7 @@ function trainClassifier(req, res) {
   const jobId = crypto.randomUUID();
   const cwd = path.resolve(__dirname, '..', '..');
   // Spawn the npm script for classifier training with shell to enable streaming
-  const fullCmd = 'npm run train:classifier';
+  const fullCmd = 'node --max-old-space-size=4096 scripts/train_knn_classifier.js';
   const child = spawn(fullCmd, { cwd, shell: true });
   child.stdout.on('data', (chunk) => {
     progressBus.emit('progress', {
@@ -152,6 +152,29 @@ function trainClassifier(req, res) {
   });
   // Redirect to generic progress page with task type
   res.redirect(`/manage/progress/${jobId}?task=train`);
+}
+// Kick off classification of existing transactions with Embed+KNN classifier and redirect to progress
+function classifyTransactions(req, res) {
+  const jobId = crypto.randomUUID();
+  const cwd = path.resolve(__dirname, '..', '..');
+  const fullCmd = 'node --max-old-space-size=4096 scripts/classify_knn_classifier.js';
+  const child = spawn(fullCmd, { cwd, shell: true });
+  child.stdout.on('data', (chunk) => {
+    progressBus.emit('progress', {
+      jobId,
+      data: { message: chunk.toString(), type: 'stdout' },
+    });
+  });
+  child.stderr.on('data', (chunk) => {
+    progressBus.emit('progress', {
+      jobId,
+      data: { message: chunk.toString(), type: 'stderr' },
+    });
+  });
+  child.on('close', (code) => {
+    progressBus.emit('progress', { jobId, data: { done: true, code } });
+  });
+  res.redirect(`/manage/progress/${jobId}?task=classify`);
 }
 // SSE-based upload and processing with per-importer classifier mapping
 function uploadFilesSse(req, res) {
@@ -245,6 +268,7 @@ module.exports = {
   resetData,
   loadDefaultSettings,
   deleteTransactions,
+  classifyTransactions,
   trainClassifier,
   updateTransactionCategory,
   showProgressPage,

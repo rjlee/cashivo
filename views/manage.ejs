@@ -27,11 +27,17 @@
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <button type="submit">Load Default Settings</button>
   </form>
-  <h2>Train Classifier</h2>
-  <form method="POST" action="/manage/train-classifier" class="mt-1">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-    <button type="submit">Train Classifier</button>
-  </form>
+  <h2>Categorisation</h2>
+  <div class="mt-1" style="display:flex; gap:8px;">
+    <form method="POST" action="/manage/train-classifier">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button type="submit">Train Classifier</button>
+    </form>
+    <form method="POST" action="/manage/classify-transactions">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button type="submit">Classify Transactions</button>
+    </form>
+  </div>
   <hr>
   <h2>Export Data</h2>
   <form method="GET" action="/manage/export" class="mt-1">
