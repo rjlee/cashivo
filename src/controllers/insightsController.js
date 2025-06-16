@@ -7,6 +7,12 @@ const summaryService = require('../services/summaryService');
 function showAllYears(req, res, next) {
   try {
     const summary = summaryService.getSummary();
+    // Order years descending (most recent first)
+    if (Array.isArray(summary.yearlySummary)) {
+      summary.yearlySummary = summary.yearlySummary
+        .slice()
+        .sort((a, b) => Number(b.year) - Number(a.year));
+    }
     const currency = req.query.currency;
     // Build year-spending map from monthlySpending
     const yearSpendingMap = {};

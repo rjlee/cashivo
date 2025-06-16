@@ -2,33 +2,23 @@
 <%- include('partials/head') %>
 <h1>Annual Summaries</h1>
 
-<% if (summary.yearlySummary && summary.yearlySummary.length) { %>
-  <table>
-    <thead>
-      <tr>
-        <th>Year</th>
-        <th>Income</th>
-        <th>Expenses</th>
-        <th>Spending</th>
-        <th>Net Cash Flow</th>
-        <th>Savings Rate</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% summary.yearlySummary.forEach(function(y) { %>
-        <tr>
-          <td><a href="/years/<%= y.year %>"><%= y.year %></a></td>
-          <td><%= fmtCurrency(y.totalIncome, currency) %></td>
-          <td><%= fmtCurrency(y.totalExpenses, currency) %></td>
-          <td><%= fmtCurrency(yearSpendingMap[y.year] || 0, currency) %></td>
-          <td><%= fmtCurrency(y.netCashFlow, currency) %></td>
-          <td><%= y.savingsRate.toFixed(2) %>%</td>
-        </tr>
-      <% }) %>
-    </tbody>
-  </table>
-<% } else { %>
-  <p>No annual summaries available.</p>
-<% } %>
+<%- include('partials/annualSummaryTable', {
+  rows: (summary.yearlySummary || [])
+    .slice()
+    .sort(function(a, b) { return Number(b.year) - Number(a.year); })
+    .map(function(y) {
+    return {
+      year: y.year,
+      yearLink: '<a href="/years/' + y.year + '">' + y.year + '</a>',
+      totalIncome: y.totalIncome,
+      totalExpenses: y.totalExpenses,
+      spending: yearSpendingMap[y.year] || 0,
+      netCashFlow: y.netCashFlow,
+      savingsRate: y.savingsRate
+    };
+  }),
+  currency: currency,
+  emptyMessage: 'No annual summaries available.'
+}) %>
 
 <%- include('partials/footer') %>

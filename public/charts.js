@@ -1,46 +1,21 @@
 // Centralized chart initialization for Budget App
 document.addEventListener('DOMContentLoaded', function () {
-  // Dashboard: Monthly Spending Chart for current year
-  if (window.dashboardSpending && document.getElementById('dashboardChart')) {
-    const raw = window.dashboardSpending;
-    const labels = raw.map((e) => e.month);
-    const data = raw.map((e) => e.spending);
-    const ctx = document.getElementById('dashboardChart').getContext('2d');
+  /**
+   * Helper: render a simple bar chart of spending data
+   * @param {string} canvasId DOM id of the <canvas>
+   * @param {string[]} labels array of x-axis labels
+   * @param {number[]} data numeric data array
+   */
+  function renderSpendingBarChart(canvasId, labels, data) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
     new Chart(ctx, {
       type: 'bar',
       data: {
         labels,
         datasets: [
-          { label: 'Spending', data, backgroundColor: 'rgba(75,192,192,0.5)' },
-        ],
-      },
-      options: {
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } },
-      },
-    });
-  }
-  // Monthly Summary: Spending Chart
-  if (window.spendingChartRawData && document.getElementById('spendingChart')) {
-    const raw = window.spendingChartRawData;
-    const sel = window.spendingChartSelMonth;
-    const sorted = raw.slice().sort((a, b) => a.month.localeCompare(b.month));
-    const idx = sorted.findIndex((e) => e.month === sel);
-    const sliceArr =
-      idx >= 0 ? sorted.slice(Math.max(0, idx - 5), idx + 1) : [];
-    const spendingChartLabels = sliceArr.map((e) => e.month);
-    const spendingChartData = sliceArr.map((e) => e.spending);
-    const spendingChartCtx = document
-      .getElementById('spendingChart')
-      .getContext('2d');
-    window.spendingChart = new Chart(spendingChartCtx, {
-      type: 'bar',
-      data: {
-        labels: spendingChartLabels,
-        datasets: [
           {
             label: 'Spending',
-            data: spendingChartData,
+            data,
             backgroundColor: 'rgba(75, 192, 192, 0.5)',
           },
         ],
@@ -50,6 +25,30 @@ document.addEventListener('DOMContentLoaded', function () {
         scales: { y: { beginAtZero: true } },
       },
     });
+  }
+
+  // Dashboard: Monthly Spending Chart for current year
+  if (window.dashboardSpending && document.getElementById('dashboardChart')) {
+    const raw = window.dashboardSpending;
+    renderSpendingBarChart(
+      'dashboardChart',
+      raw.map((e) => e.month),
+      raw.map((e) => e.spending)
+    );
+  }
+  // Monthly Summary: Spending Chart
+  if (window.spendingChartRawData && document.getElementById('spendingChart')) {
+    const raw = window.spendingChartRawData;
+    const sel = window.spendingChartSelMonth;
+    const sorted = raw.slice().sort((a, b) => a.month.localeCompare(b.month));
+    const idx = sorted.findIndex((e) => e.month === sel);
+    const sliceArr =
+      idx >= 0 ? sorted.slice(Math.max(0, idx - 5), idx + 1) : [];
+    renderSpendingBarChart(
+      'spendingChart',
+      sliceArr.map((e) => e.month),
+      sliceArr.map((e) => e.spending)
+    );
   }
   // Summary Page: Collapse Category Breakdown table to first 5 rows with toggle (Show all / Show less)
   var catTbl = document.getElementById('category-breakdown-table');
@@ -98,28 +97,11 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('yearSpendingChart')
   ) {
     const raw = window.yearSpendingChartRawData;
-    const yearSpendingChartLabels = raw.map((e) => e.month).reverse();
-    const yearSpendingChartData = raw.map((e) => e.spending).reverse();
-    const yearSpendingChartCtx = document
-      .getElementById('yearSpendingChart')
-      .getContext('2d');
-    window.yearSpendingChart = new Chart(yearSpendingChartCtx, {
-      type: 'bar',
-      data: {
-        labels: yearSpendingChartLabels,
-        datasets: [
-          {
-            label: 'Spending',
-            data: yearSpendingChartData,
-            backgroundColor: 'rgba(75, 192, 192, 0.5)',
-          },
-        ],
-      },
-      options: {
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } },
-      },
-    });
+    renderSpendingBarChart(
+      'yearSpendingChart',
+      raw.map((e) => e.month).reverse(),
+      raw.map((e) => e.spending).reverse()
+    );
   }
 
   // Month Insights: Daily Spending Chart

@@ -1,0 +1,35 @@
+<%#
+  Shared partial to render an annual summary table.
+  Expects:
+    rows: Array of { year, totalIncome, totalExpenses, spending, netCashFlow, savingsRate, yearLink? }
+    currency: currency code string for fmtCurrency
+    emptyMessage: message to show when rows is empty
+%>
+<% if (Array.isArray(rows) && rows.length) { %>
+  <table>
+    <thead>
+      <tr>
+        <th>Year</th>
+        <th>Income</th>
+        <th>Expenses</th>
+        <th>Spending</th>
+        <th>Net Cash Flow</th>
+        <th>Savings Rate</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% rows.forEach(function(r) { %>
+        <tr>
+          <td><%- r.yearLink || r.year %></td>
+          <td><%= fmtCurrency(r.totalIncome, currency) %></td>
+          <td><%= fmtCurrency(r.totalExpenses, currency) %></td>
+          <td><%= fmtCurrency(r.spending, currency) %></td>
+          <td><%= fmtCurrency(r.netCashFlow, currency) %></td>
+          <td><%= Number(r.savingsRate).toFixed(2) %>%</td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+<% } else { %>
+  <p><%= emptyMessage %></p>
+<% } %>
