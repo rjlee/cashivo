@@ -57,6 +57,7 @@ const { pipeline } = require('@xenova/transformers');
     JSON.stringify({ k, labels }, null, 2)
   );
   // embeddings.bin holds all embeddings as flat Float32LE
+  const dim = embeddings[0]?.length || 0;
   const buf = Buffer.allocUnsafe(embeddings.length * dim * 4);
   for (let i = 0; i < embeddings.length; i++) {
     for (let j = 0; j < dim; j++) {
