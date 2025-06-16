@@ -24,7 +24,7 @@
 <h1>Summary for <%= fmtMonthYear(monthlyOverview[0].month) %></h1>
 
   <% if (spendingChartRawData && spendingChartSelMonth) { %>
-    <h3>Monthly Spending</h3>
+    <h3>Spending</h3>
     <canvas id="spendingChart" width="600" height="150"></canvas>
     <script>
       window.spendingChartRawData = <%- JSON.stringify(spendingChartRawData) %>;

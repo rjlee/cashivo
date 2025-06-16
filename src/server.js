@@ -27,7 +27,7 @@ app.use((req, res, next) => {
   if (p === '/') res.locals.activePage = 'home';
   else if (p.startsWith('/transactions'))
     res.locals.activePage = 'transactions';
-  else if (p.startsWith('/years')) res.locals.activePage = 'insights';
+  else if (p.startsWith('/years')) res.locals.activePage = 'summaries';
   else if (p.startsWith('/manage')) res.locals.activePage = 'manage';
   else res.locals.activePage = '';
   next();
