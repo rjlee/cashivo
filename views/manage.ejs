@@ -6,48 +6,57 @@
   <% if (showDeletedMsg) { %>
     <p class="alert-success">Transactions deleted successfully.</p>
   <% } %>
-  <h1>Manage Data</h1>
-  <form id="uploadForm" method="POST" action="/manage" enctype="multipart/form-data">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-    <div>
+
+  <div class="manage-section">
+    <h2>Data Ingestion</h2>
+    <form id="uploadForm" method="POST" action="/manage" enctype="multipart/form-data">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label>Select files to upload:</label>
       <input type="file" name="files" multiple accept=".csv,.qif,.qfx" required>
-    </div>
-    <div class="mt-1">
-      <button type="submit">Upload & Process</button>
-    </div>
-  </form>
-  <form method="POST" action="/manage/load-default-settings" class="mt-1">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-    <button type="submit">Load Default Settings</button>
-  </form>
-  <h2>Categorisation</h2>
-  <div class="mt-1" style="display:flex; gap:8px;">
-    <form method="POST" action="/manage/train-classifier">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <button type="submit">Train Classifier</button>
+      <div class="mt-1">
+        <button type="submit">Upload & Process</button>
+      </div>
     </form>
-    <form method="POST" action="/manage/classify-transactions">
+    <form method="POST" action="/manage/load-default-settings" class="mt-1">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <button type="submit">Classify Transactions</button>
+      <button type="submit">Load Default Settings</button>
     </form>
   </div>
-  <hr>
-  <h2>Export Data</h2>
-  <form method="GET" action="/manage/export" class="mt-1">
-    <input type="hidden" name="format" value="qif">
-    <button type="submit">Download QIF Export</button>
-  </form>
-  <hr>
-  <h2>Reset Data</h2>
-  <div class="mt-1" style="display:flex; gap:8px;">
-    <form method="POST" action="/manage/delete-transactions" onsubmit="return confirm('Are you sure you want to delete all transactions?');">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <button type="submit" class="btn-danger">Delete Transactions</button>
+
+  <div class="manage-section">
+    <h2>Categorisation</h2>
+    <div class="btn-group">
+      <form method="POST" action="/manage/train-classifier">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button type="submit">Train Classifier</button>
+      </form>
+      <form method="POST" action="/manage/classify-transactions">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button type="submit">Classify Transactions</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="manage-section">
+    <h2>Export Data</h2>
+    <form method="GET" action="/manage/export">
+      <input type="hidden" name="format" value="qif">
+      <button type="submit">Download QIF Export</button>
     </form>
-    <form method="POST" action="/manage/reset" onsubmit="return confirm('Are you sure you want to delete all transactions and reset data?');">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <button type="submit" class="btn-danger">Delete All Transactions & Reset Data</button>
-    </form>
+  </div>
+
+  <div class="manage-section">
+    <h2>Reset Data</h2>
+    <div class="btn-group">
+      <form method="POST" action="/manage/delete-transactions" onsubmit="return confirm('Are you sure you want to delete all transactions?');">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button type="submit" class="btn-danger">Delete Transactions</button>
+      </form>
+      <form method="POST" action="/manage/reset" onsubmit="return confirm('Are you sure you want to delete all transactions and reset data?');">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button type="submit" class="btn-danger">Reset All Data</button>
+      </form>
+    </div>
   </div>
 <%- include('partials/footer') %>
 </html>

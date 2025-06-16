@@ -126,6 +126,29 @@ th[title] {
 .mt-1 {
   margin-top: 1rem !important;
 }
+
+/* Grouping buttons together */
+.btn-group {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+/* Manage page sections */
+.manage-section {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+.manage-section h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
 /* Danger button */
 .btn-danger {
   background-color: #c00 !important;
