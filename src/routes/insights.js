@@ -4,6 +4,8 @@ const insightsCtrl = require('../controllers/insightsController');
 
 // Annual summaries index
 router.get('/', insightsCtrl.showAllYears);
+// Global transactions list (paginated, most recent first)
+router.get('/transactions', require('../controllers/transactionsController').showAllTransactions);
 // Year summary
 router.get('/:year', insightsCtrl.showYear);
 // Year insights

@@ -1,0 +1,14 @@
+<%- include('partials/head', { title: 'All Transactions' }) %>
+<h1>All Transactions</h1>
+<p>Total transactions: <%= totalCount %></p>
+<%- include('partials/transactionList', {
+  transactions,
+  totalCount,
+  totalPages,
+  currentPage,
+  allCategories,
+  currency,
+  basePath: '/transactions'
+}) %>
+<%- include('partials/footer') %>
+<%- include('partials/categoryEditorScript') %>

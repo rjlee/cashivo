@@ -62,6 +62,58 @@ function showMonthTransactions(req, res, next) {
   });
 }
 
+/**
+ * Show all transactions (no filtering), paginated by 50, most recent first.
+ */
+function showAllTransactions(req, res, next) {
+  const pageSize = 50;
+  const page = parseInt(req.query.page, 10) || 1;
+  const dataFile = path.resolve(
+    __dirname,
+    '..',
+    '..',
+    'data',
+    'transactions_categorized.json'
+  );
+  if (!fs.existsSync(dataFile)) {
+    return res.status(404).render('error', {
+      error: { status: 404, message: 'Transaction data not found' },
+    });
+  }
+  let all;
+  try {
+    all = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+    all = all.map((tx, i) => ({ ...tx, _idx: i }));
+  } catch (err) {
+    return next(err);
+  }
+  all.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const totalCount = all.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const currentPage = Math.min(Math.max(page, 1), totalPages);
+  const startIdx = (currentPage - 1) * pageSize;
+  const pageItems = all.slice(startIdx, startIdx + pageSize);
+  let allCategories = [];
+  try {
+    const summary = require(
+      path.resolve(__dirname, '..', '..', 'data', 'summary.json')
+    );
+    allCategories = Array.isArray(summary.categoriesList)
+      ? summary.categoriesList
+      : [];
+  } catch {}
+  const currency = req.query.currency;
+  res.render('allTransactions', {
+    transactions: pageItems,
+    totalCount,
+    totalPages,
+    currentPage,
+    allCategories,
+    currency,
+  });
+}
+
 module.exports = {
   showMonthTransactions,
+  showAllTransactions,
 };

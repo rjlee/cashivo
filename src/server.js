@@ -105,6 +105,9 @@ app.use('/manage', require('./routes/manage'));
 // Mount insights routes (annual, monthly, category)
 const insightsRouter = require('./routes/insights');
 app.use('/years', insightsRouter);
+// Global transactions listing (paginated, most recent first)
+const transactionsCtrl = require('./controllers/transactionsController');
+app.get('/transactions', transactionsCtrl.showAllTransactions);
 // Redirect root '/' to '/years'
 app.get('/', (req, res) => {
   res.redirect('/years');

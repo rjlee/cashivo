@@ -1,0 +1,41 @@
+<table>
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Description</th>
+      <th>Amount</th>
+      <th>Original Category</th>
+      <th>Category</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% transactions.forEach(function(tx) { %>
+      <tr>
+        <td><%= tx.date %></td>
+        <td><%= tx.description %></td>
+        <td><%= fmtCurrency(tx.amount, currency) %></td>
+        <td><%= tx.originalCategory || '' %></td>
+        <td>
+          <%- include('categoryEditor', { tx, allCategories }) %>
+        </td>
+      </tr>
+    <% }); %>
+  </tbody>
+</table>
+<% if (totalPages > 1) { %>
+  <nav class="pagination">
+    <% if (currentPage > 1) { %>
+      <a href="<%= basePath %>?page=<%= currentPage - 1 %>">&laquo; Previous</a>
+    <% } %>
+    <% for (let p = 1; p <= totalPages; p++) { %>
+      <% if (p === currentPage) { %>
+        <span class="current-page"><%= p %></span>
+      <% } else { %>
+        <a href="<%= basePath %>?page=<%= p %>"><%= p %></a>
+      <% } %>
+    <% } %>
+    <% if (currentPage < totalPages) { %>
+      <a href="<%= basePath %>?page=<%= currentPage + 1 %>">Next &raquo;</a>
+    <% } %>
+  </nav>
+<% } %>
