@@ -30,11 +30,12 @@ const { classifyWithML } = require('../src/services/mlClassifier');
   try {
     newTransactions = await classifyWithML(transactions, modelDir);
   } catch (err) {
-    if (/array length/.test(err.message)) {
+    // Detect mismatches between meta.json and embeddings.bin
+    if (/array length|expected dimension|Missing.*dim/i.test(err.message)) {
+      console.error('\nDimension mismatch detected between meta.json and embeddings.bin:');
+      console.error(err.message);
       console.error(
-        'Dimension mismatch detected. ' +
-          'Your meta.json embedding dimension does not match the actual vectors.\n' +
-          'Please re-run scripts/train_knn_classifier.js to regenerate the model files.'
+        '\nPlease re-run scripts/train_knn_classifier.js to regenerate the model files.\n'
       );
     } else {
       console.error('Classification error:', err.message);

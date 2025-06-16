@@ -17,8 +17,13 @@ async function classifyWithML(transactions, modelDir) {
   if (!fs.existsSync(metaPath) || !fs.existsSync(embPath)) {
     throw new Error(`Embed+KNN model files not found in ${modelDir}`);
   }
-  const { k, labels: trainLabels } =
+  const { k, labels: trainLabels, dim: expectedDim } =
     JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+  if (expectedDim == null) {
+    throw new Error(
+      `Missing 'dim' in meta.json at ${metaPath}. Please re-run scripts/train_knn_classifier.js to regenerate the model files using the updated training script.`
+    );
+  }
   // Read raw Float32 array for embeddings and infer dimension
   const buf = fs.readFileSync(embPath);
   const raw = new Float32Array(
@@ -34,6 +39,11 @@ async function classifyWithML(transactions, modelDir) {
     );
   }
   const dim = raw.length / trainCount;
+  if (expectedDim != null && dim !== expectedDim) {
+    throw new Error(
+      `Invalid embeddings array length ${raw.length} for ${trainCount} vectors (expected dimension ${expectedDim})`
+    );
+  }
   // Convert raw Float32Array into array of normalized JS arrays (L2 = 1)
   const trainEmb = [];
   for (let i = 0; i < raw.length; i += dim) {
@@ -58,20 +68,18 @@ async function classifyWithML(transactions, modelDir) {
   // ef should be set >= trainEmb.length for exact search
   index.setEf(trainEmb.length);
 
-  // Pool to mean-pooled sentence embeddings rather than token-level features
-  const embedder = await pipeline(
-    'feature-extraction',
-    'Xenova/all-MiniLM-L6-v2',
-    { pooling: 'mean' }
-  );
+  // Load feature extractor and apply mean-pooling per query
+  const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
   const texts = transactions.map((tx) => tx.description || '');
   const BATCH_SIZE = parseInt(process.env.EMBED_BATCH_SIZE || '512', 10);
   const results = [];
   console.log(`Embedding & classifying ${transactions.length} txns in batches of ${BATCH_SIZE}...`);
   for (let start = 0; start < texts.length; start += BATCH_SIZE) {
     const batchTexts = texts.slice(start, start + BATCH_SIZE);
-    console.log(`  embedding batch ${start}-${Math.min(start + batchTexts.length, texts.length) - 1}`);
-    const rawEmb = await embedder(batchTexts);
+    console.log(
+      `  embedding batch ${start}-${Math.min(start + batchTexts.length, texts.length) - 1}`
+    );
+    const rawEmb = await embedder(batchTexts, { pooling: 'mean' });
     for (const vecTA of rawEmb) {
       // normalize query vector
       const vec = Array.from(vecTA);

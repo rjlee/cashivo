@@ -22,12 +22,7 @@ const { pipeline } = require('@xenova/transformers');
   const labels = data.map((tx) => tx.category);
 
   console.log('Loading embedder (WASM BERT model)...');
-  // Pool to mean-pooled sentence embeddings instead of token-level features
-  const embedder = await pipeline(
-    'feature-extraction',
-    'Xenova/all-MiniLM-L6-v2',
-    { pooling: 'mean' }
-  );
+  const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
 
   // Embed in batches to avoid OOM on large datasets
   const BATCH_SIZE = parseInt(process.env.EMBED_BATCH_SIZE || '512', 10);
@@ -36,8 +31,8 @@ const { pipeline } = require('@xenova/transformers');
   for (let start = 0; start < texts.length; start += BATCH_SIZE) {
     const batch = texts.slice(start, start + BATCH_SIZE);
     console.log(`  embedding batch ${start}-${Math.min(start + batch.length, texts.length) - 1}`);
-    // embedder returns an array of vectors for this batch
-    const batchEmb = await embedder(batch);
+    // Mean-pool sentence embeddings for this batch
+    const batchEmb = await embedder(batch, { pooling: 'mean' });
     // Convert each embedding to a plain JS array (TypedArrays may not behave as Array)
     for (const vec of batchEmb) {
       embeddings.push(Array.from(vec));
@@ -51,13 +46,13 @@ const { pipeline } = require('@xenova/transformers');
 
   // Write Embed+KNN model to disk: meta.json + embeddings.bin (binary Float32)
   const k = 5;
-  // meta.json holds only k and labels
+  const dim = embeddings[0]?.length || 0;
+  // meta.json holds k, labels, and embedding dimension
   fs.writeFileSync(
     path.join(outDir, 'meta.json'),
-    JSON.stringify({ k, labels }, null, 2)
+    JSON.stringify({ k, labels, dim }, null, 2)
   );
   // embeddings.bin holds all embeddings as flat Float32LE
-  const dim = embeddings[0]?.length || 0;
   const buf = Buffer.allocUnsafe(embeddings.length * dim * 4);
   for (let i = 0; i < embeddings.length; i++) {
     for (let j = 0; j < dim; j++) {
