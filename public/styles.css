@@ -142,6 +142,16 @@ tr:nth-child(even) td {
 tr:hover td {
   background-color: #eceff4;
 }
+
+/* Caption styling for summary tables */
+table caption {
+  caption-side: top;
+  text-align: left;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: var(--spacing);
+}
 canvas {
   display: block;
   margin: 1rem 0 2rem;

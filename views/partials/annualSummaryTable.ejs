@@ -7,6 +7,9 @@
 %>
 <% if (Array.isArray(rows) && rows.length) { %>
   <table>
+    <% if (typeof caption === 'string') { %>
+      <caption><%= caption %></caption>
+    <% } %>
     <thead>
       <tr>
         <th title="Calendar year">Year</th>

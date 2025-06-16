@@ -9,13 +9,13 @@
         year: yearly.year,
         totalIncome: yearly.totalIncome,
         totalExpenses: yearly.totalExpenses,
-        spending: spendingArr.reduce(function(sum, s) { return sum + s.spending; }, 0),
+        spending: spendingArr.reduce(function (sum, s) { return sum + s.spending; }, 0),
         netCashFlow: yearly.netCashFlow,
-        savingsRate: yearly.savingsRate
-      }
+        savingsRate: yearly.savingsRate,
+      },
     ],
     currency: currency,
-    emptyMessage: 'No data available for ' + year
+    emptyMessage: 'No data available for ' + year,
   }) %>
 <% } %>
 

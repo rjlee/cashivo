@@ -62,7 +62,13 @@
 <% if (spikes && spikes.length) { %>
   <table id="spikes-table">
     <thead>
-      <tr><th>Category</th><th>Month</th><th>Amount</th><th>Mean</th><th>SD</th></tr>
+      <tr>
+        <th title="Transaction category name">Category</th>
+        <th title="Month where spike occurred (YYYY-MM)">Month</th>
+        <th title="Amount for the spike month">Amount</th>
+        <th title="Average amount for that category">Mean</th>
+        <th title="Standard deviation of category amounts">SD</th>
+      </tr>
     </thead>
     <tbody>
       <% spikes.forEach(function(s) { %>

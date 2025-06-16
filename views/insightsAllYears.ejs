@@ -7,16 +7,16 @@
     .slice()
     .sort(function(a, b) { return Number(b.year) - Number(a.year); })
     .map(function(y) {
-    return {
-      year: y.year,
-      yearLink: '<a href="/years/' + y.year + '">' + y.year + '</a>',
-      totalIncome: y.totalIncome,
-      totalExpenses: y.totalExpenses,
-      spending: yearSpendingMap[y.year] || 0,
-      netCashFlow: y.netCashFlow,
-      savingsRate: y.savingsRate
-    };
-  }),
+      return {
+        year: y.year,
+        yearLink: '<a href="/years/' + y.year + '">' + y.year + '</a>',
+        totalIncome: y.totalIncome,
+        totalExpenses: y.totalExpenses,
+        spending: yearSpendingMap[y.year] || 0,
+        netCashFlow: y.netCashFlow,
+        savingsRate: y.savingsRate
+      };
+    }),
   currency: currency,
   emptyMessage: 'No annual summaries available.'
 }) %>
