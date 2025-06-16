@@ -2,6 +2,18 @@
 <h1>Transactions for <%= fmtMonthYear(year + '-' + month) %></h1>
 <p><a href="/years/<%= year %>/<%= month %>">← Back to Monthly Summary</a></p>
 <p>Total transactions: <%= totalCount %></p>
+<%- include('partials/filterForm', {
+  basePath: `/years/${year}/${month}/transactions`,
+  yearsList,
+  categoriesList: allCategories,
+  year,
+  month,
+  category,
+  dateFrom,
+  dateTo,
+  amountMin,
+  amountMax
+}) %>
 <%- include('partials/transactionList', {
   transactions,
   totalCount,

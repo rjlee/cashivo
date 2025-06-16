@@ -32,7 +32,16 @@ function showMonthTransactions(req, res, next) {
   } catch (err) {
     return next(err);
   }
-  const filtered = all.filter((tx) => (tx.date || '').startsWith(prefix));
+  const { category, dateFrom, dateTo, amountMin, amountMax } = req.query;
+  const filtered = all.filter((tx) => {
+    if (!tx.date.startsWith(prefix)) return false;
+    if (category && tx.category !== category) return false;
+    if (dateFrom && tx.date < dateFrom) return false;
+    if (dateTo && tx.date > dateTo) return false;
+    if (amountMin && parseFloat(tx.amount) < parseFloat(amountMin)) return false;
+    if (amountMax && parseFloat(tx.amount) > parseFloat(amountMax)) return false;
+    return true;
+  });
   const totalCount = filtered.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const currentPage = Math.min(Math.max(page, 1), totalPages);
@@ -50,6 +59,10 @@ function showMonthTransactions(req, res, next) {
   } catch {}
   // Determine currency for formatting
   const currency = req.query.currency;
+  // Build yearsList for filter (to allow quick switch across months)
+  const yearsList = Array.from(
+    new Set(all.map((tx) => tx.date.slice(0, 4)))
+  ).sort((a, b) => b.localeCompare(a));
   res.render('monthTransactions', {
     year,
     month,
@@ -59,6 +72,12 @@ function showMonthTransactions(req, res, next) {
     currentPage,
     allCategories,
     currency,
+    yearsList,
+    category,
+    dateFrom,
+    dateTo,
+    amountMin,
+    amountMax,
   });
 }
 
@@ -68,13 +87,7 @@ function showMonthTransactions(req, res, next) {
 function showAllTransactions(req, res, next) {
   const pageSize = 50;
   const page = parseInt(req.query.page, 10) || 1;
-  const dataFile = path.resolve(
-    __dirname,
-    '..',
-    '..',
-    'data',
-    'transactions_categorized.json'
-  );
+  const dataFile = path.resolve(__dirname, '..', '..', 'data', 'transactions_categorized.json');
   if (!fs.existsSync(dataFile)) {
     return res.status(404).render('error', {
       error: { status: 404, message: 'Transaction data not found' },
@@ -87,6 +100,22 @@ function showAllTransactions(req, res, next) {
   } catch (err) {
     return next(err);
   }
+  // Apply filters if provided
+  const { year, month, category, dateFrom, dateTo, amountMin, amountMax } = req.query;
+  // Build year list for filter dropdown
+  const yearsList = Array.from(new Set(all.map((tx) => tx.date.slice(0, 4)))).sort((a, b) => b.localeCompare(a));
+  // Filter records
+  all = all.filter((tx) => {
+    if (year && tx.date.slice(0, 4) !== year) return false;
+    if (month && tx.date.slice(5, 7) !== month.padStart(2, '0')) return false;
+    if (category && tx.category !== category) return false;
+    if (dateFrom && tx.date < dateFrom) return false;
+    if (dateTo && tx.date > dateTo) return false;
+    if (amountMin && parseFloat(tx.amount) < parseFloat(amountMin)) return false;
+    if (amountMax && parseFloat(tx.amount) > parseFloat(amountMax)) return false;
+    return true;
+  });
+  // Sort newest first
   all.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   const totalCount = all.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
@@ -110,6 +139,15 @@ function showAllTransactions(req, res, next) {
     currentPage,
     allCategories,
     currency,
+    // Filtering context
+    yearsList,
+    year,
+    month,
+    category,
+    dateFrom,
+    dateTo,
+    amountMin,
+    amountMax,
   });
 }
 

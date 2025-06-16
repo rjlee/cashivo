@@ -1,6 +1,18 @@
 <%- include('partials/head', { title: 'All Transactions' }) %>
 <h1>All Transactions</h1>
 <p>Total transactions: <%= totalCount %></p>
+<%- include('partials/filterForm', {
+  basePath: '/transactions',
+  yearsList,
+  categoriesList: allCategories,
+  year,
+  month,
+  category,
+  dateFrom,
+  dateTo,
+  amountMin,
+  amountMax
+}) %>
 <%- include('partials/transactionList', {
   transactions,
   totalCount,
