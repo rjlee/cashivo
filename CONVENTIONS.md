@@ -86,6 +86,10 @@ Functions are named `generateXyz` and return plain JS objects/arrays for each re
   2. Computes `<canvasID>Labels`, `<canvasID>Data`
   3. Obtains `<canvasID>Ctx` and instantiates Chart.js charts
 - Additional interactivity (filters, table toggles) is implemented in `public/insights.js`
+- Use semantic HTML landmarks (`<main role="main">`, `<nav aria-label>`). Ensure `<main>` wraps page content and is closed in partials `head.ejs` / `footer.ejs`.
+- Always include a `<caption>` for data tables (see `partials/annualSummaryTable.ejs`), and left-align it to match H2 styling.
+- Add `title="…"` attributes to all `<th>` cells to provide concise header descriptions for both sighted users and screen-readers.
+- Additional interactivity (filters, table toggles) is implemented in `public/insights.js`
 
 ## 4. Helper Naming
 
