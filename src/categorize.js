@@ -6,6 +6,7 @@ const { classifyWithRules } = require('./services/rulesClassifier');
 const { classifyPassThrough } = require('./services/passClassifier');
 const { classifyWithML } = require('./services/mlClassifier');
 const { classifyWithAI } = require('./services/aiClassifier');
+const { classifyWithTF } = require('./services/tfClassifier');
 // Data directory path
 const dataDir = path.resolve(__dirname, '..', 'data');
 
@@ -76,9 +77,14 @@ async function run() {
       mapped = classifyWithRules(remaining, rulesMap).filter(
         (tx) => rulesMap && rulesMap.hasOwnProperty(tx.category)
       );
+    } else if (cls === 'tf') {
+      console.log('Applying TensorFlow classifier');
+      // Use TensorFlow-based classifier model directory
+      const modelDir = path.join(dataDir, 'tx-classifier');
+      mapped = await classifyWithTF(remaining, modelDir);
     } else if (cls === 'ml') {
-      console.log('Applying ML classifier');
-      // Use Embed+KNN model directory for ML-based classification
+      console.log('Applying KNN classifier');
+      // Use Embed+KNN model directory for KNN-based classification
       const modelDir = path.join(dataDir, 'tx-classifier-knn');
       mapped = await classifyWithML(remaining, modelDir);
     } else if (cls === 'ai') {
@@ -138,5 +144,6 @@ module.exports = {
   categorizeTransactions: classifyWithRules,
   categorizePassThrough: classifyPassThrough,
   categorizeWithAI: classifyWithAI,
+  categorizeWithTF: classifyWithTF,
   categorizeWithML: classifyWithML,
 };

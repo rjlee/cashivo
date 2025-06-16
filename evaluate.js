@@ -13,7 +13,7 @@ const path = require('path');
 const {
   categorizeTransactions,
   categorizeWithAI,
-  categorizeWithEmbeddings,
+  categorizeWithML,
 } = require('./src/categorize');
 
 async function evaluate() {
@@ -48,8 +48,8 @@ async function evaluate() {
 
   // 2. Embedding-based
   try {
-    console.log('Running embedding-based classification...');
-    const embPred = await categorizeWithEmbeddings(sample);
+  console.log('Running KNN (embedding-based) classification...');
+  const embPred = await categorizeWithML(sample);
     const embCorrect = embPred.filter(
       (tx, i) => tx.category === ground[i]
     ).length;
@@ -64,7 +64,7 @@ async function evaluate() {
       accuracy: embAcc,
     });
   } catch (err) {
-    console.error('Embedding-based classification failed:', err.message || err);
+    console.error('KNN classification failed:', err.message || err);
   }
 
   // 3. AI-based
