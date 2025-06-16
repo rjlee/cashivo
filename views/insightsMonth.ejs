@@ -1,20 +1,19 @@
 <% title = 'Summary for ' + fmtMonthYear(monthlyOverview[0].month); %>
 <%- include('partials/head') %>
-<h1>Summary for <%= fmtMonthYear(monthlyOverview[0].month) %></h1>
-
 <div class="month-nav">
   <% if (prevYear) { %>
     <a class="prev-month" href="/years/<%= prevYear %>/<%= prevMonth %>">← <%= fmtMonthYear(prevYear + '-' + prevMonth) %></a>
   <% } else { %>
-    <span></span>
+    <span class="disabled">← <%= fmtMonthYear(year + '-' + month) %></span>
   <% } %>
   <a class="year-link" href="/years/<%= year %>"><%= year %></a>
   <% if (nextYear) { %>
     <a class="next-month" href="/years/<%= nextYear %>/<%= nextMonth %>"><%= fmtMonthYear(nextYear + '-' + nextMonth) %> →</a>
   <% } else { %>
-    <span></span>
+    <span class="disabled"><%= fmtMonthYear(year + '-' + month) %> →</span>
   <% } %>
-  </div>
+</div>
+<h1>Summary for <%= fmtMonthYear(monthlyOverview[0].month) %></h1>
 
   <% if (spendingChartRawData && spendingChartSelMonth) { %>
     <h3>Monthly Spending</h3>

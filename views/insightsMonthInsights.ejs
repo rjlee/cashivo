@@ -1,7 +1,5 @@
 <% title = 'Insights for ' + fmtMonthYear(year + '-' + month); %>
 <%- include('partials/head') %>
-<h1>Insights for <%= fmtMonthYear(year + '-' + month) %></h1>
-
 <div class="month-nav">
   <% if (prev) { %>
     <a class="prev-month" href="/years/<%= prevYear %>/<%= prevMonth %>/insights">← <%= fmtMonthYear(prevYear + '-' + prevMonth) %></a>
@@ -15,6 +13,7 @@
     <span></span>
   <% } %>
 </div>
+<h1>Insights for <%= fmtMonthYear(year + '-' + month) %></h1>
 
 <details id="filter-panel" style="margin-bottom:1em;">
   <summary>Filter Categories</summary>

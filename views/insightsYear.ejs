@@ -1,20 +1,21 @@
 <% title = 'Annual Summary for ' + year; %>
 <%- include('partials/head') %>
-<h1>Annual Summary for <%= year %></h1>
 <div class="year-nav">
   <% if (prevYear) { %>
     <a class="prev-year" href="/years/<%= prevYear %>">← <%= prevYear %></a>
   <% } else { %>
-    <span></span>
+    <span class="disabled">← <%= year %></span>
   <% } %>
   <a class="years-index" href="/years">Years</a>
   <% if (nextYear) { %>
     <a class="next-year" href="/years/<%= nextYear %>"><%= nextYear %> →</a>
   <% } else { %>
-    <span></span>
+    <span class="disabled"><%= year %> →</span>
   <% } %>
 </div>
-<% if (spendingArr && spendingArr.length) { %>
+<h1>Annual Summary for <%= year %></h1>
+
+  <% if (spendingArr && spendingArr.length) { %>
   <h3>Annual Spending</h3>
   <canvas id="yearSpendingChart" width="600" height="150"></canvas>
   <script>

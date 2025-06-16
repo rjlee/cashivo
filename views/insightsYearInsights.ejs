@@ -1,7 +1,5 @@
 <% title = 'Insights for ' + year; %>
 <%- include('partials/head') %>
-<h1>Insights for <%= year %></h1>
-
 <div class="year-nav">
   <% if (prevYear) { %>
     <a class="prev-year" href="/years/<%= prevYear %>/insights">← <%= prevYear %></a>
@@ -15,6 +13,7 @@
     <span></span>
   <% } %>
 </div>
+<h1>Insights for <%= year %></h1>
 
 <details id="filter-panel" style="margin-bottom:1em;">
   <summary>Filter Categories</summary>
