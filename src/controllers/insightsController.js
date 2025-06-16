@@ -303,8 +303,10 @@ function showCategoryTransactions(req, res, next) {
     transactions = transactions.filter((tx) => {
       if (dateFrom && tx.date < dateFrom) return false;
       if (dateTo && tx.date > dateTo) return false;
-      if (amountMin && parseFloat(tx.amount) < parseFloat(amountMin)) return false;
-      if (amountMax && parseFloat(tx.amount) > parseFloat(amountMax)) return false;
+      if (amountMin && parseFloat(tx.amount) < parseFloat(amountMin))
+        return false;
+      if (amountMax && parseFloat(tx.amount) > parseFloat(amountMax))
+        return false;
       return true;
     });
     const currency = req.query.currency;

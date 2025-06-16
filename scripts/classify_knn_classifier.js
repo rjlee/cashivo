@@ -13,7 +13,7 @@ const { classifyWithML } = require('../src/services/mlClassifier');
   }
   // Expect binary KNN model files: meta.json + embeddings.bin
   const metaPath = path.join(modelDir, 'meta.json');
-  const embPath  = path.join(modelDir, 'embeddings.bin');
+  const embPath = path.join(modelDir, 'embeddings.bin');
   if (!fs.existsSync(metaPath) || !fs.existsSync(embPath)) {
     console.error('Embed+KNN model files not found in', modelDir);
     process.exit(1);
@@ -25,14 +25,18 @@ const { classifyWithML } = require('../src/services/mlClassifier');
     console.error('Failed to read transactions:', err.message);
     process.exit(1);
   }
-  console.log(`Classifying ${transactions.length} transactions using Embed+KNN classifier...`);
+  console.log(
+    `Classifying ${transactions.length} transactions using Embed+KNN classifier...`
+  );
   let newTransactions;
   try {
     newTransactions = await classifyWithML(transactions, modelDir);
   } catch (err) {
     // Detect mismatches between meta.json and embeddings.bin
     if (/array length|expected dimension|Missing.*dim/i.test(err.message)) {
-      console.error('\nDimension mismatch detected between meta.json and embeddings.bin:');
+      console.error(
+        '\nDimension mismatch detected between meta.json and embeddings.bin:'
+      );
       console.error(err.message);
       console.error(
         '\nPlease re-run scripts/train_knn_classifier.js to regenerate the model files.\n'

@@ -43,6 +43,10 @@ router.get('/progress/:jobId', manageCtrl.showProgressPage);
 router.get('/progress-stream/:jobId', manageCtrl.streamProgress);
 // Train classifier endpoint
 router.post('/train-classifier', csrfProtection, manageCtrl.trainClassifier);
-router.post('/classify-transactions', csrfProtection, manageCtrl.classifyTransactions);
+router.post(
+  '/classify-transactions',
+  csrfProtection,
+  manageCtrl.classifyTransactions
+);
 
 module.exports = router;

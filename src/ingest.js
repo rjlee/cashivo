@@ -145,7 +145,9 @@ async function ingest() {
   let duplicates = 0;
   const uniqueTx = validTx.filter((tx) => {
     // Use original transaction id (origId) if present, else fallback to date|amount|description
-    const key = tx.origId ? `origId:${tx.origId}` : JSON.stringify([tx.date, tx.amount, tx.description]);
+    const key = tx.origId
+      ? `origId:${tx.origId}`
+      : JSON.stringify([tx.date, tx.amount, tx.description]);
     if (seen.has(key)) {
       duplicates++;
       return false;

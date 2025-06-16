@@ -48,8 +48,8 @@ async function evaluate() {
 
   // 2. Embedding-based
   try {
-  console.log('Running KNN (embedding-based) classification...');
-  const embPred = await categorizeWithML(sample);
+    console.log('Running KNN (embedding-based) classification...');
+    const embPred = await categorizeWithML(sample);
     const embCorrect = embPred.filter(
       (tx, i) => tx.category === ground[i]
     ).length;

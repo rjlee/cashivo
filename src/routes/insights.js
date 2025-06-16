@@ -5,9 +5,15 @@ const insightsCtrl = require('../controllers/insightsController');
 // Annual summaries index
 router.get('/', insightsCtrl.showAllYears);
 // Global transactions list (paginated, most recent first)
-router.get('/transactions', require('../controllers/transactionsController').showAllTransactions);
+router.get(
+  '/transactions',
+  require('../controllers/transactionsController').showAllTransactions
+);
 // Bulk actions on global transactions
-router.post('/transactions/bulk', require('../controllers/transactionsController').bulkActions);
+router.post(
+  '/transactions/bulk',
+  require('../controllers/transactionsController').bulkActions
+);
 // Year summary
 router.get('/:year', insightsCtrl.showYear);
 // Year insights
@@ -19,10 +25,7 @@ router.get(
   transactionsCtrl.showMonthTransactions
 );
 // Bulk actions on monthly transactions
-router.post(
-  '/:year/:month/transactions/bulk',
-  transactionsCtrl.bulkActions
-);
+router.post('/:year/:month/transactions/bulk', transactionsCtrl.bulkActions);
 // Monthly summary
 router.get('/:year/:month', insightsCtrl.showMonth);
 // Monthly insights

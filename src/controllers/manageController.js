@@ -133,7 +133,8 @@ function trainClassifier(req, res) {
   const jobId = crypto.randomUUID();
   const cwd = path.resolve(__dirname, '..', '..');
   // Spawn the npm script for classifier training with shell to enable streaming
-  const fullCmd = 'node --max-old-space-size=4096 scripts/train_knn_classifier.js';
+  const fullCmd =
+    'node --max-old-space-size=4096 scripts/train_knn_classifier.js';
   const child = spawn(fullCmd, { cwd, shell: true });
   child.stdout.on('data', (chunk) => {
     progressBus.emit('progress', {
@@ -157,7 +158,8 @@ function trainClassifier(req, res) {
 function classifyTransactions(req, res) {
   const jobId = crypto.randomUUID();
   const cwd = path.resolve(__dirname, '..', '..');
-  const fullCmd = 'node --max-old-space-size=4096 scripts/classify_knn_classifier.js';
+  const fullCmd =
+    'node --max-old-space-size=4096 scripts/classify_knn_classifier.js';
   const child = spawn(fullCmd, { cwd, shell: true });
   child.stdout.on('data', (chunk) => {
     progressBus.emit('progress', {
@@ -209,7 +211,9 @@ function uploadFilesSse(req, res) {
   });
   // Fail early if no importer matched the uploaded files
   if (usedImporters.size === 0) {
-    return res.status(400).send('Unsupported file format: could not detect importer');
+    return res
+      .status(400)
+      .send('Unsupported file format: could not detect importer');
   }
   // Determine importer name (without extension) and build categorize command
   const importerName = [...usedImporters][0].replace(/\.js$/, '');

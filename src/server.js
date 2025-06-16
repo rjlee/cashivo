@@ -44,7 +44,20 @@ app.locals.fmtMonthYear = (ym) => {
   if (parts.length !== 2) return ym;
   const [year, month] = parts;
   const idx = parseInt(month, 10) - 1;
-  const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sept','Oct','Nov','Dec'];
+  const names = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sept',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   const mName = names[idx] || '';
   const yShort = year.slice(-2);
   return `${mName} ${yShort}`;

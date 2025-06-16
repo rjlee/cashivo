@@ -45,32 +45,33 @@ Examples:
 ## 2. Summary Generation Conventions (`src/summary.js`)
 
 Functions are named `generateXyz` and return plain JS objects/arrays for each report section, in file order:
-  1. generateMonthlyOverview
-  2. generateCategoryBreakdown
-  3. generateTrends
-  4. generateLifestyleSummary
-  5. generateMerchantInsights
-  6. generateBudgetAdherence
-  7. generateSavingsGoals
-  8. generateAnomalies
-  9. generateYearlySummary
- 10. generateMonthlySpending
- 11. generateDailySpending
+
+1. generateMonthlyOverview
+2. generateCategoryBreakdown
+3. generateTrends
+4. generateLifestyleSummary
+5. generateMerchantInsights
+6. generateBudgetAdherence
+7. generateSavingsGoals
+8. generateAnomalies
+9. generateYearlySummary
+10. generateMonthlySpending
+11. generateDailySpending
 
 - The main `summary.js` builds a top-level `summary` object with these keys in order:
   ```js
   {
     monthlyOverview,
-    categoryBreakdown,
-    trends,
-    lifestyle,
-    merchantInsights,
-    budgetAdherence,
-    savingsGoals,
-    anomalies,
-    yearlySummary,
-    monthlySpending,
-    dailySpending // when enabled
+      categoryBreakdown,
+      trends,
+      lifestyle,
+      merchantInsights,
+      budgetAdherence,
+      savingsGoals,
+      anomalies,
+      yearlySummary,
+      monthlySpending,
+      dailySpending; // when enabled
   }
   ```
 

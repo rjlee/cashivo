@@ -13,12 +13,15 @@ const { HierarchicalNSW } = require('hnswlib-node');
 async function classifyWithML(transactions, modelDir) {
   // Load the binary KNN model (meta.json + embeddings.bin)
   const metaPath = path.join(modelDir, 'meta.json');
-  const embPath  = path.join(modelDir, 'embeddings.bin');
+  const embPath = path.join(modelDir, 'embeddings.bin');
   if (!fs.existsSync(metaPath) || !fs.existsSync(embPath)) {
     throw new Error(`Embed+KNN model files not found in ${modelDir}`);
   }
-  const { k, labels: trainLabels, dim: expectedDim } =
-    JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+  const {
+    k,
+    labels: trainLabels,
+    dim: expectedDim,
+  } = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
   if (expectedDim == null) {
     throw new Error(
       `Missing 'dim' in meta.json at ${metaPath}. Please re-run scripts/train_knn_classifier.js to regenerate the model files using the updated training script.`
@@ -32,7 +35,8 @@ async function classifyWithML(transactions, modelDir) {
     buf.length / Float32Array.BYTES_PER_ELEMENT
   );
   const trainCount = trainLabels.length;
-  if (trainCount === 0) throw new Error('No training labels found in meta.json');
+  if (trainCount === 0)
+    throw new Error('No training labels found in meta.json');
   if (raw.length % trainCount !== 0) {
     throw new Error(
       `Invalid embeddings array length ${raw.length} for ${trainCount} vectors`
@@ -69,11 +73,16 @@ async function classifyWithML(transactions, modelDir) {
   index.setEf(trainEmb.length);
 
   // Load feature extractor and apply mean-pooling per query
-  const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  const embedder = await pipeline(
+    'feature-extraction',
+    'Xenova/all-MiniLM-L6-v2'
+  );
   const texts = transactions.map((tx) => tx.description || '');
   const BATCH_SIZE = parseInt(process.env.EMBED_BATCH_SIZE || '512', 10);
   const results = [];
-  console.log(`Embedding & classifying ${transactions.length} txns in batches of ${BATCH_SIZE}...`);
+  console.log(
+    `Embedding & classifying ${transactions.length} txns in batches of ${BATCH_SIZE}...`
+  );
   for (let start = 0; start < texts.length; start += BATCH_SIZE) {
     const batchTexts = texts.slice(start, start + BATCH_SIZE);
     console.log(
@@ -95,10 +104,15 @@ async function classifyWithML(transactions, modelDir) {
         const lbl = trainLabels[idx];
         counts[lbl] = (counts[lbl] || 0) + 1;
       }
-      results.push(Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0] || 'other');
+      results.push(
+        Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0] || 'other'
+      );
     }
   }
-  return transactions.map((tx, i) => ({ ...tx, category: results[i] || 'other' }));
+  return transactions.map((tx, i) => ({
+    ...tx,
+    category: results[i] || 'other',
+  }));
 }
 
 module.exports = { classifyWithML };

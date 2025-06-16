@@ -38,8 +38,10 @@ function showMonthTransactions(req, res, next) {
     if (category && tx.category !== category) return false;
     if (dateFrom && tx.date < dateFrom) return false;
     if (dateTo && tx.date > dateTo) return false;
-    if (amountMin && parseFloat(tx.amount) < parseFloat(amountMin)) return false;
-    if (amountMax && parseFloat(tx.amount) > parseFloat(amountMax)) return false;
+    if (amountMin && parseFloat(tx.amount) < parseFloat(amountMin))
+      return false;
+    if (amountMax && parseFloat(tx.amount) > parseFloat(amountMax))
+      return false;
     return true;
   });
   const totalCount = filtered.length;
@@ -87,7 +89,13 @@ function showMonthTransactions(req, res, next) {
 function showAllTransactions(req, res, next) {
   const pageSize = 50;
   const page = parseInt(req.query.page, 10) || 1;
-  const dataFile = path.resolve(__dirname, '..', '..', 'data', 'transactions_categorized.json');
+  const dataFile = path.resolve(
+    __dirname,
+    '..',
+    '..',
+    'data',
+    'transactions_categorized.json'
+  );
   if (!fs.existsSync(dataFile)) {
     return res.status(404).render('error', {
       error: { status: 404, message: 'Transaction data not found' },
@@ -100,19 +108,23 @@ function showAllTransactions(req, res, next) {
   } catch (err) {
     return next(err);
   }
+  // Gather filter parameters and build year dropdown list
+  const { year, month, category, dateFrom, dateTo, amountMin, amountMax } =
+    req.query;
+  const yearsList = Array.from(
+    new Set(all.map((tx) => tx.date.slice(0, 4)))
+  ).sort((a, b) => b.localeCompare(a));
   // Apply filters if provided
-  const { year, month, category, dateFrom, dateTo, amountMin, amountMax } = req.query;
-  // Build year list for filter dropdown
-  const yearsList = Array.from(new Set(all.map((tx) => tx.date.slice(0, 4)))).sort((a, b) => b.localeCompare(a));
-  // Filter records
   all = all.filter((tx) => {
     if (year && tx.date.slice(0, 4) !== year) return false;
     if (month && tx.date.slice(5, 7) !== month.padStart(2, '0')) return false;
     if (category && tx.category !== category) return false;
     if (dateFrom && tx.date < dateFrom) return false;
     if (dateTo && tx.date > dateTo) return false;
-    if (amountMin && parseFloat(tx.amount) < parseFloat(amountMin)) return false;
-    if (amountMax && parseFloat(tx.amount) > parseFloat(amountMax)) return false;
+    if (amountMin && parseFloat(tx.amount) < parseFloat(amountMin))
+      return false;
+    if (amountMax && parseFloat(tx.amount) > parseFloat(amountMax))
+      return false;
     return true;
   });
   // Sort newest first
@@ -139,16 +151,7 @@ function showAllTransactions(req, res, next) {
     currentPage,
     allCategories,
     currency,
-    // Filtering context
-    yearsList,
-    year,
-    month,
-    category,
-    dateFrom,
-    dateTo,
-    amountMin,
-    amountMax,
-    // Filtering context
+    // Filtering context & dropdown data
     yearsList,
     year,
     month,
@@ -181,8 +184,8 @@ function bulkActions(req, res, next) {
   const sel = Array.isArray(req.body.selected)
     ? req.body.selected
     : req.body.selected
-    ? [req.body.selected]
-    : [];
+      ? [req.body.selected]
+      : [];
   if (action === 'delete') {
     txList = txList.filter((tx, i) => !sel.includes(String(i)));
   } else if (action === 'setCategory') {
@@ -195,8 +198,11 @@ function bulkActions(req, res, next) {
   } catch (err) {
     return next(err);
   }
-  // Redirect back to origin page safely
-  const backURL = req.get('Referrer') || '/';
+  // Redirect back to origin page safely; fallback to stripping '/bulk' if no Referrer
+  let backURL = req.get('Referrer');
+  if (!backURL) {
+    backURL = req.originalUrl.replace(/\/bulk$/, '');
+  }
   res.location(backURL);
   res.redirect(backURL);
 }
@@ -205,5 +211,4 @@ module.exports = {
   showMonthTransactions,
   showAllTransactions,
   bulkActions,
-  showAllTransactions,
 };

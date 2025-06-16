@@ -6,7 +6,10 @@ const { pipeline } = require('@xenova/transformers');
 
 (async function train() {
   // Load labeled transactions
-  const dataPath = path.resolve(__dirname, '../data/transactions_categorized.json');
+  const dataPath = path.resolve(
+    __dirname,
+    '../data/transactions_categorized.json'
+  );
   if (!fs.existsSync(dataPath)) {
     console.error('Input transactions_categorized.json not found at', dataPath);
     process.exit(1);
@@ -22,15 +25,22 @@ const { pipeline } = require('@xenova/transformers');
   const labels = data.map((tx) => tx.category);
 
   console.log('Loading embedder (WASM BERT model)...');
-  const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  const embedder = await pipeline(
+    'feature-extraction',
+    'Xenova/all-MiniLM-L6-v2'
+  );
 
   // Embed in batches to avoid OOM on large datasets
   const BATCH_SIZE = parseInt(process.env.EMBED_BATCH_SIZE || '512', 10);
-  console.log(`Embedding ${texts.length} transactions in batches of ${BATCH_SIZE}...`);
+  console.log(
+    `Embedding ${texts.length} transactions in batches of ${BATCH_SIZE}...`
+  );
   const embeddings = [];
   for (let start = 0; start < texts.length; start += BATCH_SIZE) {
     const batch = texts.slice(start, start + BATCH_SIZE);
-    console.log(`  embedding batch ${start}-${Math.min(start + batch.length, texts.length) - 1}`);
+    console.log(
+      `  embedding batch ${start}-${Math.min(start + batch.length, texts.length) - 1}`
+    );
     // Mean-pool sentence embeddings for this batch
     const batchEmb = await embedder(batch, { pooling: 'mean' });
     // Convert each embedding to a plain JS array (TypedArrays may not behave as Array)

@@ -9,7 +9,10 @@ async function train() {
     tf = require('@tensorflow/tfjs-node');
     use = require('@tensorflow-models/universal-sentence-encoder');
   } catch (e) {
-    console.error('ML training is not supported on this platform or tfjs failed to load:', e.message);
+    console.error(
+      'ML training is not supported on this platform or tfjs failed to load:',
+      e.message
+    );
     process.exit(0);
   }
   const dataDir = path.resolve(__dirname, '../data');
