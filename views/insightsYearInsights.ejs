@@ -4,13 +4,13 @@
   <% if (prevYear) { %>
     <a class="prev-year" href="/years/<%= prevYear %>/insights">← <%= prevYear %></a>
   <% } else { %>
-    <span></span>
+    <span class="disabled">← <%= Number(year) - 1 %></span>
   <% } %>
   <a class="years-index" href="/years/<%= year %>">Summary</a>
   <% if (nextYear) { %>
     <a class="next-year" href="/years/<%= nextYear %>/insights"><%= nextYear %> →</a>
   <% } else { %>
-    <span></span>
+    <span class="disabled"><%= Number(year) + 1 %> →</span>
   <% } %>
 </div>
 <h1>Insights for <%= year %></h1>

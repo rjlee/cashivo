@@ -4,13 +4,21 @@
   <% if (prev) { %>
     <a class="prev-month" href="/years/<%= prevYear %>/<%= prevMonth %>/insights">← <%= fmtMonthYear(prevYear + '-' + prevMonth) %></a>
   <% } else { %>
-    <span></span>
+    <% /* previous calendar month */ %>
+    <span class="disabled">← <%= fmtMonthYear(
+      (Number(month) === 1 ? Number(year) - 1 : year) + '-' +
+      String(Number(month) === 1 ? 12 : Number(month) - 1).padStart(2, '0')
+    ) %></span>
   <% } %>
   <a class="year-link" href="/years/<%= year %>/<%= month %>"><%= fmtMonthYear(year + '-' + month) %> Summary</a>
   <% if (next) { %>
     <a class="next-month" href="/years/<%= nextYear %>/<%= nextMonth %>/insights"><%= fmtMonthYear(nextYear + '-' + nextMonth) %> →</a>
   <% } else { %>
-    <span></span>
+    <% /* next calendar month */ %>
+    <span class="disabled"><%= fmtMonthYear(
+      (Number(month) === 12 ? Number(year) + 1 : year) + '-' +
+      String(Number(month) === 12 ? 1 : Number(month) + 1).padStart(2, '0')
+    ) %> →</span>
   <% } %>
 </div>
 <h1>Insights for <%= fmtMonthYear(year + '-' + month) %></h1>
