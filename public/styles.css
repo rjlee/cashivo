@@ -200,6 +200,22 @@ th[title] {
 .filter-form button,
 .bulk-actions-form button {
   font-size: 0.75rem;
+  .dashboard-insights {
+    margin-top: var(--spacing);
+    font-size: 0.9rem;
+  }
+  .dashboard-insights ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .dashboard-insights li {
+    display: inline-block;
+    margin-right: var(--spacing);
+  }
+  .dashboard-insights .view-full-insights {
+    margin-top: calc(var(--spacing) * 0.5);
+  }
   padding: calc(var(--spacing) * 0.33) calc(var(--spacing) * 0.66);
 }
 .year-nav .disabled {

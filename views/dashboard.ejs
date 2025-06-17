@@ -26,6 +26,19 @@
     window.dashboardSpending = <%- JSON.stringify(spendingArr) %>;
     window.chartCurrency = '<%= currency %>';
   </script>
+  </script>
+
+  <p class="mt-1"><a href="/years/<%= year %>">View <%= year %> Summary →</a></p>
+
+  <h2>Insights</h2>
+  <section class="dashboard-insights">
+    <ul>
+      <li>⚠️ Flagged: <%= numFlagged %></li>
+      <li>🔄 Recurring: <%= recurringCount %></li>
+      <li>🏆 Top Merchant: <strong><%= topMerchant.merchant || 'N/A' %></strong> <%= fmtCurrency(topMerchant.total, currency) %></li>
+    </ul>
+    <p class="view-full-insights"><a href="/years/<%= year %>/insights">View <%= year %> insights →</a></p>
+  </section>
 <% } %>
 
 <%- include('partials/footer') %>
