@@ -12,12 +12,12 @@ describe('Insights Routes', () => {
   test('GET /years/2023 should return HTML for that year', async () => {
     const res = await request(app).get('/years/2023');
     expect(res.statusCode).toBe(200);
-    expect(res.text).toContain('Annual Summary for 2023');
+    expect(res.text).toContain('2023 Summary');
   });
 
   test('GET /years/2023/insights should return HTML with Insights', async () => {
     const res = await request(app).get('/years/2023/insights');
     expect(res.statusCode).toBe(200);
-    expect(res.text).toContain('Insights for 2023');
+    expect(res.text).toContain('2023 Insights');
   });
 });
