@@ -1,0 +1,24 @@
+<%# Partial: category filter panel %>
+<details id="filter-panel" class="filter-panel">
+  <summary>Filter Categories</summary>
+  <form id="category-filter" data-period="<%= period %>">
+    <fieldset>
+      <% categories.forEach(function(cat) { %>
+        <label>
+          <input
+            type="checkbox"
+            name="category"
+            value="<%= cat %>"
+            <%= defaultUnchecked[cat] ? '' : 'checked' %>
+          >
+          <%= cat %>
+        </label>
+      <% }); %>
+      <div class="filter-actions">
+        <a href="#" id="clear-all">Clear all</a> |
+        <a href="#" id="select-all">Select all</a> |
+        <a href="#" id="hide-savings-transfers">Hide savings & transfers</a>
+      </div>
+    </fieldset>
+  </form>
+</details>

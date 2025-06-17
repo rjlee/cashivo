@@ -3,24 +3,11 @@
 <%- include('partials/yearNav', { year, prevYear, nextYear, insights: true }) %>
 <h1><%= year %> Insights</h1>
 
-<details id="filter-panel" style="margin-bottom:1em;">
-  <summary>Filter Categories</summary>
-  <form id="category-filter" data-year="<%= year %>">
-    <fieldset style="border:1px solid #ccc; padding:.5em;">
-      <% Object.keys(catDist).forEach(function(c) { %>
-        <label style="margin-right:.5em;">
-          <input type="checkbox" name="category" value="<%= c %>" <%= (c === 'Savings' || c === 'Transfers') ? '' : 'checked' %> >
-          <%= c %>
-        </label>
-      <% }); %>
-      <div class="filter-actions" style="margin:.5em 0; font-size:.9em;">
-        <a href="#" id="clear-all">Clear all</a> |
-        <a href="#" id="select-all">Select all</a> |
-        <a href="#" id="hide-savings-transfers">Hide savings & transfers</a>
-      </div>
-    </fieldset>
-  </form>
-</details>
+<%- include('partials/filterPanel', {
+  period: year,
+  categories: Object.keys(catDist),
+  defaultUnchecked: { Savings: true, Transfers: true }
+}) %>
 
 <%- include('partials/categoryDistribution', {
   title: 'Spending Category Distribution',

@@ -113,8 +113,8 @@ if (fs.existsSync(defaultsDir)) {
       }
     });
 }
-// Always regenerate summary.json on startup (dashboard and summaries depend on it)
-{
+// Regenerate summary.json on startup (skip during tests)
+if (process.env.NODE_ENV !== 'test') {
   console.log('Generating data/summary.json...');
   require('./summary');
 }
