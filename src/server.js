@@ -1,6 +1,5 @@
 require('dotenv').config();
 const express = require('express');
-const helmet = require('helmet');
 const compression = require('compression');
 const cookieParser = require('cookie-parser');
 const path = require('path');
