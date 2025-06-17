@@ -1,0 +1,9 @@
+<%# Partial: Top Merchants chart %>
+<% if (data && Object.keys(data).length) { %>
+  <h2>Top Merchants</h2>
+  <canvas id="<%= canvasId %>" width="600" height="150"></canvas>
+  <script>
+    window.<%= varData %> = <%- JSON.stringify(data) %>;
+    window.<%= varCatData %> = <%- JSON.stringify(categoryData) %>;
+  </script>
+<% } %>

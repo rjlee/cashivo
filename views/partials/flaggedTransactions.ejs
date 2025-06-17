@@ -1,0 +1,26 @@
+<%# Partial: Flagged Transactions table %>
+<h2>Flagged Transactions</h2>
+<% if (flagged && flagged.length) { %>
+  <table id="flagged-transactions-table">
+    <thead>
+      <tr>
+        <th title="Transaction date">Date</th>
+        <th title="Transaction description or merchant">Description</th>
+        <th title="Transaction amount">Amount</th>
+        <th title="Assigned transaction category">Category</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% flagged.forEach(function(o) { %>
+        <tr data-category="<%= o.category %>">
+          <td><%= o.date %></td>
+          <td><%= o.description || '' %></td>
+          <td><%= fmtCurrency(o.amount, currency) %></td>
+          <td><a href="<%= linkBase %>?category=<%= encodeURIComponent(o.category) %>"><%= o.category %></a></td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+<% } else { %>
+  <p>No flagged transactions.</p>
+<% } %>

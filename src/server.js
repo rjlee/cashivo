@@ -7,19 +7,7 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-// Security headers via Helmet: CSP + disable COOP/OAC for HTTP/dev
-//app.use(
-//  helmet({
-//    contentSecurityPolicy: {
-//      directives: {
-//        "script-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net/npm/chart.js"]
-//      }
-//    },
-//    strictTransportSecurity: false,
-//    crossOriginOpenerPolicy: false,
-//    originAgentCluster: false
-//  })
-//);
+// Security headers via Helmet
 // Gzip compression
 // Determine active page for navbar highlighting
 app.use((req, res, next) => {

@@ -16,40 +16,19 @@
   jsVar: 'categoryDistributionChartRawData'
 }) %>
 
-<% if (Object.keys(topMerchantsData).length) { %>
-  <h2>Top Merchants</h2>
-  <canvas id="topMerchantsChart" width="600" height="150"></canvas>
-  <script>
-    window.topMerchantsChartRawData = <%- JSON.stringify(topMerchantsData) %>;
-    window.topMerchantsChartCategoryData = <%- JSON.stringify(topMerchantsCategoryData) %>;
-  </script>
-<% } %>
+<%- include('partials/topMerchantsChart', {
+  data: topMerchantsData,
+  categoryData: topMerchantsCategoryData,
+  canvasId: 'topMerchantsChart',
+  varData: 'topMerchantsChartRawData',
+  varCatData: 'topMerchantsChartCategoryData'
+}) %>
 
-<h2>Flagged Transactions</h2>
-<% if (outliers && outliers.length) { %>
-  <table id="flagged-transactions-table">
-    <thead>
-      <tr>
-        <th title="Transaction date">Date</th>
-        <th title="Transaction description or merchant">Description</th>
-        <th title="Transaction amount">Amount</th>
-        <th title="Assigned transaction category">Category</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% outliers.forEach(function(o) { %>
-        <tr data-category="<%= o.category %>">
-          <td><%= o.date %></td>
-          <td><%= o.description || '' %></td>
-          <td><%= fmtCurrency(o.amount, currency) %></td>
-          <td><a href="/years/<%= year %>/insights?category=<%= encodeURIComponent(o.category) %>"><%= o.category %></a></td>
-        </tr>
-      <% }); %>
-    </tbody>
-  </table>
-<% } else { %>
-  <p>No flagged transactions.</p>
-<% } %>
+<%- include('partials/flaggedTransactions', {
+  flagged: outliers,
+  currency,
+  linkBase: `/years/${year}/insights`
+}) %>
 
 <%- include('partials/recurringTable', {
   recs,

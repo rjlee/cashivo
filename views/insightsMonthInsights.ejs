@@ -52,40 +52,19 @@
   <p>No spending spikes detected.</p>
 <% } %>
 
-<% if (topMerchantsData && Object.keys(topMerchantsData).length) { %>
-  <h2>Top Merchants</h2>
-  <canvas id="topMerchantsChart" width="600" height="150"></canvas>
-  <script>
-    window.topMerchantsChartRawData = <%- JSON.stringify(topMerchantsData) %>;
-    window.topMerchantsChartCategoryData = <%- JSON.stringify(topMerchantsCategoryData) %>;
-  </script>
-<% } %>
+<%- include('partials/topMerchantsChart', {
+  data: topMerchantsData,
+  categoryData: topMerchantsCategoryData,
+  canvasId: 'topMerchantsChart',
+  varData: 'topMerchantsChartRawData',
+  varCatData: 'topMerchantsChartCategoryData'
+}) %>
 
-<h2>Flagged Transactions</h2>
-<% if (flagged && flagged.length) { %>
-  <table id="flagged-transactions-table">
-    <thead>
-      <tr>
-        <th title="Transaction date">Date</th>
-        <th title="Transaction description or merchant">Description</th>
-        <th title="Transaction amount">Amount</th>
-        <th title="Assigned transaction category">Category</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% flagged.forEach(function(o) { %>
-        <tr data-category="<%= o.category %>">
-          <td><%= o.date %></td>
-          <td><%= o.description || '' %></td>
-          <td><%= fmtCurrency(o.amount, currency) %></td>
-          <td><a href="/years/<%= year %>/<%= month %>/category/<%= encodeURIComponent(o.category) %>"><%= o.category %></a></td>
-        </tr>
-      <% }); %>
-    </tbody>
-  </table>
-<% } else { %>
-  <p>No flagged transactions.</p>
-<% } %>
+<%- include('partials/flaggedTransactions', {
+  flagged,
+  currency,
+  linkBase: `/years/${year}/${month}/insights`
+}) %>
 
 <%- include('partials/recurringTable', {
   recs,
