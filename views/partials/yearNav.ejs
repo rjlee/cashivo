@@ -1,0 +1,14 @@
+<%# Partial: Year navigation strip %>
+<div class="nav-strip">
+  <% if (prevYear) { %>
+    <a class="prev-year" href="/years/<%= prevYear %><%= insights ? '/insights' : '' %>">← <%= prevYear %></a>
+  <% } else { %>
+    <span class="disabled">← <%= Number(year) - 1 %></span>
+  <% } %>
+  <a class="nav-index" href="/years"><%= insights ? year + ' Insights' : 'Annual Summaries' %></a>
+  <% if (nextYear) { %>
+    <a class="next-year" href="/years/<%= nextYear %><%= insights ? '/insights' : '' %>"><%= nextYear %> →</a>
+  <% } else { %>
+    <span class="disabled"><%= Number(year) + 1 %> →</span>
+  <% } %>
+</div>

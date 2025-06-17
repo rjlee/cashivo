@@ -2,6 +2,16 @@ const path = require('path');
 const fs = require('fs');
 const { getSummary, exportQif } = require('../../src/services/summaryService');
 
+const summaryPath = path.resolve(__dirname, '../../data/summary.json');
+let hadSummaryFile = false;
+let origSummary;
+beforeAll(() => {
+  if (fs.existsSync(summaryPath)) {
+    hadSummaryFile = true;
+    origSummary = fs.readFileSync(summaryPath, 'utf8');
+  }
+});
+
 const txPath = path.resolve(
   __dirname,
   '../../data/transactions_categorized.json'
@@ -27,7 +37,15 @@ beforeAll(() => {
     );
   }
 });
+
 afterAll(() => {
+  if (hadSummaryFile) {
+    fs.writeFileSync(summaryPath, origSummary);
+  } else {
+    try {
+      fs.unlinkSync(summaryPath);
+    } catch {}
+  }
   if (!hadTxFile) {
     try {
       fs.unlinkSync(txPath);
@@ -71,9 +89,17 @@ describe('summaryService', () => {
         { date: monthA + '-15', spending: 100 },
         { date: monthB + '-20', spending: 200 },
       ],
-      categoryBreakdown: { perMonth: { [monthA]: { categories: { A: 1 } }, [monthB]: { categories: { B: 2 } } } },
+      categoryBreakdown: {
+        perMonth: {
+          [monthA]: { categories: { A: 1 } },
+          [monthB]: { categories: { B: 2 } },
+        },
+      },
       trends: {
-        monthlyTrends: [ { month: monthA, income: 10 }, { month: monthB, income: 20 } ],
+        monthlyTrends: [
+          { month: monthA, income: 10 },
+          { month: monthB, income: 20 },
+        ],
         monthlyRecurringBills: { [monthA]: ['X'], [monthB]: ['Y'] },
         recurringBills: [],
       },
@@ -82,9 +108,15 @@ describe('summaryService', () => {
     const outA = getSummary({ month: monthA });
     expect(outA.monthlyOverview).toHaveLength(1);
     expect(outA.monthlyOverview[0].month).toBe(monthA);
-    expect(outA.dailySpending.every(d => d.date.startsWith(monthA))).toBe(true);
+    expect(outA.dailySpending.every((d) => d.date.startsWith(monthA))).toBe(
+      true
+    );
     expect(Object.keys(outA.categoryBreakdown.perMonth)).toEqual([monthA]);
-    expect(outA.trends.monthlyTrends.every(t => t.month === monthA)).toBe(true);
-    expect(outA.trends.recurringBills).toEqual(input.trends.monthlyRecurringBills[monthA]);
+    expect(outA.trends.monthlyTrends.every((t) => t.month === monthA)).toBe(
+      true
+    );
+    expect(outA.trends.recurringBills).toEqual(
+      input.trends.monthlyRecurringBills[monthA]
+    );
   });
 });

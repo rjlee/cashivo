@@ -1,18 +1,6 @@
 <% title = year + ' Insights'; %>
 <%- include('partials/head') %>
-<div class="year-nav">
-  <% if (prevYear) { %>
-    <a class="prev-year" href="/years/<%= prevYear %>/insights">← <%= prevYear %></a>
-  <% } else { %>
-    <span class="disabled">← <%= Number(year) - 1 %></span>
-  <% } %>
-  <a class="years-index" href="/years/<%= year %>"><%= year %> Summary</a>
-  <% if (nextYear) { %>
-    <a class="next-year" href="/years/<%= nextYear %>/insights"><%= nextYear %> →</a>
-  <% } else { %>
-    <span class="disabled"><%= Number(year) + 1 %> →</span>
-  <% } %>
-</div>
+<%- include('partials/yearNav', { year, prevYear, nextYear, insights: true }) %>
 <h1><%= year %> Insights</h1>
 
 <details id="filter-panel" style="margin-bottom:1em;">
@@ -34,13 +22,12 @@
   </form>
 </details>
 
-<% if (Object.keys(catDist).length) { %>
-  <h2>Spending Category Distribution</h2>
-  <canvas id="categoryDistributionChart" width="600" height="150"></canvas>
-  <script>
-    window.categoryDistributionChartRawData = <%- JSON.stringify(catDist) %>;
-  </script>
-<% } %>
+<%- include('partials/categoryDistribution', {
+  title: 'Spending Category Distribution',
+  chartData: catDist,
+  canvasId: 'categoryDistributionChart',
+  jsVar: 'categoryDistributionChartRawData'
+}) %>
 
 <% if (Object.keys(topMerchantsData).length) { %>
   <h2>Top Merchants</h2>
@@ -77,29 +64,9 @@
   <p>No flagged transactions.</p>
 <% } %>
 
-<h2>Recurring Bills & Subscriptions</h2>
-<% if (recs && recs.length) { %>
-  <table id="recurring-table">
-    <thead>
-      <tr>
-        <th title="Name of the recurring merchant or subscription">Merchant</th>
-        <th title="Number of occurrences this period">Occurrences</th>
-        <th title="Total amount spent for this merchant">Total Spend</th>
-        <th title="Average spend per occurrence">Avg per Occurrence</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% recs.forEach(function(r) { %>
-        <tr data-category="<%= r.category %>">
-          <td><a href="/years/<%= year %>/insights?category=<%= encodeURIComponent(r.category) %>"><%= r.description %></a></td>
-          <td><%= r.occurrences %></td>
-          <td><%= fmtCurrency(r.total, currency) %></td>
-          <td><%= fmtCurrency(r.avgAmount, currency) %></td>
-        </tr>
-      <% }); %>
-    </tbody>
-  </table>
-<% } else { %>
-  <p>No recurring bills detected.</p>
-<% } %>
+<%- include('partials/recurringTable', {
+  recs,
+  linkBase: `/years/${year}/insights`,
+  currency
+}) %>
 <%- include('partials/footer') %>

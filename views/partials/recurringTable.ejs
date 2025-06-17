@@ -1,0 +1,26 @@
+<%# Partial: render recurring bills/subscriptions table %>
+<h2>Recurring Bills & Subscriptions</h2>
+<% if (recs && recs.length) { %>
+  <table id="recurring-table">
+    <thead>
+      <tr>
+        <th title="Name of the recurring merchant or subscription">Merchant</th>
+        <th title="Number of occurrences this period">Occurrences</th>
+        <th title="Total amount spent for this merchant">Total Spend</th>
+        <th title="Average spend per occurrence">Avg per Occurrence</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% recs.forEach(function(r) { %>
+        <tr data-category="<%= r.category %>">
+          <td><a href="<%= linkBase %>?category=<%= encodeURIComponent(r.category) %>"><%= r.description %></a></td>
+          <td><%= r.occurrences %></td>
+          <td><%= fmtCurrency(r.total, currency) %></td>
+          <td><%= fmtCurrency(r.avgAmount, currency) %></td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+<% } else { %>
+  <p>No recurring bills detected.</p>
+<% } %>

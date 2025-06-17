@@ -1,6 +1,6 @@
 <% title = fmtMonthYear(monthlyOverview[0].month) + ' Summary'; %>
 <%- include('partials/head') %>
-<div class="month-nav">
+<div class="nav-strip">
   <% if (prevYear) { %>
     <a class="prev-month" href="/years/<%= prevYear %>/<%= prevMonth %>">← <%= fmtMonthYear(prevYear + '-' + prevMonth) %></a>
   <% } else { %>

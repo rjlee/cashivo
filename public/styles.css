@@ -161,34 +161,6 @@ canvas {
 th[title] {
   cursor: help;
 }
-/* Month navigation links */
-.month-nav {
-  margin: calc(var(--spacing) / 2) 0;
-  font-size: 0.9rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.month-nav .disabled {
-  color: var(--color-disabled);
-  cursor: default;
-  text-decoration: none;
-}
-.month-nav a {
-  text-decoration: none;
-  color: #2980b9;
-}
-.month-nav a:hover {
-  text-decoration: underline;
-}
-/* Year navigation links on yearly report pages */
-.year-nav {
-  margin: calc(var(--spacing) / 2) 0;
-  font-size: 0.9rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 
 /* Spacing for transaction filters & bulk actions */
 .filter-form,
@@ -220,16 +192,24 @@ th[title] {
 .dashboard-insights .view-full-insights {
   margin-top: calc(var(--spacing) * 0.5);
 }
-.year-nav .disabled {
+/* Navigation strip for years and months */
+.nav-strip {
+  margin: calc(var(--spacing) / 2) 0;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.nav-strip .disabled {
   color: var(--color-disabled);
   cursor: default;
   text-decoration: none;
 }
-.year-nav a {
+.nav-strip a {
   text-decoration: none;
   color: #2980b9;
 }
-.year-nav a:hover {
+.nav-strip a:hover {
   text-decoration: underline;
 }
 /* Utility margin top */

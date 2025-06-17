@@ -1,0 +1,8 @@
+<%# Partial: render a category distribution chart %>
+<% if (chartData && Object.keys(chartData).length) { %>
+  <h2><%= title %></h2>
+  <canvas id="<%= canvasId %>" width="600" height="150"></canvas>
+  <script>
+    window.<%= jsVar %> = <%- JSON.stringify(chartData) %>;
+  </script>
+<% } %>

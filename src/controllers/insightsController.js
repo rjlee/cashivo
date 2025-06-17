@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const summaryService = require('../services/summaryService');
 const { getCurrency } = require('../utils/currency');
+const { makeYearNav, makeMonthNav } = require('../utils/navigation');
 // summaryModule rendering functions replaced by EJS views
 
 // GET /years
@@ -35,10 +36,7 @@ function showYear(req, res, next) {
     const currency = getCurrency(req.query.currency);
     // Prepare list of years for navigation
     const yearsList = (summary.yearlySummary || []).map((y) => y.year).sort();
-    const idx = yearsList.indexOf(year);
-    const prevYear = idx > 0 ? yearsList[idx - 1] : null;
-    const nextYear =
-      idx >= 0 && idx < yearsList.length - 1 ? yearsList[idx + 1] : null;
+    const { prevYear, nextYear } = makeYearNav(yearsList, year);
     // Find yearly summary entry
     const yearly =
       (summary.yearlySummary || []).find((y) => y.year === year) || null;
@@ -77,10 +75,7 @@ function showYearInsights(req, res, next) {
     const currency = getCurrency(req.query.currency);
     // Navigation: previous and next years
     const yearsList = (summary.yearlySummary || []).map((y) => y.year).sort();
-    const idxY = yearsList.indexOf(year);
-    const prevYear = idxY > 0 ? yearsList[idxY - 1] : null;
-    const nextYear =
-      idxY >= 0 && idxY < yearsList.length - 1 ? yearsList[idxY + 1] : null;
+    const { prevYear, nextYear } = makeYearNav(yearsList, year);
     // Months in this year
     const allMonths = Array.isArray(summary.monthlySpending)
       ? summary.monthlySpending
@@ -152,17 +147,16 @@ function showMonth(req, res, next) {
     const summary = summaryService.getSummary({ month: `${year}-${month}` });
     const currency = getCurrency(req.query.currency);
     // Determine prev/next months for navigation
-    const allMonths = (summary.monthlySpending || [])
-      .map((s) => s.month)
-      .sort();
-    const idx = allMonths.indexOf(`${year}-${month}`);
-    const prev = idx > 0 ? allMonths[idx - 1] : null;
-    const next =
-      idx >= 0 && idx < allMonths.length - 1 ? allMonths[idx + 1] : null;
-    const prevYear = prev ? prev.split('-')[0] : null;
-    const prevMonth = prev ? prev.split('-')[1] : null;
-    const nextYear = next ? next.split('-')[0] : null;
-    const nextMonth = next ? next.split('-')[1] : null;
+    const allMonths = Array.isArray(summary.monthlySpending)
+      ? summary.monthlySpending.map((s) => s.month).sort()
+      : [];
+    const { prevYear, prevMonth, nextYear, nextMonth } = makeMonthNav(
+      allMonths,
+      year,
+      month
+    );
+    const prev = prevYear && prevMonth ? `${prevYear}-${prevMonth}` : null;
+    const next = nextYear && nextMonth ? `${nextYear}-${nextMonth}` : null;
     // Monthly overview (should be single entry)
     const monthlyOverview = summary.monthlyOverview || [];
     const isMonthView = monthlyOverview.length === 1;
@@ -225,17 +219,16 @@ function showMonthInsights(req, res, next) {
       ? Object.keys(cbMonth.categories)
       : [];
     // Prev/Next month navigation
-    const allMonths = (summary.monthlySpending || [])
-      .map((s) => s.month)
-      .sort();
-    const idx = allMonths.indexOf(sel);
-    const prev = idx > 0 ? allMonths[idx - 1] : null;
-    const next =
-      idx >= 0 && idx < allMonths.length - 1 ? allMonths[idx + 1] : null;
-    const prevYear = prev ? prev.split('-')[0] : null;
-    const prevMonth = prev ? prev.split('-')[1] : null;
-    const nextYear = next ? next.split('-')[0] : null;
-    const nextMonth = next ? next.split('-')[1] : null;
+    const allMonths = Array.isArray(summary.monthlySpending)
+      ? summary.monthlySpending.map((s) => s.month).sort()
+      : [];
+    const { prevYear, prevMonth, nextYear, nextMonth } = makeMonthNav(
+      allMonths,
+      year,
+      month
+    );
+    const prev = prevYear && prevMonth ? `${prevYear}-${prevMonth}` : null;
+    const next = nextYear && nextMonth ? `${nextYear}-${nextMonth}` : null;
     // Daily spending data
     const dailyData = summary.dailySpending || [];
     // Category distribution data

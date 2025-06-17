@@ -113,18 +113,17 @@ if (fs.existsSync(defaultsDir)) {
       }
     });
 }
+// Always regenerate summary.json on startup (dashboard and summaries depend on it)
+{
+  console.log('Generating data/summary.json...');
+  require('./summary');
+}
 const port = process.env.PORT || 3000;
 
 // Endpoint to serve summary JSON
-app.get('/api/summary', (req, res) => {
-  const summaryPath = path.join(__dirname, '..', 'data', 'summary.json');
-  if (!fs.existsSync(summaryPath)) {
-    return res
-      .status(404)
-      .send({ error: 'summary.json not found. Run npm run start first.' });
-  }
-  res.sendFile(summaryPath);
-});
+const apiCtrl = require('./controllers/apiController');
+// API endpoint to return summary JSON
+app.get('/api/summary', apiCtrl.getSummaryJson);
 
 // Mount manage routes
 app.use('/manage', require('./routes/manage'));

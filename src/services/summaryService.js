@@ -19,28 +19,37 @@ function getSummary({ month } = {}) {
     const raw = fs.readFileSync(summaryPath, 'utf-8');
     summary = JSON.parse(raw);
   } else {
-    summary = {
-      yearlySummary: [],
-      monthlyOverview: [],
-      monthlySpending: [],
-      dailySpending: [],
-      categoryBreakdown: { perMonth: {} },
-      trends: {
-        monthlyTrends: [],
-        monthlyRecurringBills: {},
-        recurringBills: [],
-      },
-      lifestyle: [],
-      merchantInsights: {
-        topMerchants: [],
-        transactionCounts: {},
-        usageOverTime: {},
-      },
-      budgetAdherence: {},
-      savingsGoals: {},
-      anomalies: { outliers: [], spikes: [], duplicates: [] },
-    };
+    summary = {};
   }
+  // Normalize missing fields to defaults
+  summary.yearlySummary = Array.isArray(summary.yearlySummary)
+    ? summary.yearlySummary
+    : [];
+  summary.monthlyOverview = Array.isArray(summary.monthlyOverview)
+    ? summary.monthlyOverview
+    : [];
+  summary.monthlySpending = Array.isArray(summary.monthlySpending)
+    ? summary.monthlySpending
+    : [];
+  summary.dailySpending = Array.isArray(summary.dailySpending)
+    ? summary.dailySpending
+    : [];
+  summary.categoryBreakdown =
+    summary.categoryBreakdown && typeof summary.categoryBreakdown === 'object'
+      ? summary.categoryBreakdown
+      : { perMonth: {} };
+  summary.trends =
+    summary.trends && typeof summary.trends === 'object'
+      ? summary.trends
+      : { monthlyTrends: [], monthlyRecurringBills: {}, recurringBills: [] };
+  summary.merchantInsights =
+    summary.merchantInsights && typeof summary.merchantInsights === 'object'
+      ? summary.merchantInsights
+      : { usageOverTime: {}, usageOverTimeByCategory: {} };
+  summary.anomalies =
+    summary.anomalies && typeof summary.anomalies === 'object'
+      ? summary.anomalies
+      : { outliers: [], spikes: [], duplicates: [] };
   if (month) {
     if (Array.isArray(summary.monthlyOverview)) {
       summary.monthlyOverview = summary.monthlyOverview.filter(

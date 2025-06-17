@@ -1,6 +1,6 @@
 <% title = fmtMonthYear(year + '-' + month) + ' Insights'; %>
 <%- include('partials/head') %>
-<div class="month-nav">
+<div class="nav-strip">
   <% if (prev) { %>
     <a class="prev-month" href="/years/<%= prevYear %>/<%= prevMonth %>/insights">← <%= fmtMonthYear(prevYear + '-' + prevMonth) %></a>
   <% } else { %>
@@ -50,13 +50,12 @@
   </script>
 <% } %>
 
-<% if (monthCategories && Object.keys(monthCategories).length) { %>
-  <h2>Spending Category Distribution</h2>
-  <canvas id="categoryDistributionChart" width="600" height="150"></canvas>
-  <script>
-    window.categoryDistributionChartRawData = <%- JSON.stringify(monthCategories) %>;
-  </script>
-<% } %>
+<%- include('partials/categoryDistribution', {
+  title: 'Spending Category Distribution',
+  chartData: monthCategories,
+  canvasId: 'categoryDistributionChart',
+  jsVar: 'categoryDistributionChartRawData'
+}) %>
 
 <h2>Spending Category Spikes</h2>
 <% if (spikes && spikes.length) { %>
@@ -121,33 +120,11 @@
   <p>No flagged transactions.</p>
 <% } %>
 
-<h2>Recurring Bills & Subscriptions</h2>
-<% if (recs && recs.length) { %>
-  <table id="recurring-table">
-    <thead>
-      <tr>
-        <th title="Merchant or subscription name">Merchant</th>
-        <th title="Transaction category">Category</th>
-        <th title="Number of times this transaction occurred">Occurrences</th>
-        <th title="Total amount spent">Total</th>
-        <th title="Average amount per occurrence">Avg</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% recs.forEach(function(r) { %>
-        <tr data-category="<%= r.category %>">
-          <td><%= r.description %></td>
-          <td><%= r.category %></td>
-          <td><%= r.occurrences %></td>
-          <td><%= fmtCurrency(r.total, currency) %></td>
-          <td><%= fmtCurrency(r.avgAmount, currency) %></td>
-        </tr>
-      <% }); %>
-    </tbody>
-  </table>
-<% } else { %>
-  <p>No recurring bills detected.</p>
-<% } %>
+<%- include('partials/recurringTable', {
+  recs,
+  linkBase: `/years/${year}/${month}/insights`,
+  currency
+}) %>
 
   <!-- scripts loaded in footer -->
 <%- include('partials/footer') %>
