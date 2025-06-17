@@ -3,8 +3,6 @@ process.env.DATA_DIR = path.resolve(__dirname, '../tmp_data');
 const request = require('supertest');
 const cheerio = require('cheerio');
 const fs = require('fs');
-// Ensure test data directory exists
-fs.mkdirSync(process.env.DATA_DIR, { recursive: true });
 const app = require('../../src/server');
 
 const DATA_FILE = path.resolve(
