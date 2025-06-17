@@ -28,7 +28,7 @@
   </script>
   </script>
 
-  <p class="mt-1"><a href="/years/<%= year %>">View <%= year %> Summary →</a></p>
+  <p class="mt-1"><a href="/years/<%= year %>">View Summary →</a></p>
 
   <h2>Insights</h2>
   <section class="dashboard-insights">
@@ -37,8 +37,9 @@
       <li>🔄 Recurring: <%= recurringCount %></li>
       <li>🏆 Top Merchant: <strong><%= topMerchant.merchant || 'N/A' %></strong> <%= fmtCurrency(topMerchant.total, currency) %></li>
     </ul>
-    <p class="view-full-insights"><a href="/years/<%= year %>/insights">View <%= year %> insights →</a></p>
   </section>
+
+  <p><a href="/years/<%= year %>/insights">View Insights →</a></p>
 <% } %>
 
 <%- include('partials/footer') %>

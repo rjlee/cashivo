@@ -1,7 +1,9 @@
 <% title = fmtMonthYear(year + '-' + month) + ' ' + category + ' Transactions'; %>
 <%- include('partials/head') %>
+<div class="month-nav">
+  <a class="prev-month" href="/years/<%= year %>">← <%= year %> Summary</a>
+</div>
 <h1><%= fmtMonthYear(year + '-' + month) %> <%= category %> Transactions</h1>
-<p><a href="/years/<%= year %>/<%= month %>">← Back to month summary</a></p>
 <%- include('partials/filterForm', {
   basePath: `/years/${year}/${month}/category/${category}`,
   yearsList,
