@@ -14,24 +14,33 @@ function showDashboard(req, res, next) {
   // Spending per month for chart/table
   const spendingArr = filterByYear(summary.monthlySpending || [], year);
   const currency = getCurrency(req.query.currency);
-  // Extract key insights for dashboard
-  const numFlagged = filterByYear(
-    summary.anomalies?.outliers || [],
-    year
-  ).length;
+  // Extract key insights for dashboard, excluding Savings & Transfers by default
+  const excludeCats = ['Savings', 'Transfers'];
+  const flagged = filterByYear(summary.anomalies?.outliers || [], year).filter(
+    (o) => !excludeCats.includes(o.category)
+  );
+  const numFlagged = flagged.length;
   const recurringCount = Array.isArray(summary.trends?.recurringBills)
     ? summary.trends.recurringBills.length
     : 0;
-  // Determine top merchant by annual spending
-  const usageOverTime = summary.merchantInsights?.usageOverTime || {};
-  const topMerchant = Object.entries(usageOverTime)
-    .map(([merchant, data]) => ({
+  // Determine top merchant for the current year, excluding Savings & Transfers
+  const usageByCategory =
+    summary.merchantInsights?.usageOverTimeByCategory || {};
+  const topMerchant = Object.entries(usageByCategory)
+    .map(([merchant, monthMap]) => ({
       merchant,
-      total: Object.entries(data).reduce(
-        (sum, [mo, v]) => (mo.startsWith(year + '-') ? sum + v : sum),
-        0
-      ),
+      total: Object.entries(monthMap).reduce((sum, [mo, catMap]) => {
+        if (!mo.startsWith(year + '-')) return sum;
+        return (
+          sum +
+          Object.entries(catMap).reduce(
+            (s2, [cat, amt]) => (excludeCats.includes(cat) ? s2 : s2 + amt),
+            0
+          )
+        );
+      }, 0),
     }))
+    .filter((x) => x.total > 0)
     .sort((a, b) => b.total - a.total)[0] || { merchant: '', total: 0 };
   res.render('dashboard', {
     year,

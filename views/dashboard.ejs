@@ -33,9 +33,9 @@
   <h2>Insights</h2>
   <section class="dashboard-insights">
     <ul>
+      <li>🏆 Top Merchant: <strong><%= topMerchant.merchant || 'N/A' %></strong> <%= fmtCurrency(topMerchant.total, currency) %></li>
       <li>⚠️ Flagged: <%= numFlagged %></li>
       <li>🔄 Recurring: <%= recurringCount %></li>
-      <li>🏆 Top Merchant: <strong><%= topMerchant.merchant || 'N/A' %></strong> <%= fmtCurrency(topMerchant.total, currency) %></li>
     </ul>
   </section>
 
