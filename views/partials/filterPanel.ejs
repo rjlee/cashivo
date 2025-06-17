@@ -1,7 +1,10 @@
 <%# Partial: category filter panel %>
 <details id="filter-panel" class="filter-panel">
   <summary>Filter Categories</summary>
-  <form id="category-filter" data-period="<%= period %>">
+  <form id="category-filter"
+        data-period="<%= period %>"
+        data-year="<%= period.split('-')[0] %>"
+        <% if (period.includes('-')) { %>data-month="<%= period %>"<% } %>>
     <fieldset>
       <% categories.forEach(function(cat) { %>
         <label>
