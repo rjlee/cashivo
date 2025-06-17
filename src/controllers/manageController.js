@@ -3,6 +3,8 @@ const fs = require('fs');
 const summaryService = require('../services/summaryService');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
+const runSummary = require('../utils/runSummary');
+const getDataDir = require('../utils/getDataDir');
 const progressBus = require('../progressBus');
 // Render manage page
 function showManage(req, res) {
@@ -34,8 +36,7 @@ function exportData(req, res) {
 }
 function resetData(req, res) {
   // Reset project-root/data
-  const dataDir =
-    process.env.DATA_DIR || path.resolve(__dirname, '..', '..', 'data');
+  const dataDir = getDataDir();
   if (fs.existsSync(dataDir)) {
     // Empty the data directory without removing the mount point
     fs.readdirSync(dataDir).forEach((name) => {
@@ -176,7 +177,7 @@ function classifyTransactions(req, res) {
     progressBus.emit('progress', { jobId, data: { done: true, code } });
     // Regenerate summary after classification completes
     try {
-      require(path.resolve(__dirname, '..', 'summary.js'));
+      runSummary();
     } catch (err) {
       console.warn('Error regenerating summary after classify:', err.message);
     }

@@ -81,7 +81,8 @@ if (USERNAME && PASSWORD) {
   });
 }
 // Determine data directory (allow override via DATA_DIR, e.g. in tests) and seed default files
-const dataDir = process.env.DATA_DIR || path.resolve(__dirname, '..', 'data');
+const getDataDir = require('./utils/getDataDir');
+const dataDir = getDataDir();
 const defaultsDir = path.resolve(__dirname, '..', 'defaults');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 // Seed all default JSON files from defaults/ into data/, stripping "default_" prefix
@@ -104,7 +105,8 @@ if (fs.existsSync(defaultsDir)) {
 // (skip when DATA_DIR is overridden, e.g. during tests)
 // Regenerate summary.json on startup
 console.log('Generating data/summary.json...');
-require('./summary');
+const runSummary = require('./utils/runSummary');
+runSummary();
 const port = process.env.PORT || 3000;
 
 // Endpoint to serve summary JSON

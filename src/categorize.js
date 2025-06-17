@@ -1,6 +1,8 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
+const getDataDir = require('./utils/getDataDir');
+const runSummary = require('./utils/runSummary');
 const { loadJSON } = require('./utils');
 const { classifyWithRules } = require('./services/rulesClassifier');
 const { classifyPassThrough } = require('./services/passClassifier');
@@ -8,7 +10,7 @@ const { classifyWithML } = require('./services/mlClassifier');
 const { classifyWithAI } = require('./services/aiClassifier');
 const { classifyWithTF } = require('./services/tfClassifier');
 // Data directory path
-const dataDir = process.env.DATA_DIR || path.resolve(__dirname, '..', 'data');
+const dataDir = getDataDir();
 
 // Determine importer from CLI and load its categories config
 const importerArg = process.argv.find((arg) => arg.startsWith('--importer='));
@@ -121,7 +123,7 @@ async function run() {
   const cleanOutput = categorized.map(({ _origIdx, ...tx }) => tx);
   fs.writeFileSync(outputFile, JSON.stringify(cleanOutput, null, 2));
   // Regenerate summary after reclassification
-  require(path.resolve(__dirname, 'summary.js'));
+  runSummary();
   // Summary report
   console.log(`\n=== Classification Summary for ${importerName} ===`);
   console.log(`Total transactions: ${totalTransactions}`);

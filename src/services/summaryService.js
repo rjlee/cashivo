@@ -5,10 +5,11 @@ const path = require('path');
  * @param {{month?: string}} options
  * @returns {object} summary data
  */
+const getDataDir = require('../utils/getDataDir');
+
 function getSummary({ month } = {}) {
-  // summary JSON lives at project-root/data/summary.json
-  const dataDir =
-    process.env.DATA_DIR || path.resolve(__dirname, '..', '..', 'data');
+  // summary JSON lives under DATA_DIR or project-root/data
+  const dataDir = getDataDir();
   const summaryPath = path.resolve(dataDir, 'summary.json');
   let summary;
   if (fs.existsSync(summaryPath)) {
@@ -82,8 +83,7 @@ function getSummary({ month } = {}) {
  */
 function exportQif() {
   // transactions file under DATA_DIR or project-root/data
-  const dataDir =
-    process.env.DATA_DIR || path.resolve(__dirname, '..', '..', 'data');
+  const dataDir = getDataDir();
   const txPath = path.resolve(dataDir, 'transactions_categorized.json');
   if (!fs.existsSync(txPath)) throw new Error('No transaction data');
   const txs = JSON.parse(fs.readFileSync(txPath, 'utf-8'));

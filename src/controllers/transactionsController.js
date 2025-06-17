@@ -1,5 +1,7 @@
 const path = require('path');
 const fs = require('fs');
+const getDataDir = require('../utils/getDataDir');
+const runSummary = require('../utils/runSummary');
 
 /**
  * Show all transactions for a given year and month, paginated by 100.
@@ -159,8 +161,7 @@ function showAllTransactions(req, res, next) {
  * Handle bulk delete or category‐update actions for selected transactions.
  */
 function bulkActions(req, res, next) {
-  const dataDir =
-    process.env.DATA_DIR || path.resolve(__dirname, '..', '..', 'data');
+  const dataDir = getDataDir();
   const dataFile = path.resolve(dataDir, 'transactions_categorized.json');
   let txList;
   try {
@@ -184,7 +185,7 @@ function bulkActions(req, res, next) {
   try {
     fs.writeFileSync(dataFile, JSON.stringify(txList, null, 2));
     // Regenerate summary.json after transactions change
-    require(path.resolve(__dirname, '..', '..', 'src', 'summary'));
+    runSummary();
   } catch (err) {
     return next(err);
   }
