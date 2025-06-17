@@ -21,12 +21,6 @@ router.get(
 router.get('/export', manageCtrl.exportData);
 // Process uploaded files (multipart) with CSRF protection
 router.post('/', upload.array('files'), csrfProtection, manageCtrl.uploadFiles);
-// Reload default settings (categories, category groups, importer mappings)
-router.post(
-  '/load-default-settings',
-  csrfProtection,
-  manageCtrl.loadDefaultSettings
-);
 // Delete only transactions and summary data
 router.post(
   '/delete-transactions',

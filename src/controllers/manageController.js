@@ -8,10 +8,9 @@ const getDataDir = require('../utils/getDataDir');
 const progressBus = require('../progressBus');
 // Render manage page
 function showManage(req, res) {
-  const showDefaultsMsg = req.query.msg === 'defaults_loaded';
   const showDeletedMsg = req.query.msg === 'transactions_deleted';
   // Render the manage view (explicit .ejs extension)
-  res.render('manage.ejs', { showDefaultsMsg, showDeletedMsg });
+  res.render('manage.ejs', { showDeletedMsg });
 }
 // Show progress page for a submitted job or training task
 function showProgressPage(req, res) {
@@ -49,28 +48,6 @@ function resetData(req, res) {
   }
   // After clearing data, redirect to GET /manage to generate a fresh CSRF token
   res.redirect('/manage');
-}
-// Reload default settings (categories, category groups, importer mappings)
-function loadDefaultSettings(req, res) {
-  const defaultsDir = path.resolve(__dirname, '..', '..', 'defaults');
-  const dataDir =
-    process.env.DATA_DIR || path.resolve(__dirname, '..', '..', 'data');
-  // Copy all default JSON configs into data/, stripping 'default_' prefix
-  if (fs.existsSync(defaultsDir)) {
-    fs.readdirSync(defaultsDir)
-      .filter((file) => file.endsWith('.json'))
-      .forEach((file) => {
-        const src = path.join(defaultsDir, file);
-        const dstName = file.replace(/^default_/, '');
-        const dst = path.join(dataDir, dstName);
-        try {
-          fs.copyFileSync(src, dst);
-        } catch (e) {
-          console.warn(`Could not load default settings ${file}: ${e.message}`);
-        }
-      });
-  }
-  res.redirect('/manage?msg=defaults_loaded');
 }
 // Delete transactions and summary files
 function deleteTransactions(req, res) {
@@ -280,7 +257,6 @@ module.exports = {
   exportData,
   uploadFiles: uploadFilesSse,
   resetData,
-  loadDefaultSettings,
   deleteTransactions,
   classifyTransactions,
   trainClassifier,

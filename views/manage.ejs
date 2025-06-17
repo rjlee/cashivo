@@ -1,8 +1,5 @@
 <% title = 'Manage Data'; %>
 <%- include('partials/head') %>
-  <% if (showDefaultsMsg) { %>
-    <p class="alert-success">Default settings loaded successfully.</p>
-  <% } %>
   <% if (showDeletedMsg) { %>
     <p class="alert-success">Transactions deleted successfully.</p>
   <% } %>
@@ -16,10 +13,6 @@
       <div class="mt-1">
         <button type="submit">Upload & Process</button>
       </div>
-    </form>
-    <form method="POST" action="/manage/load-default-settings" class="mt-1">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <button type="submit">Load Default Settings</button>
     </form>
   </div>
 
