@@ -14,8 +14,8 @@ function loadJSON(filePath) {
   }
 }
 
-// Paths
-const dataDir = path.resolve(__dirname, '..', 'data');
+// Paths (override with DATA_DIR, e.g. for tests)
+const dataDir = process.env.DATA_DIR || path.resolve(__dirname, '..', 'data');
 const inputFile = path.resolve(dataDir, 'transactions_categorized.json');
 
 // Load transactions or start empty if none exist

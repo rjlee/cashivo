@@ -17,8 +17,8 @@ beforeAll(() => {
 });
 
 const txPath = path.resolve(
-  __dirname,
-  '../../data/transactions_categorized.json'
+  process.env.DATA_DIR || path.resolve(__dirname, '../tmp_data'),
+  'transactions_categorized.json'
 );
 let hadTxFile = false;
 beforeAll(() => {
@@ -68,10 +68,6 @@ describe('summaryService', () => {
 
   test('exportQif returns a non-empty string starting with QIF header', () => {
     // Ensure data file exists
-    const txPath = path.resolve(
-      __dirname,
-      '../../data/transactions_categorized.json'
-    );
     expect(fs.existsSync(txPath)).toBe(true);
     const qif = exportQif();
     expect(typeof qif).toBe('string');

@@ -81,14 +81,10 @@ function getSummary({ month } = {}) {
  * @returns {string}
  */
 function exportQif() {
-  // transactions file at project-root/data/transactions_categorized.json
-  const txPath = path.resolve(
-    __dirname,
-    '..',
-    '..',
-    'data',
-    'transactions_categorized.json'
-  );
+  // transactions file under DATA_DIR or project-root/data
+  const dataDir =
+    process.env.DATA_DIR || path.resolve(__dirname, '..', '..', 'data');
+  const txPath = path.resolve(dataDir, 'transactions_categorized.json');
   if (!fs.existsSync(txPath)) throw new Error('No transaction data');
   const txs = JSON.parse(fs.readFileSync(txPath, 'utf-8'));
   txs.sort((a, b) => a.date.localeCompare(b.date));

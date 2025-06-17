@@ -80,8 +80,8 @@ if (USERNAME && PASSWORD) {
     return res.status(401).send('Invalid credentials');
   });
 }
-// Ensure data directory and seed default cat/files
-const dataDir = path.resolve(__dirname, '..', 'data');
+// Determine data directory (allow override via DATA_DIR, e.g. in tests) and seed default files
+const dataDir = process.env.DATA_DIR || path.resolve(__dirname, '..', 'data');
 const defaultsDir = path.resolve(__dirname, '..', 'defaults');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 // Seed all default JSON files from defaults/ into data/, stripping "default_" prefix
@@ -100,11 +100,11 @@ if (fs.existsSync(defaultsDir)) {
       }
     });
 }
-// Regenerate summary.json on startup (skip during tests)
-if (process.env.NODE_ENV !== 'test') {
-  console.log('Generating data/summary.json...');
-  require('./summary');
-}
+// Regenerate summary.json on startup when using default data directory
+// (skip when DATA_DIR is overridden, e.g. during tests)
+// Regenerate summary.json on startup
+console.log('Generating data/summary.json...');
+require('./summary');
 const port = process.env.PORT || 3000;
 
 // Endpoint to serve summary JSON
