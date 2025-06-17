@@ -175,6 +175,12 @@ function classifyTransactions(req, res) {
   });
   child.on('close', (code) => {
     progressBus.emit('progress', { jobId, data: { done: true, code } });
+    // Regenerate summary after classification completes
+    try {
+      require(path.resolve(__dirname, '..', 'summary.js'));
+    } catch (err) {
+      console.warn('Error regenerating summary after classify:', err.message);
+    }
   });
   res.redirect(`/manage/progress/${jobId}?task=classify`);
 }
