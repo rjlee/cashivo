@@ -18,11 +18,19 @@ function loadJSON(filePath) {
 const dataDir = path.resolve(__dirname, '..', 'data');
 const inputFile = path.resolve(dataDir, 'transactions_categorized.json');
 
-if (!fs.existsSync(inputFile)) {
-  console.error('Input file not found:', inputFile);
-  process.exit(1);
+// Load transactions or start empty if none exist
+let transactions;
+if (fs.existsSync(inputFile)) {
+  try {
+    transactions = JSON.parse(fs.readFileSync(inputFile, 'utf-8'));
+  } catch (e) {
+    console.error('Error reading transactions file:', inputFile, e.message);
+    transactions = [];
+  }
+} else {
+  console.warn('No transactions file found, starting with empty dataset.');
+  transactions = [];
 }
-const transactions = JSON.parse(fs.readFileSync(inputFile));
 // Optional date range filtering (YYYY-MM). Transactions month >= START_MONTH and/or <= END_MONTH
 const startMonth = process.env.START_MONTH;
 const endMonth = process.env.END_MONTH;
