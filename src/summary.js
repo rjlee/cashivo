@@ -3,19 +3,11 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-
-// Safe JSON loader
-function loadJSON(filePath) {
-  try {
-    const raw = fs.readFileSync(filePath);
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
+const getDataDir = require('./utils/getDataDir');
+const { loadJSON, loadDefaultJson } = require('./utils');
 
 // Paths (override with DATA_DIR, e.g. for tests)
-const dataDir = process.env.DATA_DIR || path.resolve(__dirname, '..', 'data');
+const dataDir = getDataDir();
 const inputFile = path.resolve(dataDir, 'transactions_categorized.json');
 
 // Load transactions or start empty if none exist
@@ -51,18 +43,12 @@ if (startMonth || endMonth) {
   );
 }
 
-// Optional configs
-const budgets = loadJSON(path.resolve(__dirname, '..', 'budgets.json')) || {};
-const goalsConfig = loadJSON(path.resolve(__dirname, '..', 'goals.json')) || {};
+// Optional configs (from dataDir or fallback defaults)
+const budgets = loadDefaultJson('budgets.json', {});
+const goalsConfig = loadDefaultJson('goals.json', {});
 // Load category groups: user-provided or default
-const defaultCategoryGroups = require(
-  path.resolve(__dirname, '..', 'defaults', 'default_category_groups.json')
-);
-const categoryGroups =
-  loadJSON(path.resolve(dataDir, 'category-groups.json')) ||
-  defaultCategoryGroups;
-const deductibleCategories =
-  loadJSON(path.resolve(__dirname, '..', 'deductible-categories.json')) || [];
+const categoryGroups = loadDefaultJson('category-groups.json', {});
+const deductibleCategories = loadDefaultJson('deductible-categories.json', []);
 
 // Helper: group transactions by month
 function getMonthlyData(txs) {

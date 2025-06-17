@@ -3,6 +3,7 @@ const path = require('path');
 const summaryService = require('../services/summaryService');
 const { getCurrency } = require('../utils/currency');
 const { makeYearNav, makeMonthNav } = require('../utils/navigation');
+const { filterByYear, filterByMonth } = require('../utils/filters');
 // summaryModule rendering functions replaced by EJS views
 
 // GET /years
@@ -41,12 +42,8 @@ function showYear(req, res, next) {
     const yearly =
       (summary.yearlySummary || []).find((y) => y.year === year) || null;
     // Monthly overview and spending data for the year
-    const months = (summary.monthlyOverview || []).filter((m) =>
-      m.month.startsWith(year + '-')
-    );
-    const spendingArr = (summary.monthlySpending || []).filter((s) =>
-      s.month.startsWith(year + '-')
-    );
+    const months = filterByYear(summary.monthlyOverview || [], year);
+    const spendingArr = filterByYear(summary.monthlySpending || [], year);
     // Total spending for the year
     const annualSpending = spendingArr.reduce(
       (sum, m) => sum + (m.spending || 0),
@@ -94,9 +91,7 @@ function showYearInsights(req, res, next) {
       }
     });
     // Flagged transactions (outliers) for the year
-    const outliers = Array.isArray(summary.anomalies?.outliers)
-      ? summary.anomalies.outliers.filter((o) => o.date.startsWith(year + '-'))
-      : [];
+    const outliers = filterByYear(summary.anomalies?.outliers || [], year);
     // Top merchants data
     const topMerchantsData = summary.merchantInsights?.usageOverTime || {};
     const topMerchantsCategoryData =
@@ -234,17 +229,13 @@ function showMonthInsights(req, res, next) {
     // Category distribution data
     const monthCategories = cbMonth.categories || {};
     // Spending spikes
-    const spikes = (summary.anomalies?.spikes || []).filter(
-      (s) => s.month === sel
-    );
+    const spikes = filterByMonth(summary.anomalies?.spikes || [], sel);
     // Top merchants
     const topMerchantsData = summary.merchantInsights?.usageOverTime || {};
     const topMerchantsCategoryData =
       summary.merchantInsights?.usageOverTimeByCategory || {};
     // Flagged transactions
-    const flagged = (summary.anomalies?.outliers || []).filter((o) =>
-      o.date.startsWith(sel)
-    );
+    const flagged = filterByMonth(summary.anomalies?.outliers || [], sel);
     // Recurring bills & subscriptions for this month
     const recDefs = summary.trends?.recurringBills || [];
     const recs = recDefs.filter((item) => {

@@ -1,5 +1,6 @@
 const summaryService = require('../services/summaryService');
 const { getCurrency } = require('../utils/currency');
+const { filterByYear } = require('../utils/filters');
 
 /**
  * Dashboard showing summary info for current year
@@ -11,15 +12,13 @@ function showDashboard(req, res, next) {
   const yearly =
     (summary.yearlySummary || []).find((y) => y.year === year) || null;
   // Spending per month for chart/table
-  const spendingArr = (summary.monthlySpending || []).filter((s) =>
-    s.month.startsWith(year + '-')
-  );
+  const spendingArr = filterByYear(summary.monthlySpending || [], year);
   const currency = getCurrency(req.query.currency);
   // Extract key insights for dashboard
-  const numFlagged = Array.isArray(summary.anomalies?.outliers)
-    ? summary.anomalies.outliers.filter((o) => o.date.startsWith(year + '-'))
-        .length
-    : 0;
+  const numFlagged = filterByYear(
+    summary.anomalies?.outliers || [],
+    year
+  ).length;
   const recurringCount = Array.isArray(summary.trends?.recurringBills)
     ? summary.trends.recurringBills.length
     : 0;

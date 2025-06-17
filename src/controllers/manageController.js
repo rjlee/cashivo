@@ -184,15 +184,15 @@ function classifyTransactions(req, res) {
   });
   res.redirect(`/manage/progress/${jobId}?task=classify`);
 }
+const { loadDefaultJson } = require('../utils');
+
 // SSE-based upload and processing with per-importer classifier mapping
 function uploadFilesSse(req, res) {
   const files = req.files || [];
   if (!files.length) return res.status(400).send('No files uploaded.');
   const importersDir = path.resolve(__dirname, '..', 'importers');
   // Load importer modules with their filenames
-  const importerConfig = require(
-    path.resolve(__dirname, '..', '..', 'data', 'importerClassifiers.json')
-  );
+  const importerConfig = loadDefaultJson('importerClassifiers.json', {});
   const importerEntries = [];
   if (fs.existsSync(importersDir)) {
     fs.readdirSync(importersDir)

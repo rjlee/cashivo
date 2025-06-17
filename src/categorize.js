@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const getDataDir = require('./utils/getDataDir');
 const runSummary = require('./utils/runSummary');
-const { loadJSON } = require('./utils');
+const { loadJSON, loadDefaultJson } = require('./utils');
 const { classifyWithRules } = require('./services/rulesClassifier');
 const { classifyPassThrough } = require('./services/passClassifier');
 const { classifyWithML } = require('./services/mlClassifier');
@@ -35,7 +35,7 @@ if (!categories) {
   process.exit(1);
 }
 // Multi-pass classification per importer precedence
-const importerConfig = loadJSON(path.join(dataDir, 'importerClassifiers.json'));
+const importerConfig = loadDefaultJson('importerClassifiers.json', {});
 const importerFile = importerName + '.js';
 let precedence =
   importerConfig &&
