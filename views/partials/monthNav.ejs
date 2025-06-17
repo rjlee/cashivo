@@ -5,7 +5,16 @@
   <% } else { %>
     <span class="disabled">← <%= fmtMonthYear((Number(month) === 1 ? Number(year) - 1 : year) + '-' + String(Number(month) === 1 ? 12 : Number(month) - 1).padStart(2, '0')) %></span>
   <% } %>
-  <a class="nav-index" href="/years/<%= year %>/<%= month %><%= insights ? '/insights' : '' %>"><%= fmtMonthYear(year + '-' + month) %> <%= insights ? 'Insights' : 'Summary' %></a>
+  <% // Center link: on Insights page, go to month Summary; on Summary page, go to year Summary %>
+  <% const centerHref = insights
+      ? `/years/${year}/${month}`
+      : `/years/${year}`;
+  %>
+  <a class="nav-index" href="<%= centerHref %>">
+    <%= insights
+        ? fmtMonthYear(year + '-' + month) + ' Summary'
+        : year + ' Summary' %>
+  </a>
   <% if (nextYear && nextMonth) { %>
     <a class="next-month" href="/years/<%= nextYear %>/<%= nextMonth %><%= insights ? '/insights' : '' %>"><%= fmtMonthYear(nextYear + '-' + nextMonth) %> →</a>
   <% } else { %>

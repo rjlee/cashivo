@@ -17,6 +17,7 @@ app.use((req, res, next) => {
   else if (p.startsWith('/years')) res.locals.activePage = 'summaries';
   else if (p.startsWith('/manage')) res.locals.activePage = 'manage';
   else res.locals.activePage = '';
+  res.locals.reqPath = p;
   next();
 });
 app.use(compression());

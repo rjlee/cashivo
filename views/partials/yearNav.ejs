@@ -5,7 +5,10 @@
   <% } else { %>
     <span class="disabled">← <%= Number(year) - 1 %></span>
   <% } %>
-  <a class="nav-index" href="/years"><%= insights ? year + ' Insights' : 'Annual Summaries' %></a>
+  <% const summaryHref = `/years/${year}`; %>
+  <a class="nav-index" href="<%= insights ? summaryHref : '/years' %>">
+    <%= insights ? year + ' Summary' : 'Annual Summaries' %>
+  </a>
   <% if (nextYear) { %>
     <a class="next-year" href="/years/<%= nextYear %><%= insights ? '/insights' : '' %>"><%= nextYear %> →</a>
   <% } else { %>
