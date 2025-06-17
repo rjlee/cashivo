@@ -225,6 +225,19 @@ th[title] {
   margin-top: calc(var(--spacing) * 0.5);
 }
 
+/* Filter panel styles */
+.filter-panel {
+  margin-bottom: var(--spacing);
+}
+.filter-panel fieldset {
+  border: 1px solid var(--color-border);
+  padding: 0.5em;
+}
+.filter-panel .filter-actions {
+  margin: 0.5em 0;
+  font-size: 0.9rem;
+}
+
 /* Manage page sections */
 .manage-section {
   background: var(--color-panel-bg);
