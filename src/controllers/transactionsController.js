@@ -195,6 +195,8 @@ function bulkActions(req, res, next) {
   }
   try {
     fs.writeFileSync(dataFile, JSON.stringify(txList, null, 2));
+    // Regenerate summary.json after transactions change
+    require(path.resolve(__dirname, '..', '..', 'src', 'summary'));
   } catch (err) {
     return next(err);
   }

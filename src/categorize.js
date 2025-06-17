@@ -120,6 +120,8 @@ async function run() {
   // Write output (strip internal index)
   const cleanOutput = categorized.map(({ _origIdx, ...tx }) => tx);
   fs.writeFileSync(outputFile, JSON.stringify(cleanOutput, null, 2));
+  // Regenerate summary after reclassification
+  require(path.resolve(__dirname, 'summary.js'));
   // Summary report
   console.log(`\n=== Classification Summary for ${importerName} ===`);
   console.log(`Total transactions: ${totalTransactions}`);
