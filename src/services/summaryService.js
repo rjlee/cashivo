@@ -7,13 +7,9 @@ const path = require('path');
  */
 function getSummary({ month } = {}) {
   // summary JSON lives at project-root/data/summary.json
-  const summaryPath = path.resolve(
-    __dirname,
-    '..',
-    '..',
-    'data',
-    'summary.json'
-  );
+  const dataDir =
+    process.env.DATA_DIR || path.resolve(__dirname, '..', '..', 'data');
+  const summaryPath = path.resolve(dataDir, 'summary.json');
   let summary;
   if (fs.existsSync(summaryPath)) {
     const raw = fs.readFileSync(summaryPath, 'utf-8');

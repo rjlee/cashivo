@@ -1,3 +1,5 @@
+const path = require('path');
+process.env.DATA_DIR = path.resolve(__dirname, '../tmp_data');
 const request = require('supertest');
 const app = require('../../src/server');
 

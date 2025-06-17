@@ -10,7 +10,8 @@ async function ingest() {
     console.error('Import directory not found:', transactionsDir);
     process.exit(1);
   }
-  const outputDir = path.resolve(__dirname, '..', 'data');
+  const outputDir =
+    process.env.DATA_DIR || path.resolve(__dirname, '..', 'data');
   const outputFile = path.join(outputDir, 'transactions.json');
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });

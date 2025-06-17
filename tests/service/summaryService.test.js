@@ -1,8 +1,12 @@
 const path = require('path');
+process.env.DATA_DIR = path.resolve(__dirname, '../tmp_data');
 const fs = require('fs');
 const { getSummary, exportQif } = require('../../src/services/summaryService');
 
-const summaryPath = path.resolve(__dirname, '../../data/summary.json');
+const summaryPath = path.resolve(
+  process.env.DATA_DIR || path.resolve(__dirname, '../tmp_data'),
+  'summary.json'
+);
 let hadSummaryFile = false;
 let origSummary;
 beforeAll(() => {
@@ -75,7 +79,6 @@ describe('summaryService', () => {
   });
 
   test('getSummary filters data correctly when month option is provided', () => {
-    const summaryPath = path.resolve(__dirname, '../../data/summary.json');
     // Seed summary.json with multiple months
     const monthA = '2023-01';
     const monthB = '2023-02';

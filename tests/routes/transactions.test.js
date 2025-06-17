@@ -1,12 +1,13 @@
+const path = require('path');
+process.env.DATA_DIR = path.resolve(__dirname, '../tmp_data');
 const request = require('supertest');
 const cheerio = require('cheerio');
 const fs = require('fs');
-const path = require('path');
 const app = require('../../src/server');
 
 const DATA_FILE = path.resolve(
-  __dirname,
-  '../../data/transactions_categorized.json'
+  process.env.DATA_DIR || path.resolve(__dirname, '../tmp_data'),
+  'transactions_categorized.json'
 );
 let originalData;
 

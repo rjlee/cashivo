@@ -34,7 +34,8 @@ function exportData(req, res) {
 }
 function resetData(req, res) {
   // Reset project-root/data
-  const dataDir = path.resolve(__dirname, '..', '..', 'data');
+  const dataDir =
+    process.env.DATA_DIR || path.resolve(__dirname, '..', '..', 'data');
   if (fs.existsSync(dataDir)) {
     // Empty the data directory without removing the mount point
     fs.readdirSync(dataDir).forEach((name) => {
@@ -51,7 +52,8 @@ function resetData(req, res) {
 // Reload default settings (categories, category groups, importer mappings)
 function loadDefaultSettings(req, res) {
   const defaultsDir = path.resolve(__dirname, '..', '..', 'defaults');
-  const dataDir = path.resolve(__dirname, '..', '..', 'data');
+  const dataDir =
+    process.env.DATA_DIR || path.resolve(__dirname, '..', '..', 'data');
   // Copy all default JSON configs into data/, stripping 'default_' prefix
   if (fs.existsSync(defaultsDir)) {
     fs.readdirSync(defaultsDir)
@@ -71,7 +73,8 @@ function loadDefaultSettings(req, res) {
 }
 // Delete transactions and summary files
 function deleteTransactions(req, res) {
-  const dataDir = path.resolve(__dirname, '..', '..', 'data');
+  const dataDir =
+    process.env.DATA_DIR || path.resolve(__dirname, '..', '..', 'data');
   [
     'transactions.json',
     'transactions_categorized.json',
@@ -92,13 +95,9 @@ function deleteTransactions(req, res) {
 function updateTransactionCategory(req, res) {
   const idx = parseInt(req.params.idx, 10);
   const { category } = req.body;
-  const dataFile = path.resolve(
-    __dirname,
-    '..',
-    '..',
-    'data',
-    'transactions_categorized.json'
-  );
+  const dataDir =
+    process.env.DATA_DIR || path.resolve(__dirname, '..', '..', 'data');
+  const dataFile = path.resolve(dataDir, 'transactions_categorized.json');
   if (!fs.existsSync(dataFile)) {
     return res.status(404).json({ error: 'Transactions file not found' });
   }

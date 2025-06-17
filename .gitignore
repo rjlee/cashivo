@@ -4,6 +4,8 @@ data/
 .env
 # Ignore import folder (user-uploaded transaction files)
 import/
+# Test temporary data for tests
+tests/tmp_data/
 
 # Logs
 *.log

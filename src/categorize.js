@@ -8,7 +8,7 @@ const { classifyWithML } = require('./services/mlClassifier');
 const { classifyWithAI } = require('./services/aiClassifier');
 const { classifyWithTF } = require('./services/tfClassifier');
 // Data directory path
-const dataDir = path.resolve(__dirname, '..', 'data');
+const dataDir = process.env.DATA_DIR || path.resolve(__dirname, '..', 'data');
 
 // Determine importer from CLI and load its categories config
 const importerArg = process.argv.find((arg) => arg.startsWith('--importer='));

@@ -12,13 +12,9 @@ function showMonthTransactions(req, res, next) {
   const pageSize = 50;
   const page = parseInt(req.query.page, 10) || 1;
   // Data directory is at project root (not under src)
-  const dataFile = path.resolve(
-    __dirname,
-    '..',
-    '..',
-    'data',
-    'transactions_categorized.json'
-  );
+  const dataDir =
+    process.env.DATA_DIR || path.resolve(__dirname, '..', '..', 'data');
+  const dataFile = path.resolve(dataDir, 'transactions_categorized.json');
   if (!fs.existsSync(dataFile)) {
     return res.status(404).render('error', {
       error: { status: 404, message: 'Transaction data not found' },
@@ -89,13 +85,9 @@ function showMonthTransactions(req, res, next) {
 function showAllTransactions(req, res, next) {
   const pageSize = 50;
   const page = parseInt(req.query.page, 10) || 1;
-  const dataFile = path.resolve(
-    __dirname,
-    '..',
-    '..',
-    'data',
-    'transactions_categorized.json'
-  );
+  const dataDir =
+    process.env.DATA_DIR || path.resolve(__dirname, '..', '..', 'data');
+  const dataFile = path.resolve(dataDir, 'transactions_categorized.json');
   if (!fs.existsSync(dataFile)) {
     return res.status(404).render('error', {
       error: { status: 404, message: 'Transaction data not found' },
@@ -167,13 +159,9 @@ function showAllTransactions(req, res, next) {
  * Handle bulk delete or category‐update actions for selected transactions.
  */
 function bulkActions(req, res, next) {
-  const dataFile = path.resolve(
-    __dirname,
-    '..',
-    '..',
-    'data',
-    'transactions_categorized.json'
-  );
+  const dataDir =
+    process.env.DATA_DIR || path.resolve(__dirname, '..', '..', 'data');
+  const dataFile = path.resolve(dataDir, 'transactions_categorized.json');
   let txList;
   try {
     txList = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
