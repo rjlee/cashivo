@@ -179,6 +179,11 @@ th[title] {
 .dashboard-insights {
   margin-top: var(--spacing);
   font-size: 0.9rem;
+  background-color: var(--color-panel-bg);
+  border-left: 4px solid var(--color-primary);
+  padding: var(--spacing);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-light);
 }
 .dashboard-insights ul {
   list-style: none;
