@@ -10,7 +10,15 @@
     "Telephone & mobile",
     "TV & internet",
     "Service fees & bank charges",
-    "Child & dependent expenses"
+    "Child & dependent expenses",
+    "Car running costs",
+    "Home maintenance",
+    "Loans",
+    "Other household expenses",
+    "Postage and shipping",
+    "Printing",
+    "Taxes",
+    "Education"
   ],
   "Lifestyle": [
     "Entertainment",
@@ -25,7 +33,28 @@
     "Personal care",
     "Pets",
     "Charitable giving",
-    "Other expenses"
+    "Other expenses",
+    "Fitness",
+    "Gambling",
+    "General merchandise",
+    "Home improvement",
+    "Online services",
+    "Gym"
   ],
-  "Internal": ["Transfers", "Savings", "Income"]
+  "Internal": [
+    "Transfers",
+    "Savings",
+    "Cash withdrawals",
+    "Interest earnings",
+    "Other income",
+    "Salary",
+    "Sales",
+    "Cash & cheque deposits",
+    "Credit card payments",
+    "Pension contributions",
+    "Pension income",
+    "Savings & investments income",
+    "Securities trades",
+    "Work expenses"
+  ]
 }

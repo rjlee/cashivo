@@ -1,10 +1,13 @@
 {
   "Car running costs": ["Car running costs"],
+  "Cash & cheque deposits": ["Cash & cheque deposits"],
   "Cash withdrawals": ["Cash withdrawals"],
+  "Credit card payments": ["Credit card payments"],
   "Charitable giving": ["Charitable giving"],
   "Child & dependent expenses": ["Child & dependent expenses"],
   "Clothing & shoes": ["Clothing & shoes"],
   "Eating out": ["Eating out"],
+  "Education": ["Education"],
   "Electronics": ["Electronics"],
   "Entertainment": ["Entertainment"],
   "Fitness": ["Fitness"],
@@ -14,6 +17,7 @@
   "General merchandise": ["General merchandise"],
   "Gifts to friends & family": ["Gifts to friends & family"],
   "Groceries": ["Groceries"],
+  "Gym": ["Gym"],
   "Healthcare": ["Healthcare"],
   "Hobbies": ["Hobbies"],
   "Holiday": ["Holiday"],
@@ -27,6 +31,8 @@
   "Other household expenses": ["Other household expenses"],
   "Other income": ["Other income"],
   "Personal care": ["Personal care"],
+  "Pension contributions": ["Pension contributions"],
+  "Pension income": ["Pension income"],
   "Pets": ["Pets"],
   "Postage and shipping": ["Postage and shipping"],
   "Printing": ["Printing"],
@@ -34,6 +40,8 @@
   "Salary": ["Salary"],
   "Sales": ["Sales"],
   "Savings": ["Savings"],
+  "Savings & investments income": ["Savings & investments income"],
+  "Securities trades": ["Securities trades"],
   "Service fees & bank charges": ["Service fees & bank charges"],
   "Subscriptions": ["Subscriptions"],
   "TV & internet": ["TV & internet"],
@@ -41,5 +49,6 @@
   "Telephone & mobile": ["Telephone & mobile"],
   "Transfers": ["Transfers"],
   "Travel": ["Travel"],
-  "Utilities": ["Utilities"]
+  "Utilities": ["Utilities"],
+  "Work expenses": ["Work expenses"]
 }
